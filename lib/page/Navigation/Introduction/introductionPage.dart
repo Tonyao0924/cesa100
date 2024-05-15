@@ -2,6 +2,8 @@ import 'package:cesa100/commonComponents/constants.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../Login/loginPage.dart';
+
 class IntroductionPage extends StatefulWidget {
   const IntroductionPage({super.key});
 
@@ -35,7 +37,7 @@ class _IntroductionPageState extends State<IntroductionPage> {
               'AnimalSensor',
               style: TextStyle(
                 color: Colors.black,
-                fontSize: 40,
+                fontSize: 36,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -61,7 +63,26 @@ class _IntroductionPageState extends State<IntroductionPage> {
                 borderRadius: BorderRadius.circular(10),
               )
             ),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.of(context).pushAndRemoveUntil(
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) => LoginPage(),
+                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                    const begin = Offset(0.0, 1.0);
+                    const end = Offset.zero;
+                    const curve = Curves.ease;
+
+                    var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+
+                    return SlideTransition(
+                      position: animation.drive(tween),
+                      child: child,
+                    );
+                  },
+                ),
+                    (route) => route == null,
+              );
+            },
             child: Text(
               'Start',
               style: TextStyle(
