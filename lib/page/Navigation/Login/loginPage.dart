@@ -1,5 +1,6 @@
 import 'package:cesa100/commonComponents/constants.dart';
 import 'package:cesa100/page/Navigation/Login/loginform.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
@@ -21,9 +22,9 @@ class _LoginPageState extends State<LoginPage> {
         body: Column(
           children: [
             Container(
-              padding: EdgeInsets.symmetric(vertical: 20),
+              padding: const EdgeInsets.symmetric(vertical: 20),
               color: buttonColor,
-              child: Column(
+              child: const Column(
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -50,12 +51,11 @@ class _LoginPageState extends State<LoginPage> {
                 ],
               ),
             ),
-            Loginform(),
-            Spacer(),
+            const Expanded(child: Loginform()),
             Container(
               width: width * 1,
               height: 80,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: buttonColor,
               ),
             )
