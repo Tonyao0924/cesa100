@@ -109,6 +109,7 @@ class _LoginformState extends State<Loginform> {
               ),
             ),
           ),
+          Text('Don’t have an account?'),
           Spacer(flex: 3),
         ],
       ),
