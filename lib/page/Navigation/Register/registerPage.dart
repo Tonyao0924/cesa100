@@ -1,16 +1,16 @@
-import 'package:cesa100/commonComponents/constants.dart';
-import 'package:cesa100/page/Navigation/Login/loginform.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:cesa100/page/Navigation/Register/registerform.dart';
 import 'package:flutter/material.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+import '../../../commonComponents/constants.dart';
+
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     int width = MediaQuery.of(context).size.width.toInt();
@@ -44,7 +44,7 @@ class _LoginPageState extends State<LoginPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Login',
+                        'Register',
                         style: TextStyle(
                           color: Colors.black,
                           fontSize: 40,
@@ -55,14 +55,14 @@ class _LoginPageState extends State<LoginPage> {
                 ],
               ),
             ),
-            const Expanded(child: Loginform()),
+            const Expanded(child: Registerform()),
             Container(
               width: width * 1,
               height: 80,
               decoration: const BoxDecoration(
                 color: buttonColor,
               ),
-            ),
+            )
           ],
         ),
       ),

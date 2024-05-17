@@ -1,29 +1,60 @@
-import 'package:cesa100/commonComponents/constants.dart';
-import 'package:cesa100/page/Home/Home/homePage.dart';
-import 'package:cesa100/page/Navigation/Register/registerPage.dart';
+import 'package:cesa100/page/Navigation/Login/loginPage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
-class Loginform extends StatefulWidget {
-  const Loginform({super.key});
+import '../../../commonComponents/constants.dart';
+import '../../Home/Home/homePage.dart';
+
+class Registerform extends StatefulWidget {
+  const Registerform({super.key});
 
   @override
-  State<Loginform> createState() => _LoginformState();
+  State<Registerform> createState() => _RegisterformState();
 }
 
-class _LoginformState extends State<Loginform> {
+class _RegisterformState extends State<Registerform> {
   bool _isPasswordVisible = true;
+  TextEditingController _namecontroller = TextEditingController();
   TextEditingController _emailcontroller = TextEditingController();
   TextEditingController _passwordcontroller = TextEditingController();
+  TextEditingController _confirmpasswordcontroller = TextEditingController();
+
 
   @override
   Widget build(BuildContext context) {
     int width = MediaQuery.of(context).size.width.toInt();
     int height = MediaQuery.of(context).size.height.toInt();
+    double appBarTop = (MediaQuery.of(context).padding.top);
     return Container(
       child: Column(
         children: [
+          Spacer(),
+          SizedBox(
+            width: width * 0.8,
+            height: height * 0.06,
+            child: TextField(
+              style: const TextStyle(
+                color: Colors.black,
+              ),
+              controller: _namecontroller,
+              decoration: InputDecoration(
+                contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 10),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                enabledBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(color: outLineBorder, width: 1), // 框線透明
+                ),
+                focusedBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(color: outLineBorder, width: 1), // 點擊後框線透明
+                ),
+                hintText: 'Full Name',
+                hintStyle: const TextStyle(
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+          ),
           Spacer(),
           SizedBox(
             width: width * 0.8,
@@ -91,24 +122,44 @@ class _LoginformState extends State<Loginform> {
               ),
             ),
           ),
-          Container(
-            alignment: Alignment.centerRight,
-            padding: EdgeInsets.symmetric(horizontal: width * 0.1),
-            child: TextButton(
-              style: ButtonStyle(
-                overlayColor: MaterialStateProperty.resolveWith<Color>(
-                      (Set<MaterialState> states) {
-                    return Colors.transparent;
+          Spacer(),
+          SizedBox(
+            width: width * 0.8,
+            height: height * 0.06,
+            child: TextField(
+              style: const TextStyle(
+                color: Colors.black,
+              ),
+              controller: _confirmpasswordcontroller,
+              obscureText: _isPasswordVisible,
+              decoration: InputDecoration(
+                contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 10),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                enabledBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(color: outLineBorder, width: 1), // 框線透明
+                ),
+                focusedBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(color: outLineBorder, width: 1), // 點擊後框線透明
+                ),
+                hintText: 'Confirm Password',
+                hintStyle: const TextStyle(color: Colors.grey),
+                suffixIcon: IconButton(
+                  style: IconButton.styleFrom(
+                    splashFactory: NoSplash.splashFactory,
+                  ),
+                  icon: Icon(
+                    _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                    color: Colors.grey,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isPasswordVisible = !_isPasswordVisible;
+                    });
                   },
                 ),
               ),
-              child: const Text(
-                'Forgot Password?',
-                style: TextStyle(
-                  fontSize: 12,
-                ),
-              ),
-              onPressed: () {},
             ),
           ),
           Spacer(),
@@ -141,7 +192,7 @@ class _LoginformState extends State<Loginform> {
               );
             },
             child: Text(
-              'Login',
+              'Sign Up',
               style: TextStyle(
                 fontSize: 24,
                 color: Colors.white,
@@ -152,7 +203,7 @@ class _LoginformState extends State<Loginform> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'Don’t have an account?',
+                'Already have an account?',
                 style: TextStyle(
                   color: Colors.black12,
                   fontSize: 12,
@@ -167,7 +218,7 @@ class _LoginformState extends State<Loginform> {
                   ),
                 ),
                 child: const Text(
-                  'Sign Up',
+                  'Login',
                   style: TextStyle(
                     fontSize: 12,
                   ),
@@ -175,7 +226,7 @@ class _LoginformState extends State<Loginform> {
                 onPressed: () {
                   Navigator.of(context).pushAndRemoveUntil(
                     PageRouteBuilder(
-                      pageBuilder: (context, animation, secondaryAnimation) => RegisterPage(),
+                      pageBuilder: (context, animation, secondaryAnimation) => LoginPage(),
                       transitionsBuilder: (context, animation, secondaryAnimation, child) {
                         const begin = Offset(0.0, 1.0);
                         const end = Offset.zero;
