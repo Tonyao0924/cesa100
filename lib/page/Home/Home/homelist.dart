@@ -87,7 +87,22 @@ class _HomeListState extends State<HomeList> {
                       ),
                     ),
                     onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => DetailPage()));
+                      Navigator.push(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder: (context, animation, secondaryAnimation) => DetailPage(rowData: _dataLens[index]),
+                          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                            const begin = Offset(1.0, 0.0);
+                            const end = Offset.zero;
+                            const curve = Curves.ease;
+                            var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                            return SlideTransition(
+                              position: animation.drive(tween),
+                              child: child,
+                            );
+                          },
+                        ),
+                      );
                     },
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -120,7 +135,7 @@ class _HomeListState extends State<HomeList> {
                             Row(
                               children: [
                                 Image(
-                                  image: AssetImage('assets/home/sugar-blood-level.png'),
+                                  image: AssetImage('assets/home/bloodsugar.png'),
                                   fit: BoxFit.scaleDown,
                                   width: 30,
                                   height: 30,
