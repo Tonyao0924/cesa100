@@ -1,4 +1,5 @@
 import 'package:cesa100/page/Navigation/Introduction/introductionPage.dart';
+import 'package:cesa100/page/tmpPage.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -20,6 +21,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: IntroductionPage(),
+      // home: TmpPage(),
     );
   }
 }

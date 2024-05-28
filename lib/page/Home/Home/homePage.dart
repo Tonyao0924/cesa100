@@ -1,6 +1,7 @@
 import 'package:cesa100/commonComponents/constants.dart';
 import 'package:cesa100/page/Home/Home/homelist.dart';
 import 'package:cesa100/page/Home/Profile/profilePage.dart';
+import 'package:cesa100/page/Home/Scan/scanPage.dart';
 import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
@@ -51,10 +52,27 @@ class _HomePageState extends State<HomePage> {
                       });
                     },
                     onTapCancel: () {
-                      // 松开手指时恢复图片原始大小
                       setState(() {
                         _scale = 1.0;
                       });
+                    },
+                    onTap: (){
+                      Navigator.push(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder: (context, animation, secondaryAnimation) => ScanPage(),
+                          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                            const begin = Offset(1.0, 0.0);
+                            const end = Offset.zero;
+                            const curve = Curves.ease;
+                            var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                            return SlideTransition(
+                              position: animation.drive(tween),
+                              child: child,
+                            );
+                          },
+                        ),
+                      );
                     },
                     child: Transform.scale(
                       scale: _scale,
