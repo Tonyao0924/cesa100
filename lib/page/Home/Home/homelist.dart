@@ -72,6 +72,7 @@ class _HomeListState extends State<HomeList> {
                   child: TextField(
                     onChanged: onQueryChanged,
                     decoration: InputDecoration(
+                      contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 10),
                       labelText: 'Search',
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.search),

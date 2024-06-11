@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/painting.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_ttc_ble/flutter_ttc_ble.dart';
 import 'package:flutter_ttc_ble/scan_screen.dart';
 
@@ -136,14 +138,26 @@ class _ScanPageState extends State<ScanPage> with BleCallback2{
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            "${_devices[index].name}",
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              "${_devices[index].name}",
+                            ),
                           ),
-                          Text(
-                            "${_devices[index].deviceId}",
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              "${_devices[index].deviceId}",
+                              style: TextStyle(
+                                fontSize: 9, // todo edit this
+                              ),
+                            ),
                           ),
-                          Text(
-                            "${_devices[index].rssi}",
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              "${_devices[index].rssi}",
+                            ),
                           ),
                         ],
                       ),
