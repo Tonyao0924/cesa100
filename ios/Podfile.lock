@@ -4,6 +4,8 @@ PODS:
   - Flutter (1.0.0)
   - flutter_ttc_ble (0.0.1):
     - Flutter
+  - image_picker_ios (0.0.1):
+    - Flutter
   - permission_handler_apple (9.1.1):
     - Flutter
   - sqflite (0.0.3):
@@ -14,6 +16,7 @@ DEPENDENCIES:
   - device_info (from `.symlinks/plugins/device_info/ios`)
   - Flutter (from `Flutter`)
   - flutter_ttc_ble (from `.symlinks/plugins/flutter_ttc_ble/ios`)
+  - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - sqflite (from `.symlinks/plugins/sqflite/darwin`)
 
@@ -24,6 +27,8 @@ EXTERNAL SOURCES:
     :path: Flutter
   flutter_ttc_ble:
     :path: ".symlinks/plugins/flutter_ttc_ble/ios"
+  image_picker_ios:
+    :path: ".symlinks/plugins/image_picker_ios/ios"
   permission_handler_apple:
     :path: ".symlinks/plugins/permission_handler_apple/ios"
   sqflite:
@@ -33,9 +38,10 @@ SPEC CHECKSUMS:
   device_info: d7d233b645a32c40dfdc212de5cf646ca482f175
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   flutter_ttc_ble: 6c71c17e7ec30ee2322541fc10e461e9e9e73c83
+  image_picker_ios: c560581cceedb403a6ff17f2f816d7fea1421fc1
   permission_handler_apple: e76247795d700c14ea09e3a2d8855d41ee80a2e6
   sqflite: 673a0e54cc04b7d6dba8d24fb8095b31c3a99eec
 
-PODFILE CHECKSUM: 819463e6a0290f5a72f145ba7cde16e8b6ef0796
+PODFILE CHECKSUM: 7be2f5f74864d463a8ad433546ed1de7e0f29aef
 
 COCOAPODS: 1.15.0

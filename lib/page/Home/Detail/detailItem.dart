@@ -339,12 +339,11 @@ class _DetailItemState extends State<DetailItem> {
               ],
             ),
           ),
-          ElevatedButton(
-            onPressed: _toggleChartState,
-            child: const Text('Toggle Chart'),
-          ),
           Expanded(
-            child: Container(
+            child: GestureDetector(
+              onTap: () {
+                _toggleChartState();
+              },
               child: SfCartesianChart(
                 zoomPanBehavior: _zoomPanBehavior,
                 tooltipBehavior: _tooltipBehavior,
@@ -354,7 +353,7 @@ class _DetailItemState extends State<DetailItem> {
                   _debounce?.cancel();
                   print(args.visibleMin);
 
-                  _debounce = Timer(const Duration(seconds: 1), () {
+                  _debounce = Timer(const Duration(milliseconds: 100), () {
                     if (args.visibleMin != 0) {
                       setState(() {
                         minX = DateTime.fromMillisecondsSinceEpoch((args.visibleMin).toInt());
@@ -411,7 +410,7 @@ class _DetailItemState extends State<DetailItem> {
                   initialVisibleMaximum: maxX,
                   // autoScrollingDeltaType: DateTimeIntervalType.months, //自動滾動Delta類型
                 ),
-                primaryYAxis: const NumericAxis(
+                primaryYAxis: NumericAxis(
                   interval: 40,
                   // interval: primaryYAxisInterval,
                   // minimum: primaryYAxisMin,
@@ -419,26 +418,29 @@ class _DetailItemState extends State<DetailItem> {
                   title: AxisTitle(
                     text: 'mg/dl',
                     textStyle: TextStyle(
-                      color: Colors.deepOrange,
+                      color: _chartState == 0 || _chartState == 1 ? Colors.deepOrange : Colors.transparent,
                     ),
                   ),
-                  labelStyle: TextStyle(color: Colors.deepOrange),
+                  labelStyle: TextStyle(
+                    color: _chartState == 0 || _chartState == 1 ? Colors.deepOrange : Colors.transparent,
+                  ),
                 ),
-                axes: const <ChartAxis>[
+                axes: <ChartAxis>[
                   NumericAxis(
                     name: 'secondaryYAxis',
                     opposedPosition: true,
-                    interval: 5,
                     // interval: secondaryYAxisInterval,
                     // minimum: secondaryYAxisMin,
                     // maximum: secondaryYAxisMax,
                     title: AxisTitle(
                       text: '℃',
                       textStyle: TextStyle(
-                        color: Colors.blue,
+                        color: _chartState == 0 || _chartState == 2 ? Colors.blue : Colors.transparent,
                       ),
                     ),
-                    labelStyle: TextStyle(color: Colors.blue),
+                    labelStyle: TextStyle(
+                      color: _chartState == 0 || _chartState == 2 ? Colors.blue : Colors.transparent,
+                    ),
                   ),
                 ],
                 series: <CartesianSeries>[

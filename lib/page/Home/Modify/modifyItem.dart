@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../commonComponents/constants.dart';
 import '../Home/petlist.dart';
@@ -13,6 +16,24 @@ class ModifyItem extends StatefulWidget {
 }
 
 class _ModifyItemState extends State<ModifyItem> {
+  File? _image;
+  final picker = ImagePicker();
+
+  Future getImageGallery() async {
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
+    setState(() {
+      if(pickedFile != null){
+        _image = File(pickedFile.path);
+        // widget.imgUrl = null;
+      }else {
+        print('No image picker');
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     int width = MediaQuery.of(context).size.width.toInt();
@@ -224,7 +245,9 @@ class _ModifyItemState extends State<ModifyItem> {
                     borderRadius: BorderRadius.circular(0),
                   ),
                 ),
-                onPressed: () {},
+                onPressed: () {
+                  getImageGallery();
+                },
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [

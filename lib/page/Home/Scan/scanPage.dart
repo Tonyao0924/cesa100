@@ -1,11 +1,6 @@
 import 'dart:async';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/painting.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_ttc_ble/flutter_ttc_ble.dart';
-import 'package:flutter_ttc_ble/scan_screen.dart';
 
 class ScanPage extends StatefulWidget {
   const ScanPage({super.key});
@@ -14,7 +9,7 @@ class ScanPage extends StatefulWidget {
   State<ScanPage> createState() => _ScanPageState();
 }
 
-class _ScanPageState extends State<ScanPage> with BleCallback2{
+class _ScanPageState extends State<ScanPage> with BleCallback2 {
   List<BLEDevice> _devices = [];
   late Timer timer;
 
@@ -22,7 +17,7 @@ class _ScanPageState extends State<ScanPage> with BleCallback2{
   void initState() {
     super.initState();
     bleProxy.addBleCallback(this);
-    timer = new Timer.periodic(Duration(milliseconds: 200), (timer) {
+    timer = Timer.periodic(Duration(milliseconds: 200), (timer) {
       setState(() {});
     });
   }
@@ -46,7 +41,6 @@ class _ScanPageState extends State<ScanPage> with BleCallback2{
       }
     });
   }
-
 
   void stopscan() {
     FlutterTtcBle.stopLeScan();
@@ -97,7 +91,6 @@ class _ScanPageState extends State<ScanPage> with BleCallback2{
                       ),
                     ),
                     onPressed: () {
-                      // stopscan();
                       print(_devices.length);
                     },
                     child: Text(
@@ -119,7 +112,7 @@ class _ScanPageState extends State<ScanPage> with BleCallback2{
             Divider(),
             ...List.generate(
               _devices.length,
-              (index) => Container(
+                  (index) => Container(
                 padding: EdgeInsets.symmetric(horizontal: width * 0.1, vertical: 5),
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -135,31 +128,34 @@ class _ScanPageState extends State<ScanPage> with BleCallback2{
                   child: Row(
                     children: [
                       Icon(Icons.bluetooth, size: 30),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              "${_devices[index].name}",
-                            ),
-                          ),
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              "${_devices[index].deviceId}",
-                              style: TextStyle(
-                                fontSize: 9, // todo edit this
+                      SizedBox(width: 10), // Add space between the icon and text
+                      Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                "${_devices[index].name}",
+                                overflow: TextOverflow.ellipsis, // Add ellipsis if text overflows
                               ),
                             ),
-                          ),
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              "${_devices[index].rssi}",
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                "${_devices[index].deviceId}",
+                                overflow: TextOverflow.ellipsis, // Add ellipsis if text overflows
+                              ),
                             ),
-                          ),
-                        ],
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                "${_devices[index].rssi}",
+                                overflow: TextOverflow.ellipsis, // Add ellipsis if text overflows
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
