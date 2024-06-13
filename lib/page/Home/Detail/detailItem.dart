@@ -188,15 +188,15 @@ class _DetailItemState extends State<DetailItem> {
                       Image(
                         image: AssetImage(widget.rowData.src),
                         fit: BoxFit.scaleDown,
-                        width: 30,
-                        height: 30,
+                        width: 40,
+                        height: 40,
                       ),
                       FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
                           '${widget.rowData.number}',
                           style: const TextStyle(
-                            fontSize: 16,
+                            fontSize: 20,
                             color: Colors.black,
                           ),
                         ),
@@ -310,6 +310,15 @@ class _DetailItemState extends State<DetailItem> {
                           ),
                         ),
                       ),
+                      Expanded(
+                        child: Image.asset(
+                          'assets/home/arrow_90angle.png',
+                          width: 20,
+                          height: 20,
+                          fit: BoxFit.scaleDown,
+                        ),
+                      ),
+                      Spacer(),
                     ],
                   ),
                 ),
@@ -317,6 +326,7 @@ class _DetailItemState extends State<DetailItem> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
+                      Spacer(),
                       const Image(
                         image: AssetImage('assets/home/temperature.png'),
                         fit: BoxFit.scaleDown,
@@ -332,7 +342,15 @@ class _DetailItemState extends State<DetailItem> {
                             color: Colors.black,
                           ),
                         ),
-                      )
+                      ),
+                      Expanded(
+                        child: Image.asset(
+                          'assets/home/arrow_90angle.png',
+                          width: 20,
+                          height: 20,
+                          fit: BoxFit.scaleDown,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -351,7 +369,6 @@ class _DetailItemState extends State<DetailItem> {
                 crosshairBehavior: _crosshairBehavior,
                 onActualRangeChanged: (ActualRangeChangedArgs args) {
                   _debounce?.cancel();
-                  print(args.visibleMin);
 
                   _debounce = Timer(const Duration(milliseconds: 100), () {
                     if (args.visibleMin != 0) {
@@ -494,14 +511,14 @@ class _DetailItemState extends State<DetailItem> {
         child: Row(
           children: [
             Expanded(
-              flex: 2,
+              flex: 1,
               child: Align(
                 alignment: Alignment.centerRight,
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
                     '${ranges[i]}：',
-                    style: TextStyle(fontSize: 14),
+                    style: TextStyle(fontSize: 10),
                   ),
                 ),
               ),
@@ -510,7 +527,8 @@ class _DetailItemState extends State<DetailItem> {
               flex: 5,
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  final tmpWidth = (constraints.maxWidth * percentage / 100).clamp(0.0, constraints.maxWidth);
+                  final maxBarWidth = constraints.maxWidth * 0.8;
+                  final tmpWidth = (maxBarWidth * percentage / 100).clamp(0.0, maxBarWidth);
                   return Row(
                     children: [
                       Container(
@@ -524,7 +542,7 @@ class _DetailItemState extends State<DetailItem> {
                       SizedBox(width: 5),
                       Text(
                         '${percentage.toStringAsFixed(2)}%',
-                        style: TextStyle(fontSize: 14),
+                        style: TextStyle(fontSize: 10),
                       ),
                     ],
                   );

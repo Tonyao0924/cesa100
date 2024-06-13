@@ -18,6 +18,7 @@ class ModifyItem extends StatefulWidget {
 class _ModifyItemState extends State<ModifyItem> {
   File? _image;
   final picker = ImagePicker();
+  final ImagePicker _picker = ImagePicker();
 
   Future getImageGallery() async {
     final pickedFile = await picker.pickImage(
@@ -32,6 +33,17 @@ class _ModifyItemState extends State<ModifyItem> {
         print('No image picker');
       }
     });
+  }
+
+  Future<void> _pickImageFromCamera() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.camera);
+
+    if (pickedFile != null) {
+      setState(() {
+        _image = File(pickedFile.path);
+      });
+      print(pickedFile);
+    }
   }
 
   @override
@@ -282,7 +294,9 @@ class _ModifyItemState extends State<ModifyItem> {
                     borderRadius: BorderRadius.circular(0),
                   ),
                 ),
-                onPressed: () {},
+                onPressed: () {
+                  _pickImageFromCamera();
+                },
                 child: Row(
                   children: [
                     const Image(
