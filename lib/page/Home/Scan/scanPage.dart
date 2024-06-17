@@ -92,6 +92,7 @@ class _ScanPageState extends State<ScanPage> with BleCallback2 {
                     ),
                     onPressed: () {
                       print(_devices.length);
+                      stopscan();
                     },
                     child: Text(
                       'Stop',

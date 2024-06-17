@@ -21,7 +21,6 @@ class DetailItem extends StatefulWidget {
 class _DetailItemState extends State<DetailItem> {
   late ZoomPanBehavior _zoomPanBehavior;
   late TooltipBehavior _tooltipBehavior;
-  late TrackballBehavior _trackballBehavior;
   late CrosshairBehavior _crosshairBehavior; // 十字線
   List<dynamic>? futureData; //讀取資料
   List<ChartData> bloodSugarLens = []; //圖表血糖軸
@@ -59,11 +58,6 @@ class _DetailItemState extends State<DetailItem> {
       borderColor: Colors.red,
       borderWidth: 5,
       color: Colors.lightBlue,
-    );
-    _trackballBehavior = TrackballBehavior(
-      // Enables the trackball
-      enable: false,
-      tooltipSettings: const InteractiveTooltip(enable: true, color: Colors.red),
     );
     _crosshairBehavior = CrosshairBehavior(
       enable: true,
@@ -166,7 +160,7 @@ class _DetailItemState extends State<DetailItem> {
   Widget build(BuildContext context) {
     int width = MediaQuery.of(context).size.width.toInt();
     int height = MediaQuery.of(context).size.height.toInt();
-    if (_tooltipBehavior == null && _trackballBehavior == null && _crosshairBehavior == null || futureData == null) {
+    if (_tooltipBehavior == null && _crosshairBehavior == null || futureData == null) {
       return const Scaffold(
         body: Center(
           child: CircularProgressIndicator(),
@@ -208,71 +202,19 @@ class _DetailItemState extends State<DetailItem> {
             ),
           ),
           SizedBox(height: height * 0.01),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: width * 0.05),
-            child: Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: chooseBloodSugar ? Colors.blue : Colors.white,
-                      splashFactory: NoSplash.splashFactory,
-                      elevation: 0,
-                      shadowColor: Colors.transparent,
-                      minimumSize: Size(width * 0.3, 40),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      side: const BorderSide(width: 1, color: Colors.black),
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        chooseBloodSugar = true;
-                      });
-                    },
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        'Blood sugar',
-                        style: TextStyle(
-                          color: chooseBloodSugar ? Colors.white : Colors.black,
-                        ),
-                      ),
-                    ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  'Time In Range',
+                  style: TextStyle(
+                    fontSize: 14,
                   ),
                 ),
-                SizedBox(width: width * 0.15),
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: chooseBloodSugar ? Colors.white : Colors.blue,
-                      splashFactory: NoSplash.splashFactory,
-                      elevation: 0,
-                      shadowColor: Colors.transparent,
-                      minimumSize: Size(width * 0.3, 40),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      side: const BorderSide(width: 1, color: Colors.black),
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        chooseBloodSugar = false;
-                      });
-                    },
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        'Temperature',
-                        style: TextStyle(
-                          color: chooseBloodSugar ? Colors.black : Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              )
+            ],
           ),
           Container(
             padding: EdgeInsets.symmetric(horizontal: width * 0.05),
@@ -281,11 +223,12 @@ class _DetailItemState extends State<DetailItem> {
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: _getTextList(chooseBloodSugar, displayBloodSugarTIR, displayTemperatureTIR, dataCount),
+                  children: _getTextList(displayBloodSugarTIR, displayTemperatureTIR, dataCount),
                 ),
               ],
             ),
           ),
+          SizedBox(height: height * 0.01),
           Container(
             padding: EdgeInsets.symmetric(horizontal: width * 0.1),
             child: Row(
@@ -303,16 +246,28 @@ class _DetailItemState extends State<DetailItem> {
                       FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
-                          '${widget.rowData.bloodSugar} mg/dl',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.black,
-                          ),
+                          '${widget.rowData.bloodSugar}',
+                          style: const TextStyle(fontSize: 28, color: Colors.black, fontWeight: FontWeight.bold),
                         ),
+                      ),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              'mg/dl',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       Expanded(
                         child: Image.asset(
-                          'assets/home/arrow_90angle.png',
+                          'assets/home/arrow_-90angle.png',
                           width: 20,
                           height: 20,
                           fit: BoxFit.scaleDown,
@@ -345,7 +300,7 @@ class _DetailItemState extends State<DetailItem> {
                       ),
                       Expanded(
                         child: Image.asset(
-                          'assets/home/arrow_90angle.png',
+                          'assets/home/arrow_45angle.png',
                           width: 20,
                           height: 20,
                           fit: BoxFit.scaleDown,
@@ -365,7 +320,6 @@ class _DetailItemState extends State<DetailItem> {
               child: SfCartesianChart(
                 zoomPanBehavior: _zoomPanBehavior,
                 tooltipBehavior: _tooltipBehavior,
-                trackballBehavior: _trackballBehavior,
                 crosshairBehavior: _crosshairBehavior,
                 onActualRangeChanged: (ActualRangeChangedArgs args) {
                   _debounce?.cancel();
@@ -375,12 +329,6 @@ class _DetailItemState extends State<DetailItem> {
                       setState(() {
                         minX = DateTime.fromMillisecondsSinceEpoch((args.visibleMin).toInt());
                         maxX = DateTime.fromMillisecondsSinceEpoch((args.visibleMax).toInt());
-
-                        // if (chooseBloodSugar) {
-                        //   visibleBloodSugarData = bloodSugarLens.where((data) => data.x.isAfter(minX) && data.x.isBefore(maxX)).toList();
-                        // } else {
-                        //   visibleTemperatureData = temperatureLens.where((data) => data.x.isAfter(minX) && data.x.isBefore(maxX)).toList();
-                        // }
                         print('------');
                         print(minX);
                         print(maxX);
@@ -463,7 +411,7 @@ class _DetailItemState extends State<DetailItem> {
                 series: <CartesianSeries>[
                   if (_chartState == 0 || _chartState == 1)
                     LineSeries<ChartData, DateTime>(
-                      color: Colors.deepOrange,
+                      color: Colors.deepOrangeAccent,
                       dataSource: bloodSugarLens,
                       xValueMapper: (ChartData data, _) => data.x,
                       yValueMapper: (ChartData data, _) => data.y,
@@ -486,9 +434,19 @@ class _DetailItemState extends State<DetailItem> {
             margin: const EdgeInsets.only(bottom: 15),
             child: Row(
               children: [
-                Text('Avg. BG：${avgBloodSugar.toStringAsFixed(2)}'),
+                Text(
+                  'Avg. BG：${avgBloodSugar.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    color: Colors.deepOrangeAccent,
+                  ),
+                ),
                 const Spacer(),
-                Text('Avg. TEMP：${avgTemperature.toStringAsFixed(2)}'),
+                Text(
+                  'Avg. TEMP：${avgTemperature.toStringAsFixed(1)}',
+                  style: TextStyle(
+                    color: Colors.blue,
+                  ),
+                ),
               ],
             ),
           ),
@@ -497,61 +455,188 @@ class _DetailItemState extends State<DetailItem> {
     );
   }
 
-  List<Widget> _getTextList(
-      bool chooseBloodSugar, List<int> displayBloodSugarTIR, List<int> displayTemperatureTIR, int length) {
-    List<String> ranges =
-        chooseBloodSugar ? ['>300', '200~300', '126~200', '90~126', '<90'] : ['>42', '40~42', '38~40', '36~38', '<36'];
-    List<int> displayTIR = chooseBloodSugar ? displayBloodSugarTIR : displayTemperatureTIR;
-    Color barColor = chooseBloodSugar ? Colors.deepOrange : Colors.blue;
+  List<Widget> _getTextList(List<int> displayBloodSugarTIR, List<int> displayTemperatureTIR, int length) {
+    List<String> ranges = ['>300', '200~300', '126~200', '90~126', '<90'];
+    List<Color> colors = [Colors.red, Colors.blue, Colors.green, Colors.orange, Colors.red];
 
-    return List.generate(ranges.length, (i) {
-      double percentage = length > 0 ? (displayTIR[i] / length) * 100 : 0;
-      return Container(
-        width: MediaQuery.of(context).size.width * 0.9,
-        child: Row(
-          children: [
-            Expanded(
-              flex: 1,
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    '${ranges[i]}：',
-                    style: TextStyle(fontSize: 10),
+    double calculatePercentage(int value, int length) {
+      return length > 0 ? (value / length) * 100 : 0;
+    }
+
+    int firstBgNonZeroIndex = displayBloodSugarTIR.indexWhere((value) => value > 0);
+    int lastBgNonZeroIndex = displayBloodSugarTIR.lastIndexWhere((value) => value > 0);
+    int firstTempNonZeroIndex = displayTemperatureTIR.indexWhere((value) => value > 0);
+    int lastTempNonZeroIndex = displayTemperatureTIR.lastIndexWhere((value) => value > 0);
+
+    return [
+      Opacity(
+        opacity: _chartState == 0 || _chartState == 1 ? 1.0 : 0.0,
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.9,
+          child: Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: Align(
+                  alignment: Alignment.center,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      'BG. ',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.deepOrangeAccent,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-            Expanded(
-              flex: 5,
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final maxBarWidth = constraints.maxWidth * 0.8;
-                  final tmpWidth = (maxBarWidth * percentage / 100).clamp(0.0, maxBarWidth);
-                  return Row(
-                    children: [
-                      Container(
-                        width: tmpWidth,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: barColor,
-                          borderRadius: BorderRadius.circular(4.0),
+              Expanded(
+                flex: 14,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    double maxBarWidth = constraints.maxWidth;
+                    return Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: Row(
+                        children: List.generate(ranges.length, (i) {
+                          double percentage = calculatePercentage(displayBloodSugarTIR[i], length);
+                          final tmpWidth = (maxBarWidth * percentage / 100).clamp(0.0, maxBarWidth);
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 5),
+                            child: Stack(
+                              children: [
+                                Container(
+                                  width: tmpWidth,
+                                  height: 16,
+                                  decoration: BoxDecoration(
+                                    color: colors[i],
+                                    borderRadius: BorderRadius.horizontal(
+                                      left: i == firstBgNonZeroIndex ? Radius.circular(5) : Radius.zero,
+                                      right: i == lastBgNonZeroIndex ? Radius.circular(5) : Radius.zero,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black26,
+                                        blurRadius: 4.0,
+                                        spreadRadius: 1.0,
+                                        offset: Offset(2, 2), // 阴影的偏移量
+                                      ),
+                                    ],
+                                  ),
+                                  child: Align(
+                                    alignment: Alignment.center,
+                                    child: percentage >= 10
+                                        ? Text(
+                                      '${percentage.toStringAsFixed(0)}%',
+                                      style: TextStyle(fontSize: 8, color: Colors.white),
+                                    )
+                                        : null,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              Spacer(
+                flex: 2,
+              ),
+            ],
+          ),
+        ),
+      ),
+      SizedBox(height: 5),
+      Opacity(
+        opacity: _chartState == 0 || _chartState == 2 ? 1.0 : 0.0,
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.9,
+          child: Row(
+            children: [
+              Spacer(
+                flex: 2,
+              ),
+              Expanded(
+                flex: 14,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    double maxBarWidth = constraints.maxWidth;
+                    return Row(
+                      children: List.generate(ranges.length, (i) {
+                        double percentage = calculatePercentage(displayTemperatureTIR[i], length);
+                        final tmpWidth = (maxBarWidth * percentage / 100).clamp(0.0, maxBarWidth);
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 5),
+                          child: Stack(
+                            children: [
+                              Container(
+                                width: tmpWidth,
+                                height: 16,
+                                decoration: BoxDecoration(
+                                  color: colors[i],
+                                  borderRadius: BorderRadius.horizontal(
+                                    left: i == firstTempNonZeroIndex ? Radius.circular(5) : Radius.zero,
+                                    right: i == lastTempNonZeroIndex ? Radius.circular(5) : Radius.zero,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black26,
+                                      blurRadius: 4.0,
+                                      spreadRadius: 1.0,
+                                      offset: Offset(2, 2), // 阴影的偏移量
+                                    ),
+                                  ],
+                                ),
+                                child: Align(
+                                  alignment: Alignment.center,
+                                  child: percentage >= 10
+                                      ? Text(
+                                    '${percentage.toStringAsFixed(0)}%',
+                                    style: TextStyle(fontSize: 8, color: Colors.white),
+                                  )
+                                      : null,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                    );
+                  },
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        ' TEMP.',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
                         ),
                       ),
-                      SizedBox(width: 5),
-                      Text(
-                        '${percentage.toStringAsFixed(2)}%',
-                        style: TextStyle(fontSize: 10),
-                      ),
-                    ],
-                  );
-                },
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      );
-    });
+      ),
+    ];
   }
+
 }

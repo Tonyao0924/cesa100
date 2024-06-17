@@ -217,8 +217,10 @@ class _ModifyItemState extends State<ModifyItem> {
   Future<void> _showCustomModalBottomSheet(int width, int height) async {
     return showModalBottomSheet(
       context: context,
+      isScrollControlled: true, // This makes the modal bottom sheet take full height
       builder: (BuildContext context) {
         return Container(
+          height: 300, // Fixed height for the modal bottom sheet
           padding: const EdgeInsets.only(top: 8),
           decoration: const BoxDecoration(
             color: Colors.white,
@@ -226,8 +228,6 @@ class _ModifyItemState extends State<ModifyItem> {
               top: Radius.circular(10),
             ),
           ),
-          height: 300,
-          width: width * 1,
           child: Column(
             children: [
               Container(
@@ -395,4 +395,5 @@ class _ModifyItemState extends State<ModifyItem> {
       },
     );
   }
+
 }
