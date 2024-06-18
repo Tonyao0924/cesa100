@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:cesa100/page/Home/Detail/editTIR.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -216,21 +217,41 @@ class _DetailItemState extends State<DetailItem> {
               )
             ],
           ),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: width * 0.05),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: _getTextList(displayBloodSugarTIR, displayTemperatureTIR, dataCount),
+          GestureDetector(
+            onTap: (){
+              Navigator.push(
+                context,
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) => EditTIRPage(),
+                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                    const begin = Offset(1.0, 0.0);
+                    const end = Offset.zero;
+                    const curve = Curves.ease;
+                    var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                    return SlideTransition(
+                      position: animation.drive(tween),
+                      child: child,
+                    );
+                  },
                 ),
-              ],
+              );
+            },
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: width * 0.05),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: _getTextList(displayBloodSugarTIR, displayTemperatureTIR, dataCount),
+                  ),
+                ],
+              ),
             ),
           ),
           SizedBox(height: height * 0.01),
           Container(
-            padding: EdgeInsets.symmetric(horizontal: width * 0.1),
+            padding: EdgeInsets.symmetric(horizontal: width * 0.05),
             child: Row(
               children: [
                 Expanded(
@@ -240,30 +261,31 @@ class _DetailItemState extends State<DetailItem> {
                       const Image(
                         image: AssetImage('assets/home/bloodsugar.png'),
                         fit: BoxFit.scaleDown,
-                        width: 25,
-                        height: 25,
+                        width: 30,
+                        height: 30,
                       ),
                       FittedBox(
                         fit: BoxFit.scaleDown,
-                        child: Text(
-                          '${widget.rowData.bloodSugar}',
-                          style: const TextStyle(fontSize: 28, color: Colors.black, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              'mg/dl',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.black,
+                        child: Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                text: '${widget.rowData.bloodSugar}',
+                                style: const TextStyle(
+                                  fontSize: 28, // 放大這裡的字體
+                                  color: Colors.black,
+                                ),
                               ),
-                            ),
+                              TextSpan(
+                                text: 'mg/dl',
+                                style: const TextStyle(
+                                  fontSize: 10, // 這裡保持原來的字體大小
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                       Expanded(
                         child: Image.asset(
@@ -285,16 +307,29 @@ class _DetailItemState extends State<DetailItem> {
                       const Image(
                         image: AssetImage('assets/home/temperature.png'),
                         fit: BoxFit.scaleDown,
-                        width: 25,
-                        height: 25,
+                        width: 30,
+                        height: 30,
                       ),
                       FittedBox(
                         fit: BoxFit.scaleDown,
-                        child: Text(
-                          '${widget.rowData.temperature} ℃',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.black,
+                        child: Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                text: '${widget.rowData.temperature}',
+                                style: const TextStyle(
+                                  fontSize: 28, // 放大這裡的字體
+                                  color: Colors.black,
+                                ),
+                              ),
+                              TextSpan(
+                                text: ' ℃',
+                                style: const TextStyle(
+                                  fontSize: 10, // 這裡保持原來的字體大小
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -313,143 +348,296 @@ class _DetailItemState extends State<DetailItem> {
             ),
           ),
           Expanded(
-            child: GestureDetector(
-              onTap: () {
-                _toggleChartState();
-              },
-              child: SfCartesianChart(
-                zoomPanBehavior: _zoomPanBehavior,
-                tooltipBehavior: _tooltipBehavior,
-                crosshairBehavior: _crosshairBehavior,
-                onActualRangeChanged: (ActualRangeChangedArgs args) {
-                  _debounce?.cancel();
+            child: Stack(
+              children: [
+                // 图表部分
+                Positioned.fill(
+                  child: Container(
+                    padding: EdgeInsets.only(bottom: height * 0.03),
+                    child: GestureDetector(
+                      onTap: () {
+                        _toggleChartState();
+                      },
+                      child: SfCartesianChart(
+                        zoomPanBehavior: _zoomPanBehavior,
+                        tooltipBehavior: _tooltipBehavior,
+                        crosshairBehavior: _crosshairBehavior,
+                        onActualRangeChanged: (ActualRangeChangedArgs args) {
+                          _debounce?.cancel();
 
-                  _debounce = Timer(const Duration(milliseconds: 100), () {
-                    if (args.visibleMin != 0) {
-                      setState(() {
-                        minX = DateTime.fromMillisecondsSinceEpoch((args.visibleMin).toInt());
-                        maxX = DateTime.fromMillisecondsSinceEpoch((args.visibleMax).toInt());
-                        print('------');
-                        print(minX);
-                        print(maxX);
-                        if (futureData != null) {
-                          List<dynamic> data = futureData!;
-                          List<double> totalCurrent = [];
-                          List<double> totalTemperature = [];
-                          bloodSugarTIR = [0, 0, 0, 0, 0];
-                          temperatureTIR = [0, 0, 0, 0, 0];
-                          dataCount = 0;
-                          for (var item in data) {
-                            DateTime itemDateTime = DateTime.parse(item['DateTime']);
-                            if (itemDateTime.isAfter(minX) && itemDateTime.isBefore(maxX)) {
-                              // print('DateTime: ${item['DateTime']}, Current_A: ${item['Current_A']}, Temperature_C: ${item['Temperature_C']}, machine_id: ${item['machine_id']}');
-                              double current =
-                                  item['Current_A'] is double ? item['Current_A'] : item['Current_A'].toDouble();
-                              double temperature = item['Temperature_C'] is double
-                                  ? item['Temperature_C']
-                                  : item['Temperature_C'].toDouble();
-                              totalCurrent.add(current);
-                              totalTemperature.add(temperature);
-                              putTIRData(current, temperature);
-                              dataCount++;
+                          _debounce = Timer(const Duration(milliseconds: 100), () {
+                            if (args.visibleMin != 0) {
+                              setState(() {
+                                minX = DateTime.fromMillisecondsSinceEpoch((args.visibleMin).toInt());
+                                maxX = DateTime.fromMillisecondsSinceEpoch((args.visibleMax).toInt());
+                                print('------');
+                                print(minX);
+                                print(maxX);
+                                if (futureData != null) {
+                                  List<dynamic> data = futureData!;
+                                  List<double> totalCurrent = [];
+                                  List<double> totalTemperature = [];
+                                  bloodSugarTIR = [0, 0, 0, 0, 0];
+                                  temperatureTIR = [0, 0, 0, 0, 0];
+                                  dataCount = 0;
+                                  for (var item in data) {
+                                    DateTime itemDateTime = DateTime.parse(item['DateTime']);
+                                    if (itemDateTime.isAfter(minX) && itemDateTime.isBefore(maxX)) {
+                                      // print('DateTime: ${item['DateTime']}, Current_A: ${item['Current_A']}, Temperature_C: ${item['Temperature_C']}, machine_id: ${item['machine_id']}');
+                                      double current =
+                                          item['Current_A'] is double ? item['Current_A'] : item['Current_A'].toDouble();
+                                      double temperature = item['Temperature_C'] is double
+                                          ? item['Temperature_C']
+                                          : item['Temperature_C'].toDouble();
+                                      totalCurrent.add(current);
+                                      totalTemperature.add(temperature);
+                                      putTIRData(current, temperature);
+                                      dataCount++;
+                                    }
+                                  }
+                                  avgBloodSugar = totalCurrent.isNotEmpty
+                                      ? totalCurrent.reduce((a, b) => a + b) / totalCurrent.length
+                                      : 0.0;
+                                  avgTemperature = totalTemperature.isNotEmpty
+                                      ? totalTemperature.reduce((a, b) => a + b) / totalTemperature.length
+                                      : 0.0;
+                                  displayTemperatureTIR = temperatureTIR;
+                                  displayBloodSugarTIR = bloodSugarTIR;
+                                }
+                              });
                             }
-                          }
-                          avgBloodSugar = totalCurrent.isNotEmpty
-                              ? totalCurrent.reduce((a, b) => a + b) / totalCurrent.length
-                              : 0.0;
-                          avgTemperature = totalTemperature.isNotEmpty
-                              ? totalTemperature.reduce((a, b) => a + b) / totalTemperature.length
-                              : 0.0;
-                          displayTemperatureTIR = temperatureTIR;
-                          displayBloodSugarTIR = bloodSugarTIR;
-                        }
-                      });
-                    }
-                  });
-                },
-                primaryXAxis: DateTimeAxis(
-                  // intervalType: DateTimeIntervalType.minutes,
-                  title: const AxisTitle(text: 'Time'),
-                  rangePadding: ChartRangePadding.round,
-                  initialVisibleMinimum: minX,
-                  initialVisibleMaximum: maxX,
-                  // autoScrollingDeltaType: DateTimeIntervalType.months, //自動滾動Delta類型
-                ),
-                primaryYAxis: NumericAxis(
-                  interval: 40,
-                  // interval: primaryYAxisInterval,
-                  // minimum: primaryYAxisMin,
-                  // maximum: primaryYAxisMax,
-                  title: AxisTitle(
-                    text: 'mg/dl',
-                    textStyle: TextStyle(
-                      color: _chartState == 0 || _chartState == 1 ? Colors.deepOrange : Colors.transparent,
-                    ),
-                  ),
-                  labelStyle: TextStyle(
-                    color: _chartState == 0 || _chartState == 1 ? Colors.deepOrange : Colors.transparent,
-                  ),
-                ),
-                axes: <ChartAxis>[
-                  NumericAxis(
-                    name: 'secondaryYAxis',
-                    opposedPosition: true,
-                    // interval: secondaryYAxisInterval,
-                    // minimum: secondaryYAxisMin,
-                    // maximum: secondaryYAxisMax,
-                    title: AxisTitle(
-                      text: '℃',
-                      textStyle: TextStyle(
-                        color: _chartState == 0 || _chartState == 2 ? Colors.blue : Colors.transparent,
+                          });
+                        },
+                        primaryXAxis: DateTimeAxis(
+                          // intervalType: DateTimeIntervalType.minutes,
+                          title: const AxisTitle(text: 'Time'),
+                          rangePadding: ChartRangePadding.round,
+                          initialVisibleMinimum: minX,
+                          initialVisibleMaximum: maxX,
+                          // autoScrollingDeltaType: DateTimeIntervalType.months, //自動滾動Delta類型
+                        ),
+                        primaryYAxis: NumericAxis(
+                          interval: 40,
+                          // interval: primaryYAxisInterval,
+                          // minimum: primaryYAxisMin,
+                          // maximum: primaryYAxisMax,
+                          title: AxisTitle(
+                            text: 'mg/dl',
+                            textStyle: TextStyle(
+                              color: _chartState == 0 || _chartState == 1 ? Colors.deepOrange : Colors.transparent,
+                            ),
+                          ),
+                          labelStyle: TextStyle(
+                            color: _chartState == 0 || _chartState == 1 ? Colors.deepOrange : Colors.transparent,
+                          ),
+                        ),
+                        axes: <ChartAxis>[
+                          NumericAxis(
+                            name: 'secondaryYAxis',
+                            opposedPosition: true,
+                            // interval: secondaryYAxisInterval,
+                            // minimum: secondaryYAxisMin,
+                            // maximum: secondaryYAxisMax,
+                            title: AxisTitle(
+                              text: '℃',
+                              textStyle: TextStyle(
+                                color: _chartState == 0 || _chartState == 2 ? Colors.blue : Colors.transparent,
+                              ),
+                            ),
+                            labelStyle: TextStyle(
+                              color: _chartState == 0 || _chartState == 2 ? Colors.blue : Colors.transparent,
+                            ),
+                          ),
+                        ],
+                        series: <CartesianSeries>[
+                          if (_chartState == 0 || _chartState == 1)
+                            LineSeries<ChartData, DateTime>(
+                              color: Colors.deepOrangeAccent,
+                              dataSource: bloodSugarLens,
+                              xValueMapper: (ChartData data, _) => data.x,
+                              yValueMapper: (ChartData data, _) => data.y,
+                            ),
+                          if (_chartState == 0 || _chartState == 2)
+                            LineSeries<ChartData, DateTime>(
+                              color: Colors.blue,
+                              dataSource: temperatureLens,
+                              xValueMapper: (ChartData data, _) => data.x,
+                              yValueMapper: (ChartData data, _) => data.y,
+                              yAxisName: 'secondaryYAxis',
+                              name: '℃',
+                            ),
+                        ],
                       ),
                     ),
-                    labelStyle: TextStyle(
-                      color: _chartState == 0 || _chartState == 2 ? Colors.blue : Colors.transparent,
-                    ),
-                  ),
-                ],
-                series: <CartesianSeries>[
-                  if (_chartState == 0 || _chartState == 1)
-                    LineSeries<ChartData, DateTime>(
-                      color: Colors.deepOrangeAccent,
-                      dataSource: bloodSugarLens,
-                      xValueMapper: (ChartData data, _) => data.x,
-                      yValueMapper: (ChartData data, _) => data.y,
-                    ),
-                  if (_chartState == 0 || _chartState == 2)
-                    LineSeries<ChartData, DateTime>(
-                      color: Colors.blue,
-                      dataSource: temperatureLens,
-                      xValueMapper: (ChartData data, _) => data.x,
-                      yValueMapper: (ChartData data, _) => data.y,
-                      yAxisName: 'secondaryYAxis',
-                      name: '℃',
-                    ),
-                ],
-              ),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            margin: const EdgeInsets.only(bottom: 15),
-            child: Row(
-              children: [
-                Text(
-                  'Avg. BG：${avgBloodSugar.toStringAsFixed(2)}',
-                  style: TextStyle(
-                    color: Colors.deepOrangeAccent,
                   ),
                 ),
-                const Spacer(),
-                Text(
-                  'Avg. TEMP：${avgTemperature.toStringAsFixed(1)}',
-                  style: TextStyle(
-                    color: Colors.blue,
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0, // 固定在底部
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    margin: const EdgeInsets.only(bottom: 15),
+                    child: Row(
+                      children: [
+                        Text(
+                          'Avg. BG：\n${avgBloodSugar.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            color: Colors.deepOrangeAccent,
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          'Avg. TEMP：\n${avgTemperature.toStringAsFixed(1)}',
+                          style: TextStyle(
+                            color: Colors.blue,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
             ),
           ),
+          // Expanded(
+          //   child: GestureDetector(
+          //     onTap: () {
+          //       _toggleChartState();
+          //     },
+          //     child: SfCartesianChart(
+          //       zoomPanBehavior: _zoomPanBehavior,
+          //       tooltipBehavior: _tooltipBehavior,
+          //       crosshairBehavior: _crosshairBehavior,
+          //       onActualRangeChanged: (ActualRangeChangedArgs args) {
+          //         _debounce?.cancel();
+          //
+          //         _debounce = Timer(const Duration(milliseconds: 100), () {
+          //           if (args.visibleMin != 0) {
+          //             setState(() {
+          //               minX = DateTime.fromMillisecondsSinceEpoch((args.visibleMin).toInt());
+          //               maxX = DateTime.fromMillisecondsSinceEpoch((args.visibleMax).toInt());
+          //               print('------');
+          //               print(minX);
+          //               print(maxX);
+          //               if (futureData != null) {
+          //                 List<dynamic> data = futureData!;
+          //                 List<double> totalCurrent = [];
+          //                 List<double> totalTemperature = [];
+          //                 bloodSugarTIR = [0, 0, 0, 0, 0];
+          //                 temperatureTIR = [0, 0, 0, 0, 0];
+          //                 dataCount = 0;
+          //                 for (var item in data) {
+          //                   DateTime itemDateTime = DateTime.parse(item['DateTime']);
+          //                   if (itemDateTime.isAfter(minX) && itemDateTime.isBefore(maxX)) {
+          //                     // print('DateTime: ${item['DateTime']}, Current_A: ${item['Current_A']}, Temperature_C: ${item['Temperature_C']}, machine_id: ${item['machine_id']}');
+          //                     double current =
+          //                         item['Current_A'] is double ? item['Current_A'] : item['Current_A'].toDouble();
+          //                     double temperature = item['Temperature_C'] is double
+          //                         ? item['Temperature_C']
+          //                         : item['Temperature_C'].toDouble();
+          //                     totalCurrent.add(current);
+          //                     totalTemperature.add(temperature);
+          //                     putTIRData(current, temperature);
+          //                     dataCount++;
+          //                   }
+          //                 }
+          //                 avgBloodSugar = totalCurrent.isNotEmpty
+          //                     ? totalCurrent.reduce((a, b) => a + b) / totalCurrent.length
+          //                     : 0.0;
+          //                 avgTemperature = totalTemperature.isNotEmpty
+          //                     ? totalTemperature.reduce((a, b) => a + b) / totalTemperature.length
+          //                     : 0.0;
+          //                 displayTemperatureTIR = temperatureTIR;
+          //                 displayBloodSugarTIR = bloodSugarTIR;
+          //               }
+          //             });
+          //           }
+          //         });
+          //       },
+          //       primaryXAxis: DateTimeAxis(
+          //         // intervalType: DateTimeIntervalType.minutes,
+          //         title: const AxisTitle(text: 'Time'),
+          //         rangePadding: ChartRangePadding.round,
+          //         initialVisibleMinimum: minX,
+          //         initialVisibleMaximum: maxX,
+          //         // autoScrollingDeltaType: DateTimeIntervalType.months, //自動滾動Delta類型
+          //       ),
+          //       primaryYAxis: NumericAxis(
+          //         interval: 40,
+          //         // interval: primaryYAxisInterval,
+          //         // minimum: primaryYAxisMin,
+          //         // maximum: primaryYAxisMax,
+          //         title: AxisTitle(
+          //           text: 'mg/dl',
+          //           textStyle: TextStyle(
+          //             color: _chartState == 0 || _chartState == 1 ? Colors.deepOrange : Colors.transparent,
+          //           ),
+          //         ),
+          //         labelStyle: TextStyle(
+          //           color: _chartState == 0 || _chartState == 1 ? Colors.deepOrange : Colors.transparent,
+          //         ),
+          //       ),
+          //       axes: <ChartAxis>[
+          //         NumericAxis(
+          //           name: 'secondaryYAxis',
+          //           opposedPosition: true,
+          //           // interval: secondaryYAxisInterval,
+          //           // minimum: secondaryYAxisMin,
+          //           // maximum: secondaryYAxisMax,
+          //           title: AxisTitle(
+          //             text: '℃',
+          //             textStyle: TextStyle(
+          //               color: _chartState == 0 || _chartState == 2 ? Colors.blue : Colors.transparent,
+          //             ),
+          //           ),
+          //           labelStyle: TextStyle(
+          //             color: _chartState == 0 || _chartState == 2 ? Colors.blue : Colors.transparent,
+          //           ),
+          //         ),
+          //       ],
+          //       series: <CartesianSeries>[
+          //         if (_chartState == 0 || _chartState == 1)
+          //           LineSeries<ChartData, DateTime>(
+          //             color: Colors.deepOrangeAccent,
+          //             dataSource: bloodSugarLens,
+          //             xValueMapper: (ChartData data, _) => data.x,
+          //             yValueMapper: (ChartData data, _) => data.y,
+          //           ),
+          //         if (_chartState == 0 || _chartState == 2)
+          //           LineSeries<ChartData, DateTime>(
+          //             color: Colors.blue,
+          //             dataSource: temperatureLens,
+          //             xValueMapper: (ChartData data, _) => data.x,
+          //             yValueMapper: (ChartData data, _) => data.y,
+          //             yAxisName: 'secondaryYAxis',
+          //             name: '℃',
+          //           ),
+          //       ],
+          //     ),
+          //   ),
+          // ),
+          // Container(
+          //   padding: const EdgeInsets.symmetric(horizontal: 20),
+          //   margin: const EdgeInsets.only(bottom: 15),
+          //   child: Row(
+          //     children: [
+          //       Text(
+          //         'Avg. BG：\n${avgBloodSugar.toStringAsFixed(2)}',
+          //         style: TextStyle(
+          //           color: Colors.deepOrangeAccent,
+          //         ),
+          //       ),
+          //       const Spacer(),
+          //       Text(
+          //         'Avg. TEMP：\n${avgTemperature.toStringAsFixed(1)}',
+          //         style: TextStyle(
+          //           color: Colors.blue,
+          //         ),
+          //       ),
+          //     ],
+          //   ),
+          // ),
         ],
       ),
     );
@@ -521,9 +709,9 @@ class _DetailItemState extends State<DetailItem> {
                                     boxShadow: [
                                       BoxShadow(
                                         color: Colors.black26,
-                                        blurRadius: 4.0,
+                                        blurRadius: 10.0,
                                         spreadRadius: 1.0,
-                                        offset: Offset(2, 2), // 阴影的偏移量
+                                        offset: Offset(0, 2), // 阴影的偏移量
                                       ),
                                     ],
                                   ),
@@ -531,9 +719,9 @@ class _DetailItemState extends State<DetailItem> {
                                     alignment: Alignment.center,
                                     child: percentage >= 10
                                         ? Text(
-                                      '${percentage.toStringAsFixed(0)}%',
-                                      style: TextStyle(fontSize: 8, color: Colors.white),
-                                    )
+                                            '${percentage.toStringAsFixed(0)}%',
+                                            style: TextStyle(fontSize: 8, color: Colors.white),
+                                          )
                                         : null,
                                   ),
                                 ),
@@ -588,9 +776,9 @@ class _DetailItemState extends State<DetailItem> {
                                   boxShadow: [
                                     BoxShadow(
                                       color: Colors.black26,
-                                      blurRadius: 4.0,
+                                      blurRadius: 10.0,
                                       spreadRadius: 1.0,
-                                      offset: Offset(2, 2), // 阴影的偏移量
+                                      offset: Offset(0, 2), // 阴影的偏移量
                                     ),
                                   ],
                                 ),
@@ -598,9 +786,9 @@ class _DetailItemState extends State<DetailItem> {
                                   alignment: Alignment.center,
                                   child: percentage >= 10
                                       ? Text(
-                                    '${percentage.toStringAsFixed(0)}%',
-                                    style: TextStyle(fontSize: 8, color: Colors.white),
-                                  )
+                                          '${percentage.toStringAsFixed(0)}%',
+                                          style: TextStyle(fontSize: 8, color: Colors.white),
+                                        )
                                       : null,
                                 ),
                               ),
@@ -638,5 +826,4 @@ class _DetailItemState extends State<DetailItem> {
       ),
     ];
   }
-
 }
