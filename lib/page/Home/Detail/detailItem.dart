@@ -24,6 +24,7 @@ class _DetailItemState extends State<DetailItem> {
   late TooltipBehavior _tooltipBehavior;
   late CrosshairBehavior _crosshairBehavior; // 十字線
   List<dynamic>? futureData; //讀取資料
+  List<dynamic>? futureTIRData;
   List<ChartData> bloodSugarLens = []; //圖表血糖軸
   List<ChartData> temperatureLens = []; //圖表溫度軸
   List<int> displayBloodSugarTIR = [0, 0, 0, 0, 0]; //顯示血糖用的TIR
@@ -72,6 +73,7 @@ class _DetailItemState extends State<DetailItem> {
 
   Future<void> drawChart() async {
     futureData = await fetchData();
+    futureTIRData = await fetchTIRData();
     List<double> totalCurrent = [];
     List<double> totalTemperature = [];
     bloodSugarTIR = [0, 0, 0, 0, 0];
@@ -141,6 +143,15 @@ class _DetailItemState extends State<DetailItem> {
 
   Future<List<dynamic>> fetchData() async {
     final response = await http.get(Uri.parse('http://192.168.101.101:3000/sensorData'));
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load');
+    }
+  }
+
+  Future<List<dynamic>> fetchTIRData() async {
+    final response = await http.get(Uri.parse('http://192.168.101.101:3000/ranges'));
     if (response.statusCode == 200) {
       // print(json.decode(response.body));
       return json.decode(response.body);
