@@ -47,6 +47,100 @@ class _EditTIRPageState extends State<EditTIRPage> {
     return length > 0 ? (value / length) * 100 : 0;
   }
 
+  Future<int> _showPicker(BuildContext context, int initialValue) async {
+    int selectedValue = initialValue;
+    int? result = await showCupertinoModalPopup<int>(
+      context: context,
+      builder: (_) => Container(
+        height: 250,
+        color: Color.fromARGB(255, 255, 255, 255),
+        child: Column(
+          children: [
+            Container(
+              color: Colors.black12,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  CupertinoButton(
+                    padding: EdgeInsets.all(0),
+                    child: Text('OK'),
+                    onPressed: () {
+                      print(selectedValue);
+                      Navigator.of(context).pop(selectedValue);
+                    },
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(
+              height: 180,
+              child: CupertinoPicker(
+                scrollController: FixedExtentScrollController(initialItem: initialValue),
+                itemExtent: 32.0,
+                onSelectedItemChanged: (int value) {
+                  selectedValue = value;
+                },
+                children: List<Widget>.generate(501, (index) {
+                  return Center(
+                    child: Text('$index'),
+                  );
+                }),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    return result ?? initialValue; // 返回選擇的值，如果結果為空則返回初始值
+  }
+
+  Future<double> _showTemperaturePicker(BuildContext context, double initialValue) async {
+    double selectedValue = initialValue;
+    int initialItem = ((initialValue - 20.0) * 10).toInt(); // 将初始值转换为索引
+    double? result = await showCupertinoModalPopup<double>(
+      context: context,
+      builder: (_) => Container(
+        height: 250,
+        color: Color.fromARGB(255, 255, 255, 255),
+        child: Column(
+          children: [
+            Container(
+              color: Colors.black12,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  CupertinoButton(
+                    padding: EdgeInsets.all(0),
+                    child: Text('OK'),
+                    onPressed: () {
+                      Navigator.of(context).pop(selectedValue);
+                    },
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(
+              height: 180,
+              child: CupertinoPicker(
+                scrollController: FixedExtentScrollController(initialItem: initialItem),
+                itemExtent: 32.0,
+                onSelectedItemChanged: (int value) {
+                  selectedValue = 20.0 + value / 10;
+                },
+                children: List<Widget>.generate(((60.0 - 20.0) * 10 + 1).toInt(), (index) {
+                  return Center(
+                    child: Text('${(20.0 + index / 10).toStringAsFixed(1)}'),
+                  );
+                }),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    return result ?? initialValue; // 返回選擇的值，如果結果為空則返回初始值
+  }
+
   @override
   Widget build(BuildContext context) {
     int width = MediaQuery.of(context).size.width.toInt();
@@ -177,10 +271,39 @@ class _EditTIRPageState extends State<EditTIRPage> {
                               alignment: Alignment.centerRight,
                               child: FittedBox(
                                 fit: BoxFit.scaleDown,
-                                child: Text(
-                                  i == widget.bloodSugarData.length
-                                      ? '<=${widget.bloodSugarData.last} : '
-                                      : '>=${widget.bloodSugarData[i]} : ',
+                                child: GestureDetector(
+                                  onTap: () async {
+                                    int index = (i == widget.bloodSugarData.length) ? i - 1 : i;
+                                    final tmp = await _showPicker(context, widget.bloodSugarData[index].toInt());
+                                    setState(() {
+                                      if (tmp > widget.bloodSugarData[index]) {
+                                        print('bigger');
+                                        widget.bloodSugarData[index] = tmp.toDouble();
+                                        int previousIndex = index - 1;
+                                        while (previousIndex >= 0 &&
+                                            widget.bloodSugarData[previousIndex] <=
+                                                widget.bloodSugarData[previousIndex + 1]) {
+                                          widget.bloodSugarData[previousIndex] =
+                                              widget.bloodSugarData[previousIndex + 1] + 1;
+                                          previousIndex--;
+                                        }
+                                      } else if (tmp < widget.bloodSugarData[index]) {
+                                        print('smaller');
+                                        widget.bloodSugarData[index] = tmp.toDouble();
+                                        int nextIndex = index + 1;
+                                        while (nextIndex < widget.bloodSugarData.length &&
+                                            widget.bloodSugarData[nextIndex - 1] <= widget.bloodSugarData[nextIndex]) {
+                                          widget.bloodSugarData[nextIndex] = widget.bloodSugarData[nextIndex - 1] - 1;
+                                          nextIndex++;
+                                        }
+                                      }
+                                    });
+                                  },
+                                  child: Text(
+                                    (i == widget.bloodSugarData.length)
+                                        ? '<${widget.bloodSugarData.last.toStringAsFixed(0)} : '
+                                        : '>=${widget.bloodSugarData[i].toStringAsFixed(0)} : ',
+                                  ),
                                 ),
                               ),
                             ),
@@ -312,10 +435,38 @@ class _EditTIRPageState extends State<EditTIRPage> {
                               alignment: Alignment.centerRight,
                               child: FittedBox(
                                 fit: BoxFit.scaleDown,
-                                child: Text(
-                                  i == widget.temperatureData.length
-                                      ? '<=${widget.temperatureData.last} : '
-                                      : '>=${widget.temperatureData[i]} : ',
+                                child: GestureDetector(
+                                  onTap: () async {
+                                    int index = (i == widget.temperatureData.length) ? i - 1 : i;
+
+                                    final tmp = await _showTemperaturePicker(context, widget.temperatureData[index]);
+                                    setState(() {
+                                      if (tmp > widget.temperatureData[index]) {
+                                        widget.temperatureData[index] = tmp;
+                                        int previousIndex = index - 1;
+                                        while (previousIndex >= 0 && widget.temperatureData[previousIndex] <= widget.temperatureData[previousIndex + 1]) {
+                                          widget.temperatureData[previousIndex] = widget.temperatureData[previousIndex + 1] + 0.1;
+                                          previousIndex--;
+                                        }
+                                      } else if (tmp < widget.temperatureData[index]) {
+                                        widget.temperatureData[index] = tmp;
+                                        int nextIndex = index + 1;
+                                        while (nextIndex < widget.temperatureData.length && widget.temperatureData[nextIndex - 1] >= widget.temperatureData[nextIndex]) {
+                                          widget.temperatureData[nextIndex] = widget.temperatureData[nextIndex - 1] - 0.1;
+                                          nextIndex++;
+                                        }
+                                        // 如果 i 是最后一个元素，且更新了它，就设置 i = i - 1
+                                        if (index == widget.temperatureData.length - 1) {
+                                          i = index - 1;
+                                        }
+                                      }
+                                    });
+                                  },
+                                  child: Text(
+                                    i == widget.temperatureData.length
+                                        ? '<${widget.temperatureData.last.toStringAsFixed(1)} : '
+                                        : '>=${widget.temperatureData[i].toStringAsFixed(1)} : ',
+                                  ),
                                 ),
                               ),
                             ),
