@@ -33,8 +33,8 @@ class _DetailItemState extends State<DetailItem> {
   List<int> temperatureTIR = [0, 0, 0, 0, 0]; //暫存溫度資料的TIR
   List<double> temperatureData = []; // TIR區分區間數據
   List<double> bloodSugarData = []; // TIR區分區間數據
-  List<double> totalCurrent = []; //所有的血糖
-  List<double> totalTemperature = []; //所有的溫度
+  List<double> totalCurrent = []; //所有的血糖 後用來計算平均
+  List<double> totalTemperature = []; //所有的溫度 後用來計算平均
   bool chooseBloodSugar = true; //判斷該顯示哪個TIR
   double avgBloodSugar = 0.0; //血糖平均
   double avgTemperature = 0.0; //溫度平均
@@ -395,8 +395,8 @@ class _DetailItemState extends State<DetailItem> {
                                 print(maxX);
                                 if (futureData != null) {
                                   List<dynamic> data = futureData!;
-                                  List<double> totalCurrent = [];
-                                  List<double> totalTemperature = [];
+                                  totalCurrent = [];
+                                  totalTemperature = [];
                                   bloodSugarTIR = [0, 0, 0, 0, 0];
                                   temperatureTIR = [0, 0, 0, 0, 0];
                                   dataCount = 0;

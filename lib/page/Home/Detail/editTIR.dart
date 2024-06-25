@@ -1,5 +1,9 @@
+import 'dart:convert';
+
+import 'package:cesa100/commonComponents/totalDialog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 import '../../../commonComponents/constants.dart';
 
@@ -33,6 +37,12 @@ class _EditTIRPageState extends State<EditTIRPage> {
   late int lastBgNonZeroIndex;
   late int firstTempNonZeroIndex;
   late int lastTempNonZeroIndex;
+  late List<int> bloodSugarTIR;
+  late List<int> temperatureTIR;
+  late List<double> temperatureData;
+  late List<double> bloodSugarData;
+  late List<double> totalCurrent;
+  late List<double> totalTemperature;
 
   @override
   void initState() {
@@ -41,6 +51,46 @@ class _EditTIRPageState extends State<EditTIRPage> {
     lastBgNonZeroIndex = widget.bloodSugarTIR.lastIndexWhere((value) => value > 0);
     firstTempNonZeroIndex = widget.temperatureTIR.indexWhere((value) => value > 0);
     lastTempNonZeroIndex = widget.temperatureTIR.lastIndexWhere((value) => value > 0);
+    bloodSugarTIR = List<int>.from(widget.bloodSugarTIR);
+    temperatureTIR = List<int>.from(widget.temperatureTIR);
+    temperatureData = List<double>.from(widget.temperatureData);
+    bloodSugarData = List<double>.from(widget.bloodSugarData);
+    totalCurrent = List<double>.from(widget.totalCurrent);
+    totalTemperature = List<double>.from(widget.totalTemperature);
+  }
+
+  void recalculateData() {
+    setState(() {
+      bloodSugarTIR = List<int>.filled(bloodSugarData.length + 1, 0);
+      temperatureTIR = List<int>.filled(temperatureData.length + 1, 0);
+      for (int i = 0; i < totalCurrent.length; i++) {
+        for (int j = 0; j < bloodSugarData.length; j++) {
+          if (bloodSugarData[j] < totalCurrent[i]) {
+            bloodSugarTIR[j]++;
+            break;
+          }
+          if (j == bloodSugarData.length - 1) {
+            bloodSugarTIR[j + 1]++;
+          }
+        }
+      }
+      for (int i = 0; i < totalTemperature.length; i++) {
+        for (int j = 0; j < temperatureData.length; j++) {
+          if (temperatureData[j] < totalTemperature[i]) {
+            temperatureTIR[j]++;
+            break;
+          }
+          if (j == temperatureData.length - 1) {
+            temperatureTIR[j+1]++;
+          }
+        }
+      }
+      print(temperatureTIR);
+      firstBgNonZeroIndex = bloodSugarTIR.indexWhere((value) => value > 0);
+      lastBgNonZeroIndex = bloodSugarTIR.lastIndexWhere((value) => value > 0);
+      firstTempNonZeroIndex = temperatureTIR.indexWhere((value) => value > 0);
+      lastTempNonZeroIndex = temperatureTIR.lastIndexWhere((value) => value > 0);
+    });
   }
 
   double calculatePercentage(int value, int length) {
@@ -167,12 +217,39 @@ class _EditTIRPageState extends State<EditTIRPage> {
               overlayColor: MaterialStateProperty.all(Colors.transparent),
             ),
             onPressed: () async {
-              //todo modify the data
+              Map<String, dynamic> data = {
+                "machine_id": 1,
+                "temperature_1": temperatureData[0],
+                "temperature_2": temperatureData[1],
+                "temperature_3": temperatureData[2],
+                "temperature_4": temperatureData[3],
+                "current_1": bloodSugarData[0],
+                "current_2": bloodSugarData[1],
+                "current_3": bloodSugarData[2],
+                "current_4": bloodSugarData[3],
+              };
+              print(data);
+              final response = await http.put(
+                Uri.parse('http://192.168.101.101:3000/modifyranges'),
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: jsonEncode(data),
+              );
+
+              if (response.statusCode == 200) {
+                print('數據已成功發送');
+                showToast(context, 'Edit success');
+                Navigator.pop(context);
+              } else {
+                print('發送數據失敗：${response.statusCode}');
+                showToast(context, 'Edit error');
+              }
             },
             child: const Text(
               'OK',
               style: TextStyle(
-                color: Colors.grey,
+                color: Color(0xffff8bb8),
                 fontSize: 24,
               ),
             ),
@@ -182,6 +259,12 @@ class _EditTIRPageState extends State<EditTIRPage> {
       body: Column(
         children: [
           SizedBox(height: 10),
+          // ElevatedButton(
+          //   onPressed: () {
+          //     print(totalTemperature.length);
+          //   },
+          //   child: Text('test'),
+          // ),
           Expanded(
             child: Column(
               children: [
@@ -213,7 +296,7 @@ class _EditTIRPageState extends State<EditTIRPage> {
                             double maxBarWidth = constraints.maxWidth;
                             return Row(
                               children: List.generate(5, (i) {
-                                double percentage = calculatePercentage(widget.bloodSugarTIR[i], widget.dataCount);
+                                double percentage = calculatePercentage(bloodSugarTIR[i], widget.dataCount);
                                 final tmpWidth = (maxBarWidth * percentage / 100).clamp(0.0, maxBarWidth);
                                 return Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 5),
@@ -259,7 +342,7 @@ class _EditTIRPageState extends State<EditTIRPage> {
                   ),
                 ),
                 ...List.generate(
-                  widget.bloodSugarTIR.length,
+                  bloodSugarTIR.length,
                   (i) => Expanded(
                     child: Container(
                       padding: EdgeInsets.symmetric(horizontal: width * 0.05),
@@ -273,36 +356,35 @@ class _EditTIRPageState extends State<EditTIRPage> {
                                 fit: BoxFit.scaleDown,
                                 child: GestureDetector(
                                   onTap: () async {
-                                    int index = (i == widget.bloodSugarData.length) ? i - 1 : i;
-                                    final tmp = await _showPicker(context, widget.bloodSugarData[index].toInt());
+                                    int index = (i == bloodSugarData.length) ? i - 1 : i;
+                                    final tmp = await _showPicker(context, bloodSugarData[index].toInt());
                                     setState(() {
-                                      if (tmp > widget.bloodSugarData[index]) {
-                                        print('bigger');
-                                        widget.bloodSugarData[index] = tmp.toDouble();
+                                      if (tmp > bloodSugarData[index]) {
+                                        bloodSugarData[index] = tmp.toDouble();
                                         int previousIndex = index - 1;
                                         while (previousIndex >= 0 &&
-                                            widget.bloodSugarData[previousIndex] <=
-                                                widget.bloodSugarData[previousIndex + 1]) {
-                                          widget.bloodSugarData[previousIndex] =
-                                              widget.bloodSugarData[previousIndex + 1] + 1;
+                                            bloodSugarData[previousIndex] <=
+                                                bloodSugarData[previousIndex + 1]) {
+                                          bloodSugarData[previousIndex] =
+                                              bloodSugarData[previousIndex + 1] + 1;
                                           previousIndex--;
                                         }
-                                      } else if (tmp < widget.bloodSugarData[index]) {
-                                        print('smaller');
-                                        widget.bloodSugarData[index] = tmp.toDouble();
+                                      } else if (tmp < bloodSugarData[index]) {
+                                        bloodSugarData[index] = tmp.toDouble();
                                         int nextIndex = index + 1;
-                                        while (nextIndex < widget.bloodSugarData.length &&
-                                            widget.bloodSugarData[nextIndex - 1] <= widget.bloodSugarData[nextIndex]) {
-                                          widget.bloodSugarData[nextIndex] = widget.bloodSugarData[nextIndex - 1] - 1;
+                                        while (nextIndex < bloodSugarData.length &&
+                                            bloodSugarData[nextIndex - 1] <= bloodSugarData[nextIndex]) {
+                                          bloodSugarData[nextIndex] = bloodSugarData[nextIndex - 1] - 1;
                                           nextIndex++;
                                         }
                                       }
+                                      recalculateData();
                                     });
                                   },
                                   child: Text(
-                                    (i == widget.bloodSugarData.length)
-                                        ? '<${widget.bloodSugarData.last.toStringAsFixed(0)} : '
-                                        : '>=${widget.bloodSugarData[i].toStringAsFixed(0)} : ',
+                                    (i == bloodSugarData.length)
+                                        ? '<${bloodSugarData.last.toStringAsFixed(0)} : '
+                                        : '>=${bloodSugarData[i].toStringAsFixed(0)} : ',
                                   ),
                                 ),
                               ),
@@ -313,7 +395,7 @@ class _EditTIRPageState extends State<EditTIRPage> {
                             child: LayoutBuilder(
                               builder: (context, constraints) {
                                 double maxBarWidth = constraints.maxWidth;
-                                double percentage = calculatePercentage(widget.bloodSugarTIR[i], widget.dataCount);
+                                double percentage = calculatePercentage(bloodSugarTIR[i], widget.dataCount);
                                 return Row(
                                   children: [
                                     Container(
@@ -346,6 +428,7 @@ class _EditTIRPageState extends State<EditTIRPage> {
               ],
             ),
           ),
+          SizedBox(height: 50),
           Expanded(
             child: Column(
               children: [
@@ -377,7 +460,7 @@ class _EditTIRPageState extends State<EditTIRPage> {
                             double maxBarWidth = constraints.maxWidth;
                             return Row(
                               children: List.generate(5, (i) {
-                                double percentage = calculatePercentage(widget.temperatureTIR[i], widget.dataCount);
+                                double percentage = calculatePercentage(temperatureTIR[i], widget.dataCount);
                                 final tmpWidth = (maxBarWidth * percentage / 100).clamp(0.0, maxBarWidth);
                                 return Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 5),
@@ -423,7 +506,7 @@ class _EditTIRPageState extends State<EditTIRPage> {
                   ),
                 ),
                 ...List.generate(
-                  widget.temperatureTIR.length,
+                  temperatureTIR.length,
                   (i) => Expanded(
                     child: Container(
                       padding: EdgeInsets.symmetric(horizontal: width * 0.05),
@@ -437,35 +520,39 @@ class _EditTIRPageState extends State<EditTIRPage> {
                                 fit: BoxFit.scaleDown,
                                 child: GestureDetector(
                                   onTap: () async {
-                                    int index = (i == widget.temperatureData.length) ? i - 1 : i;
-
-                                    final tmp = await _showTemperaturePicker(context, widget.temperatureData[index]);
+                                    int index = (i == temperatureData.length) ? i - 1 : i;
+                                    final tmp = await _showTemperaturePicker(context, temperatureData[index]);
                                     setState(() {
-                                      if (tmp > widget.temperatureData[index]) {
-                                        widget.temperatureData[index] = tmp;
+                                      if (tmp > temperatureData[index]) {
+                                        temperatureData[index] = tmp;
                                         int previousIndex = index - 1;
-                                        while (previousIndex >= 0 && widget.temperatureData[previousIndex] <= widget.temperatureData[previousIndex + 1]) {
-                                          widget.temperatureData[previousIndex] = widget.temperatureData[previousIndex + 1] + 0.1;
+                                        while (previousIndex >= 0 &&
+                                            temperatureData[previousIndex] <=
+                                                temperatureData[previousIndex + 1]) {
+                                          temperatureData[previousIndex] =
+                                              temperatureData[previousIndex + 1] + 0.1;
                                           previousIndex--;
                                         }
-                                      } else if (tmp < widget.temperatureData[index]) {
-                                        widget.temperatureData[index] = tmp;
+                                      } else if (tmp < temperatureData[index]) {
+                                        temperatureData[index] = tmp;
                                         int nextIndex = index + 1;
-                                        while (nextIndex < widget.temperatureData.length && widget.temperatureData[nextIndex - 1] >= widget.temperatureData[nextIndex]) {
-                                          widget.temperatureData[nextIndex] = widget.temperatureData[nextIndex - 1] - 0.1;
+                                        while (nextIndex < temperatureData.length &&
+                                            temperatureData[nextIndex - 1] <=
+                                                temperatureData[nextIndex]) {
+                                          temperatureData[nextIndex] =
+                                              temperatureData[nextIndex - 1] - 0.1;
                                           nextIndex++;
                                         }
-                                        // 如果 i 是最后一个元素，且更新了它，就设置 i = i - 1
-                                        if (index == widget.temperatureData.length - 1) {
+                                        if (index == temperatureData.length - 1) {
                                           i = index - 1;
                                         }
                                       }
                                     });
                                   },
                                   child: Text(
-                                    i == widget.temperatureData.length
-                                        ? '<${widget.temperatureData.last.toStringAsFixed(1)} : '
-                                        : '>=${widget.temperatureData[i].toStringAsFixed(1)} : ',
+                                    i == temperatureData.length
+                                        ? '<${temperatureData.last.toStringAsFixed(1)} : '
+                                        : '>=${temperatureData[i].toStringAsFixed(1)} : ',
                                   ),
                                 ),
                               ),
@@ -476,7 +563,7 @@ class _EditTIRPageState extends State<EditTIRPage> {
                             child: LayoutBuilder(
                               builder: (context, constraints) {
                                 double maxBarWidth = constraints.maxWidth;
-                                double percentage = calculatePercentage(widget.temperatureTIR[i], widget.dataCount);
+                                double percentage = calculatePercentage(temperatureTIR[i], widget.dataCount);
                                 return Row(
                                   children: [
                                     Container(
