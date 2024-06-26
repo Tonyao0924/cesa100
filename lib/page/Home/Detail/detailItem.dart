@@ -44,6 +44,10 @@ class _DetailItemState extends State<DetailItem> {
   bool firstinit = true;
   int dataCount = 0; //資料總數量
   int _chartState = 0; // 0: Both, 1: Blood Sugar, 2: Temperature
+  late int firstBgNonZeroIndex;
+  late int lastBgNonZeroIndex;
+  late int firstTempNonZeroIndex;
+  late int lastTempNonZeroIndex;
 
   @override
   void initState() {
@@ -171,6 +175,7 @@ class _DetailItemState extends State<DetailItem> {
 
   @override
   Widget build(BuildContext context) {
+    print('123456');
     int width = MediaQuery.of(context).size.width.toInt();
     int height = MediaQuery.of(context).size.height.toInt();
     if (_tooltipBehavior == null && _crosshairBehavior == null || futureData == null) {
@@ -230,8 +235,8 @@ class _DetailItemState extends State<DetailItem> {
             ],
           ),
           GestureDetector(
-            onTap: (){
-              Navigator.push(
+            onTap: () async {
+              Map<String, dynamic>? result = await Navigator.push(
                 context,
                 PageRouteBuilder(
                   pageBuilder: (context, animation, secondaryAnimation) => EditTIRPage(
@@ -255,6 +260,18 @@ class _DetailItemState extends State<DetailItem> {
                   },
                 ),
               );
+              if (result != null) {
+                setState(() {
+                  bloodSugarTIR = result['bloodSugarTIR'];
+                  temperatureTIR = result['temperatureTIR'];
+                  temperatureData = result['temperatureData'];
+                  bloodSugarData = result['bloodSugarData'];
+                  totalCurrent = result['totalCurrent'];
+                  totalTemperature = result['totalTemperature'];
+                  displayBloodSugarTIR = bloodSugarTIR;
+                  displayTemperatureTIR = temperatureTIR;
+                });
+              }
             },
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: width * 0.05),
@@ -273,97 +290,100 @@ class _DetailItemState extends State<DetailItem> {
           Container(
             padding: EdgeInsets.symmetric(horizontal: width * 0.05),
             child: Row(
+              mainAxisAlignment:
+                  _chartState == 1 || _chartState == 2 ? MainAxisAlignment.center : MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      const Image(
-                        image: AssetImage('assets/home/bloodsugar.png'),
-                        fit: BoxFit.scaleDown,
-                        width: 30,
-                        height: 30,
-                      ),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text.rich(
-                          TextSpan(
-                            children: [
-                              TextSpan(
-                                text: '${widget.rowData.bloodSugar}',
-                                style: const TextStyle(
-                                  fontSize: 28, // 放大這裡的字體
-                                  color: Colors.black,
+                if (_chartState == 0 || _chartState == 1)
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: _chartState == 0 ? MainAxisAlignment.start : MainAxisAlignment.center,
+                      children: [
+                        const Image(
+                          image: AssetImage('assets/home/bloodsugar.png'),
+                          fit: BoxFit.scaleDown,
+                          width: 30,
+                          height: 30,
+                        ),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: '${widget.rowData.bloodSugar}',
+                                  style: const TextStyle(
+                                    fontSize: 28, // 放大這裡的字體
+                                    color: Colors.black,
+                                  ),
                                 ),
-                              ),
-                              TextSpan(
-                                text: 'mg/dl',
-                                style: const TextStyle(
-                                  fontSize: 10, // 這裡保持原來的字體大小
-                                  color: Colors.black,
+                                TextSpan(
+                                  text: 'mg/dl',
+                                  style: const TextStyle(
+                                    fontSize: 10, // 這裡保持原來的字體大小
+                                    color: Colors.black,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      Expanded(
-                        child: Image.asset(
-                          'assets/home/arrow_-90angle.png',
+                        SizedBox(
                           width: 20,
                           height: 20,
-                          fit: BoxFit.scaleDown,
-                        ),
-                      ),
-                      Spacer(),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Spacer(),
-                      const Image(
-                        image: AssetImage('assets/home/temperature.png'),
-                        fit: BoxFit.scaleDown,
-                        width: 30,
-                        height: 30,
-                      ),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text.rich(
-                          TextSpan(
-                            children: [
-                              TextSpan(
-                                text: '${widget.rowData.temperature}',
-                                style: const TextStyle(
-                                  fontSize: 28, // 放大這裡的字體
-                                  color: Colors.black,
-                                ),
-                              ),
-                              TextSpan(
-                                text: ' ℃',
-                                style: const TextStyle(
-                                  fontSize: 10, // 這裡保持原來的字體大小
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ],
+                          child: Image.asset(
+                            'assets/home/arrow_-90angle.png',
+                            fit: BoxFit.scaleDown,
                           ),
                         ),
-                      ),
-                      Expanded(
-                        child: Image.asset(
-                          'assets/home/arrow_45angle.png',
+                      ],
+                    ),
+                  ),
+                if (_chartState == 0 || _chartState == 2)
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: _chartState == 0 ? MainAxisAlignment.end : MainAxisAlignment.center,
+                      children: [
+                        if (_chartState == 0) Spacer(),
+                        const Image(
+                          image: AssetImage('assets/home/temperature.png'),
+                          fit: BoxFit.scaleDown,
+                          width: 30,
+                          height: 30,
+                        ),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: '${widget.rowData.temperature}',
+                                  style: const TextStyle(
+                                    fontSize: 28, // 放大這裡的字體
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: ' ℃',
+                                  style: const TextStyle(
+                                    fontSize: 10, // 這裡保持原來的字體大小
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        SizedBox(
                           width: 20,
                           height: 20,
-                          fit: BoxFit.scaleDown,
+                          child: Image.asset(
+                            'assets/home/arrow_45angle.png',
+                            fit: BoxFit.scaleDown,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
               ],
             ),
           ),
@@ -404,8 +424,9 @@ class _DetailItemState extends State<DetailItem> {
                                     DateTime itemDateTime = DateTime.parse(item['DateTime']);
                                     if (itemDateTime.isAfter(minX) && itemDateTime.isBefore(maxX)) {
                                       // print('DateTime: ${item['DateTime']}, Current_A: ${item['Current_A']}, Temperature_C: ${item['Temperature_C']}, machine_id: ${item['machine_id']}');
-                                      double current =
-                                          item['Current_A'] is double ? item['Current_A'] : item['Current_A'].toDouble();
+                                      double current = item['Current_A'] is double
+                                          ? item['Current_A']
+                                          : item['Current_A'].toDouble();
                                       double temperature = item['Temperature_C'] is double
                                           ? item['Temperature_C']
                                           : item['Temperature_C'].toDouble();
@@ -526,22 +547,23 @@ class _DetailItemState extends State<DetailItem> {
   }
 
   List<Widget> _getTextList(List<int> displayBloodSugarTIR, List<int> displayTemperatureTIR, int length) {
-    List<String> ranges = ['>300', '200~300', '126~200', '90~126', '<90'];
+    print('1111111');
     List<Color> colors = [Colors.red, Colors.blue, Colors.green, Colors.orange, Colors.red];
 
     double calculatePercentage(int value, int length) {
       return length > 0 ? (value / length) * 100 : 0;
     }
 
-    int firstBgNonZeroIndex = displayBloodSugarTIR.indexWhere((value) => value > 0);
-    int lastBgNonZeroIndex = displayBloodSugarTIR.lastIndexWhere((value) => value > 0);
-    int firstTempNonZeroIndex = displayTemperatureTIR.indexWhere((value) => value > 0);
-    int lastTempNonZeroIndex = displayTemperatureTIR.lastIndexWhere((value) => value > 0);
+    firstBgNonZeroIndex = displayBloodSugarTIR.indexWhere((value) => value > 0);
+    lastBgNonZeroIndex = displayBloodSugarTIR.lastIndexWhere((value) => value > 0);
+    firstTempNonZeroIndex = displayTemperatureTIR.indexWhere((value) => value > 0);
+    lastTempNonZeroIndex = displayTemperatureTIR.lastIndexWhere((value) => value > 0);
 
-    return [
-      Opacity(
-        opacity: _chartState == 0 || _chartState == 1 ? 1.0 : 0.0,
-        child: Container(
+    List<Widget> widgets = [];
+
+    if (_chartState == 0 || _chartState == 1) {
+      widgets.add(
+        Container(
           width: MediaQuery.of(context).size.width * 0.9,
           child: Row(
             children: [
@@ -572,7 +594,7 @@ class _DetailItemState extends State<DetailItem> {
                         borderRadius: BorderRadius.circular(5),
                       ),
                       child: Row(
-                        children: List.generate(ranges.length, (i) {
+                        children: List.generate(colors.length, (i) {
                           double percentage = calculatePercentage(displayBloodSugarTIR[i], length);
                           final tmpWidth = (maxBarWidth * percentage / 100).clamp(0.0, maxBarWidth);
                           return Padding(
@@ -622,11 +644,16 @@ class _DetailItemState extends State<DetailItem> {
             ],
           ),
         ),
-      ),
-      SizedBox(height: 5),
-      Opacity(
-        opacity: _chartState == 0 || _chartState == 2 ? 1.0 : 0.0,
-        child: Container(
+      );
+    }
+
+    if (_chartState == 0 || _chartState == 2) {
+      widgets.add(
+        SizedBox(height: 5),
+      );
+
+      widgets.add(
+        Container(
           width: MediaQuery.of(context).size.width * 0.9,
           child: Row(
             children: [
@@ -639,7 +666,7 @@ class _DetailItemState extends State<DetailItem> {
                   builder: (context, constraints) {
                     double maxBarWidth = constraints.maxWidth;
                     return Row(
-                      children: List.generate(ranges.length, (i) {
+                      children: List.generate(colors.length, (i) {
                         double percentage = calculatePercentage(displayTemperatureTIR[i], length);
                         final tmpWidth = (maxBarWidth * percentage / 100).clamp(0.0, maxBarWidth);
                         return Padding(
@@ -705,7 +732,9 @@ class _DetailItemState extends State<DetailItem> {
             ],
           ),
         ),
-      ),
-    ];
+      );
+    }
+
+    return widgets;
   }
 }

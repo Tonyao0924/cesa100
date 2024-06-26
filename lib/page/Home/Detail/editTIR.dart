@@ -59,10 +59,9 @@ class _EditTIRPageState extends State<EditTIRPage> {
     totalTemperature = List<double>.from(widget.totalTemperature);
   }
 
-  void recalculateData() {
+  void recalculateBGData() {
     setState(() {
       bloodSugarTIR = List<int>.filled(bloodSugarData.length + 1, 0);
-      temperatureTIR = List<int>.filled(temperatureData.length + 1, 0);
       for (int i = 0; i < totalCurrent.length; i++) {
         for (int j = 0; j < bloodSugarData.length; j++) {
           if (bloodSugarData[j] < totalCurrent[i]) {
@@ -74,6 +73,14 @@ class _EditTIRPageState extends State<EditTIRPage> {
           }
         }
       }
+      firstBgNonZeroIndex = bloodSugarTIR.indexWhere((value) => value > 0);
+      lastBgNonZeroIndex = bloodSugarTIR.lastIndexWhere((value) => value > 0);
+    });
+  }
+
+  void recalculateTEMPData() {
+    setState(() {
+      temperatureTIR = List<int>.filled(temperatureData.length + 1, 0);
       for (int i = 0; i < totalTemperature.length; i++) {
         for (int j = 0; j < temperatureData.length; j++) {
           if (temperatureData[j] < totalTemperature[i]) {
@@ -86,8 +93,6 @@ class _EditTIRPageState extends State<EditTIRPage> {
         }
       }
       print(temperatureTIR);
-      firstBgNonZeroIndex = bloodSugarTIR.indexWhere((value) => value > 0);
-      lastBgNonZeroIndex = bloodSugarTIR.lastIndexWhere((value) => value > 0);
       firstTempNonZeroIndex = temperatureTIR.indexWhere((value) => value > 0);
       lastTempNonZeroIndex = temperatureTIR.lastIndexWhere((value) => value > 0);
     });
@@ -240,7 +245,15 @@ class _EditTIRPageState extends State<EditTIRPage> {
               if (response.statusCode == 200) {
                 print('數據已成功發送');
                 showToast(context, 'Edit success');
-                Navigator.pop(context);
+                Navigator.pop(context, {
+                  'bloodSugarTIR': bloodSugarTIR,
+                  'temperatureTIR': temperatureTIR,
+                  'temperatureData': temperatureData,
+                  'bloodSugarData': bloodSugarData,
+                  'dataCount': widget.dataCount,
+                  'totalCurrent': totalCurrent,
+                  'totalTemperature': totalTemperature,
+                });
               } else {
                 print('發送數據失敗：${response.statusCode}');
                 showToast(context, 'Edit error');
@@ -378,7 +391,7 @@ class _EditTIRPageState extends State<EditTIRPage> {
                                           nextIndex++;
                                         }
                                       }
-                                      recalculateData();
+                                      recalculateBGData();
                                     });
                                   },
                                   child: Text(
@@ -547,6 +560,7 @@ class _EditTIRPageState extends State<EditTIRPage> {
                                           i = index - 1;
                                         }
                                       }
+                                      recalculateTEMPData();
                                     });
                                   },
                                   child: Text(
