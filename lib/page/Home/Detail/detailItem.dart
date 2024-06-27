@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:cesa100/page/Home/Detail/editTIR.dart';
+import 'package:cesa100/page/Home/Detail/editTIRPage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -219,7 +219,6 @@ class _DetailItemState extends State<DetailItem> {
               ],
             ),
           ),
-          SizedBox(height: height * 0.01),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -236,18 +235,46 @@ class _DetailItemState extends State<DetailItem> {
           ),
           GestureDetector(
             onTap: () async {
-              Map<String, dynamic>? result = await Navigator.push(
+              // Map<String, dynamic>? result = await Navigator.push(
+              //   context,
+              //   PageRouteBuilder(
+              //     pageBuilder: (context, animation, secondaryAnimation) => EditTIRPage(
+              //       bloodSugarTIR: bloodSugarTIR,
+              //       temperatureTIR: temperatureTIR,
+              //       temperatureData: temperatureData,
+              //       bloodSugarData: bloodSugarData,
+              //       dataCount: dataCount,
+              //       totalCurrent: totalCurrent,
+              //       totalTemperature: totalTemperature,
+              //     ),
+              //     transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              //       const begin = Offset(1.0, 0.0);
+              //       const end = Offset.zero;
+              //       const curve = Curves.ease;
+              //       var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+              //       return SlideTransition(
+              //         position: animation.drive(tween),
+              //         child: child,
+              //       );
+              //     },
+              //   ),
+              // );
+              // if (result != null) {
+              //   setState(() {
+              //     bloodSugarTIR = result['bloodSugarTIR'];
+              //     temperatureTIR = result['temperatureTIR'];
+              //     temperatureData = result['temperatureData'];
+              //     bloodSugarData = result['bloodSugarData'];
+              //     totalCurrent = result['totalCurrent'];
+              //     totalTemperature = result['totalTemperature'];
+              //     displayBloodSugarTIR = bloodSugarTIR;
+              //     displayTemperatureTIR = temperatureTIR;
+              //   });
+              // }
+              Navigator.push(
                 context,
                 PageRouteBuilder(
-                  pageBuilder: (context, animation, secondaryAnimation) => EditTIRPage(
-                    bloodSugarTIR: bloodSugarTIR,
-                    temperatureTIR: temperatureTIR,
-                    temperatureData: temperatureData,
-                    bloodSugarData: bloodSugarData,
-                    dataCount: dataCount,
-                    totalCurrent: totalCurrent,
-                    totalTemperature: totalTemperature,
-                  ),
+                  pageBuilder: (context, animation, secondaryAnimation) => EditTIRPage(),
                   transitionsBuilder: (context, animation, secondaryAnimation, child) {
                     const begin = Offset(1.0, 0.0);
                     const end = Offset.zero;
@@ -260,18 +287,6 @@ class _DetailItemState extends State<DetailItem> {
                   },
                 ),
               );
-              if (result != null) {
-                setState(() {
-                  bloodSugarTIR = result['bloodSugarTIR'];
-                  temperatureTIR = result['temperatureTIR'];
-                  temperatureData = result['temperatureData'];
-                  bloodSugarData = result['bloodSugarData'];
-                  totalCurrent = result['totalCurrent'];
-                  totalTemperature = result['totalTemperature'];
-                  displayBloodSugarTIR = bloodSugarTIR;
-                  displayTemperatureTIR = temperatureTIR;
-                });
-              }
             },
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: width * 0.05),
@@ -311,8 +326,8 @@ class _DetailItemState extends State<DetailItem> {
                               children: [
                                 TextSpan(
                                   text: '${widget.rowData.bloodSugar}',
-                                  style: const TextStyle(
-                                    fontSize: 28, // 放大這裡的字體
+                                  style: TextStyle(
+                                    fontSize: _chartState == 1 ? 50 : 28, // 放大這裡的字體
                                     color: Colors.black,
                                   ),
                                 ),
@@ -357,8 +372,8 @@ class _DetailItemState extends State<DetailItem> {
                               children: [
                                 TextSpan(
                                   text: '${widget.rowData.temperature}',
-                                  style: const TextStyle(
-                                    fontSize: 28, // 放大這裡的字體
+                                  style: TextStyle(
+                                    fontSize: _chartState == 2 ? 50 : 28, // 放大這裡的字體
                                     color: Colors.black,
                                   ),
                                 ),
@@ -515,7 +530,7 @@ class _DetailItemState extends State<DetailItem> {
                 Positioned(
                   left: 0,
                   right: 0,
-                  bottom: 0, // 固定在底部
+                  bottom: 0,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     margin: const EdgeInsets.only(bottom: 15),
