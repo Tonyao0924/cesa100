@@ -64,14 +64,14 @@ class BarChartPainter extends CustomPainter {
     double spacing = 0; // 每個區間之間的間距
     double labelWidth = 30; // 刻度文字的寬度
     double barWidth = totalWidth - labelWidth; // 值條的寬度
+    double firstHigh = 0.0;
+    double lastHigh = 0.0;
 
     // 计算刻度文字的垂直位置数组
     List<double> labelYPositions = [];
 
     for (int i = 0; i < data.length; i++) {
-      double barHeight = data[i] > 0
-          ? data[i] * (totalHeight - spacing * (data.length - 1)) / 100
-          : 1; // 如果數值為0，顯示高度為1
+      double barHeight = data[i] > 0 ? data[i] * (totalHeight - spacing * (data.length - 1)) / 100 : 1; // 如果數值為0，顯示高度為1
 
       Color barColor = data[i] > 0 ? colors[i] : Colors.grey; // 如果數值為0，顏色設置為灰色
 
@@ -84,14 +84,21 @@ class BarChartPainter extends CustomPainter {
       );
 
       currentY += barHeight;
-
       // 计算刻度文字的垂直位置
       double offsetY = currentY - separatorHeight / 2 - 16 / 2;
-      if (i != 0 && i != data.length - 1) { // 確保不是第一個或最後一個
-        if (data[i] < 10) {
-          offsetY += 16;
-        }
+      if (i == 0) {
+        firstHigh = offsetY;
       }
+      if (i == data.length - 1) {
+        lastHigh = offsetY;
+      }
+      print('offsetT = $offsetY');
+      // if (i != 0 && i != data.length - 1) {
+      //   // 確保不是第一個或最後一個
+      //   if (data[i] < 10) {
+      //     offsetY += 16;
+      //   }
+      // }
 
       labelYPositions.add(offsetY);
 
@@ -111,7 +118,6 @@ class BarChartPainter extends CustomPainter {
     double minYPosition = labelYPositions.reduce((value, element) => value < element ? value : element);
     double overflowTop = totalHeight - maxYPosition;
     double overflowBottom = minYPosition;
-    print('$maxYPosition\n$minYPosition\n$overflowTop\n$overflowBottom');
     if (overflowTop < 0) {
       labelYPositions = labelYPositions.map((pos) => pos - overflowTop).toList();
     }
@@ -119,10 +125,31 @@ class BarChartPainter extends CustomPainter {
     if (overflowBottom < 0) {
       labelYPositions = labelYPositions.map((pos) => pos + overflowBottom).toList();
     }
+    print(lastHigh);
+    print('--------');
+    if (labelYPositions[0] < firstHigh) labelYPositions[0] = firstHigh;
+    for (int i = 1; i < labels.length; i++) {
+      if (labelYPositions[i] - labelYPositions[i - 1] < 16) {
+        labelYPositions[i] = labelYPositions[i - 1] + 16;
+      }
+      print('draw = ${labelYPositions[i]}');
+    }
+
+    if (labelYPositions[3] > lastHigh) {
+      labelYPositions[3] = lastHigh;
+    }
+    for (int i = labels.length - 2; i >= 0; i--) {
+      if ((labelYPositions[i + 1] - labelYPositions[i]) < 16) {
+        labelYPositions[i] = labelYPositions[i + 1] - 16;
+      }
+      print('draw = ${labelYPositions[i]}');
+    }
 
     // 繪製刻度文字
     for (int i = 0; i < labels.length; i++) {
+      print(labelYPositions[i]);
       if (i < labelYPositions.length) {
+        // print('draw = ${labelYPositions[i]}');
         drawText(
           canvas,
           labels[i],
