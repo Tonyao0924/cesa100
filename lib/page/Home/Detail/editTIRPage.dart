@@ -34,7 +34,7 @@ class _EditTIRPageState extends State<EditTIRPage> {
             children: [
               SizedBox(width: 8), // 調整文字與圖表之間的間距
               SizedBox(
-                width: 80, // 控制圖表的寬度
+                width: 300, // 控制圖表的寬度
                 height: 300, // 控制圖表的高度
                 child: CustomPaint(
                   painter: BarChartPainter(data, colors, labels),
@@ -79,7 +79,7 @@ class BarChartPainter extends CustomPainter {
 
       // 繪製值條
       canvas.drawRect(
-        Rect.fromLTWH(labelWidth, currentY, barWidth, barHeight),
+        Rect.fromLTWH(labelWidth, currentY, barWidth / 5, barHeight),
         barPaint,
       );
 
@@ -93,12 +93,6 @@ class BarChartPainter extends CustomPainter {
         lastHigh = offsetY;
       }
       print('offsetT = $offsetY');
-      // if (i != 0 && i != data.length - 1) {
-      //   // 確保不是第一個或最後一個
-      //   if (data[i] < 10) {
-      //     offsetY += 16;
-      //   }
-      // }
 
       labelYPositions.add(offsetY);
 
@@ -129,8 +123,8 @@ class BarChartPainter extends CustomPainter {
     print('--------');
     if (labelYPositions[0] < firstHigh) labelYPositions[0] = firstHigh;
     for (int i = 1; i < labels.length; i++) {
-      if (labelYPositions[i] - labelYPositions[i - 1] < 16) {
-        labelYPositions[i] = labelYPositions[i - 1] + 16;
+      if (labelYPositions[i] - labelYPositions[i - 1] < 25) {
+        labelYPositions[i] = labelYPositions[i - 1] + 25;
       }
       print('draw = ${labelYPositions[i]}');
     }
@@ -139,8 +133,8 @@ class BarChartPainter extends CustomPainter {
       labelYPositions[3] = lastHigh;
     }
     for (int i = labels.length - 2; i >= 0; i--) {
-      if ((labelYPositions[i + 1] - labelYPositions[i]) < 16) {
-        labelYPositions[i] = labelYPositions[i + 1] - 16;
+      if ((labelYPositions[i + 1] - labelYPositions[i]) < 25) {
+        labelYPositions[i] = labelYPositions[i + 1] - 25;
       }
       print('draw = ${labelYPositions[i]}');
     }
@@ -149,7 +143,6 @@ class BarChartPainter extends CustomPainter {
     for (int i = 0; i < labels.length; i++) {
       print(labelYPositions[i]);
       if (i < labelYPositions.length) {
-        // print('draw = ${labelYPositions[i]}');
         drawText(
           canvas,
           labels[i],
@@ -158,6 +151,27 @@ class BarChartPainter extends CustomPainter {
         );
       }
     }
+
+
+    if (data.isNotEmpty) {
+      //繪製虛線
+      drawFoldedLine(canvas, Offset(barWidth / 5, 0), totalWidth / 2);
+      drawstraightLine(canvas, Offset(barWidth / 5, 25), totalWidth / 2);
+      drawMidStraightLine(canvas, Offset(barWidth / 3, 158), totalWidth / 2);
+      drawstraightLine(canvas, Offset(barWidth / 5, 285), totalWidth / 2);
+      drawEndFoldedLine(canvas, Offset(barWidth / 5, 310), totalWidth / 2);
+      //繪製文字
+      drawText(canvas, 'Very High', Offset(barWidth / 5 + 40 , -40), TextStyle(color: Colors.black54, fontSize: 16));
+      drawText(canvas, 'High', Offset(barWidth / 5 + 40 , 15), TextStyle(color: Colors.black54, fontSize: 16));
+      drawText(canvas, 'Target', Offset(barWidth / 5 + 40 , 147), TextStyle(color: Colors.black54, fontSize: 16));
+      drawText(canvas, 'Low', Offset(barWidth / 5 + 40 , 275), TextStyle(color: Colors.black54, fontSize: 16));
+      drawText(canvas, 'Very Low', Offset(barWidth / 5 + 40 , 320), TextStyle(color: Colors.black54, fontSize: 16));
+      //繪製百分比
+      drawText(canvas, '${data[0].toStringAsFixed(0)}%', Offset(barWidth - 60 , -20), TextStyle(color: Colors.black54, fontSize: 16,fontWeight: FontWeight.bold));
+      drawText(canvas, '${data[1].toStringAsFixed(0)}%', Offset(barWidth - 60 , 15), TextStyle(color: Colors.black54, fontSize: 16,fontWeight: FontWeight.bold));
+      drawText(canvas, '${data[3].toStringAsFixed(0)}%', Offset(barWidth - 60 , 275), TextStyle(color: Colors.black54, fontSize: 16,fontWeight: FontWeight.bold));
+      drawText(canvas, '${data[4].toStringAsFixed(0)}%', Offset(barWidth - 60 , 310), TextStyle(color: Colors.black54, fontSize: 16,fontWeight: FontWeight.bold));
+    }
   }
 
   void drawText(Canvas canvas, String text, Offset offset, TextStyle style) {
@@ -165,6 +179,110 @@ class BarChartPainter extends CustomPainter {
     final TextPainter tp = TextPainter(text: span, textAlign: TextAlign.left, textDirection: TextDirection.ltr);
     tp.layout();
     tp.paint(canvas, offset);
+  }
+
+  void drawFoldedLine(Canvas canvas, Offset start, double width) {
+    final Paint paint = Paint()
+      ..color = Colors.grey
+      ..strokeWidth = 1.0;
+
+    double dashHeight = 4.0;
+    double dashSpace = 2.0;
+
+    Offset current = start;
+    while (current.dy > start.dy - 10) {
+      canvas.drawLine(current, Offset(current.dx, current.dy - dashHeight), paint);
+      current = Offset(current.dx, current.dy - (dashHeight + dashSpace));
+    }
+
+    current = Offset(current.dx, start.dy - 10);
+
+    while (current.dx < start.dx + width) {
+      double remainingSpace = (start.dx + width) - current.dx;
+
+      if (remainingSpace < dashHeight) {
+        canvas.drawLine(current, Offset(current.dx + remainingSpace, current.dy), paint);
+        break;
+      } else {
+        canvas.drawLine(current, Offset(current.dx + dashHeight, current.dy), paint);
+        current = Offset(current.dx + (dashHeight + dashSpace), current.dy);
+      }
+    }
+  }
+
+  void drawstraightLine(Canvas canvas, Offset start, double width) {
+    final Paint paint = Paint()
+      ..color = Colors.grey
+      ..strokeWidth = 1.0;
+
+    double dashHeight = 4.0;
+    double dashSpace = 2.0;
+
+    Offset current = Offset(start.dx + (width / 2), start.dy);
+
+    while (current.dx < start.dx + width) {
+      double remainingSpace = (start.dx + width) - current.dx;
+
+      if (remainingSpace < dashHeight) {
+        canvas.drawLine(current, Offset(current.dx + remainingSpace, current.dy), paint);
+        break;
+      } else {
+        canvas.drawLine(current, Offset(current.dx + dashHeight, current.dy), paint);
+        current = Offset(current.dx + (dashHeight + dashSpace), current.dy);
+      }
+    }
+  }
+
+  void drawMidStraightLine(Canvas canvas, Offset start, double width) {
+    final Paint paint = Paint()
+      ..color = Colors.grey
+      ..strokeWidth = 1.0;
+
+    double dashHeight = 4.0;
+    double dashSpace = 2.0;
+
+    Offset current = Offset(start.dx + (width / 2.5), start.dy);
+
+    while (current.dx < start.dx + width) {
+      double remainingSpace = (start.dx + width) - current.dx;
+
+      if (remainingSpace < dashHeight) {
+        canvas.drawLine(current, Offset(current.dx + remainingSpace, current.dy), paint);
+        break;
+      } else {
+        canvas.drawLine(current, Offset(current.dx + dashHeight, current.dy), paint);
+        current = Offset(current.dx + (dashHeight + dashSpace), current.dy);
+      }
+    }
+  }
+
+  void drawEndFoldedLine(Canvas canvas, Offset start, double width) {
+    final Paint paint = Paint()
+      ..color = Colors.grey
+      ..strokeWidth = 1.0;
+
+    double dashHeight = 4.0;
+    double dashSpace = 2.0;
+
+    Offset current = start;
+    while (current.dy < start.dy + 10) {
+      canvas.drawLine(current, Offset(current.dx, current.dy + dashHeight), paint);
+      current = Offset(current.dx, current.dy + (dashHeight + dashSpace));
+    }
+
+    current = Offset(current.dx, start.dy + 10);
+
+    while (current.dx < start.dx + width) {
+      double remainingSpace = (start.dx + width) - current.dx;
+
+      if (remainingSpace < dashHeight) {
+        canvas.drawLine(current, Offset(current.dx + remainingSpace, current.dy), paint);
+        break;
+      } else {
+        canvas.drawLine(current, Offset(current.dx + dashHeight, current.dy), paint);
+        current = Offset(current.dx + (dashHeight + dashSpace), current.dy);
+      }
+    }
   }
 
   @override
