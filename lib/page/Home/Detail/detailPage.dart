@@ -20,13 +20,23 @@ class _DetailPageState extends State<DetailPage> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: Text(
-          'Detail',
-          style: TextStyle(
-            fontSize: 24,
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
+        title: Row(
+          children: [
+            Image(
+              image: AssetImage(widget.rowData.src),
+              fit: BoxFit.scaleDown,
+              width: 40,
+              height: 40,
+            ),
+            Text(
+              '${widget.rowData.number}',
+              style: TextStyle(
+                fontSize: 24,
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
         actions: [
           GestureDetector(
