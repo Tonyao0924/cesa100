@@ -189,36 +189,6 @@ class _DetailItemState extends State<DetailItem> {
     return Container(
       child: Column(
         children: [
-          SizedBox(height: height * 0.02),
-          // Container(
-          //   padding: EdgeInsets.symmetric(horizontal: width * 0.05),
-          //   child: Row(
-          //     children: [
-          //       Expanded(
-          //         child: Row(
-          //           children: [
-          //             Image(
-          //               image: AssetImage(widget.rowData.src),
-          //               fit: BoxFit.scaleDown,
-          //               width: 40,
-          //               height: 40,
-          //             ),
-          //             FittedBox(
-          //               fit: BoxFit.scaleDown,
-          //               child: Text(
-          //                 '${widget.rowData.number}',
-          //                 style: const TextStyle(
-          //                   fontSize: 20,
-          //                   color: Colors.black,
-          //                 ),
-          //               ),
-          //             ),
-          //           ],
-          //         ),
-          //       ),
-          //     ],
-          //   ),
-          // ),
           Container(
             padding: EdgeInsets.symmetric(horizontal: width * 0.05),
             child: Row(
@@ -230,12 +200,6 @@ class _DetailItemState extends State<DetailItem> {
                     child: Row(
                       mainAxisAlignment: _chartState == 0 ? MainAxisAlignment.start : MainAxisAlignment.center,
                       children: [
-                        const Image(
-                          image: AssetImage('assets/home/bloodsugar.png'),
-                          fit: BoxFit.scaleDown,
-                          width: 30,
-                          height: 30,
-                        ),
                         FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text.rich(
@@ -244,7 +208,7 @@ class _DetailItemState extends State<DetailItem> {
                                 TextSpan(
                                   text: '${widget.rowData.bloodSugar}',
                                   style: TextStyle(
-                                    fontSize: _chartState == 1 ? 50 : 28, // 放大這裡的字體
+                                    fontSize: _chartState == 1 ? 80 : 40, // 放大這裡的字體
                                     color: Colors.black,
                                   ),
                                 ),
@@ -260,8 +224,8 @@ class _DetailItemState extends State<DetailItem> {
                           ),
                         ),
                         SizedBox(
-                          width: 20,
-                          height: 20,
+                          width: _chartState == 1 ? 50 : 20,
+                          height: _chartState == 1 ? 50 : 20,
                           child: Image.asset(
                             'assets/home/arrow_-90angle.png',
                             fit: BoxFit.scaleDown,
@@ -276,12 +240,6 @@ class _DetailItemState extends State<DetailItem> {
                       mainAxisAlignment: _chartState == 0 ? MainAxisAlignment.end : MainAxisAlignment.center,
                       children: [
                         if (_chartState == 0) Spacer(),
-                        const Image(
-                          image: AssetImage('assets/home/temperature.png'),
-                          fit: BoxFit.scaleDown,
-                          width: 30,
-                          height: 30,
-                        ),
                         FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text.rich(
@@ -290,7 +248,7 @@ class _DetailItemState extends State<DetailItem> {
                                 TextSpan(
                                   text: '${widget.rowData.temperature}',
                                   style: TextStyle(
-                                    fontSize: _chartState == 2 ? 50 : 28, // 放大這裡的字體
+                                    fontSize: _chartState == 2 ? 80 : 40, // 放大這裡的字體
                                     color: Colors.black,
                                   ),
                                 ),
@@ -306,8 +264,8 @@ class _DetailItemState extends State<DetailItem> {
                           ),
                         ),
                         SizedBox(
-                          width: 20,
-                          height: 20,
+                          width: _chartState == 2 ? 50 : 20,
+                          height: _chartState == 2 ? 50 : 20,
                           child: Image.asset(
                             'assets/home/arrow_45angle.png',
                             fit: BoxFit.scaleDown,
@@ -334,6 +292,7 @@ class _DetailItemState extends State<DetailItem> {
                         zoomPanBehavior: _zoomPanBehavior,
                         tooltipBehavior: _tooltipBehavior,
                         crosshairBehavior: _crosshairBehavior,
+                        plotAreaBorderWidth: 2, //外框線粗度
                         onActualRangeChanged: (ActualRangeChangedArgs args) {
                           _debounce?.cancel();
 
@@ -429,6 +388,7 @@ class _DetailItemState extends State<DetailItem> {
                               dataSource: bloodSugarLens,
                               xValueMapper: (ChartData data, _) => data.x,
                               yValueMapper: (ChartData data, _) => data.y,
+                              width: 2, // 橘色值粗度
                             ),
                           if (_chartState == 0 || _chartState == 2)
                             LineSeries<ChartData, DateTime>(
@@ -438,12 +398,33 @@ class _DetailItemState extends State<DetailItem> {
                               yValueMapper: (ChartData data, _) => data.y,
                               yAxisName: 'secondaryYAxis',
                               name: '℃',
+                              width: 2, // 藍色值粗度
                             ),
                         ],
                       ),
                     ),
                   ),
                 ),
+                if (_chartState == 0 || _chartState == 1)
+                  const Positioned(
+                    left: 10,
+                    child: Image(
+                      image: AssetImage('assets/home/bloodsugar.png'),
+                      fit: BoxFit.scaleDown,
+                      width: 20,
+                      height: 20,
+                    ),
+                  ),
+                if (_chartState == 0 || _chartState == 2)
+                  const Positioned(
+                    right: 10,
+                    child: Image(
+                      image: AssetImage('assets/home/temperature.png'),
+                      fit: BoxFit.scaleDown,
+                      width: 20,
+                      height: 20,
+                    ),
+                  ),
                 Positioned(
                   left: 0,
                   right: 0,
@@ -489,42 +470,6 @@ class _DetailItemState extends State<DetailItem> {
           ),
           GestureDetector(
             onTap: () async {
-              // Map<String, dynamic>? result = await Navigator.push(
-              //   context,
-              //   PageRouteBuilder(
-              //     pageBuilder: (context, animation, secondaryAnimation) => EditTIRPage(
-              //       bloodSugarTIR: bloodSugarTIR,
-              //       temperatureTIR: temperatureTIR,
-              //       temperatureData: temperatureData,
-              //       bloodSugarData: bloodSugarData,
-              //       dataCount: dataCount,
-              //       totalCurrent: totalCurrent,
-              //       totalTemperature: totalTemperature,
-              //     ),
-              //     transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              //       const begin = Offset(1.0, 0.0);
-              //       const end = Offset.zero;
-              //       const curve = Curves.ease;
-              //       var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-              //       return SlideTransition(
-              //         position: animation.drive(tween),
-              //         child: child,
-              //       );
-              //     },
-              //   ),
-              // );
-              // if (result != null) {
-              //   setState(() {
-              //     bloodSugarTIR = result['bloodSugarTIR'];
-              //     temperatureTIR = result['temperatureTIR'];
-              //     temperatureData = result['temperatureData'];
-              //     bloodSugarData = result['bloodSugarData'];
-              //     totalCurrent = result['totalCurrent'];
-              //     totalTemperature = result['totalTemperature'];
-              //     displayBloodSugarTIR = bloodSugarTIR;
-              //     displayTemperatureTIR = temperatureTIR;
-              //   });
-              // }
               Navigator.push(
                 context,
                 PageRouteBuilder(

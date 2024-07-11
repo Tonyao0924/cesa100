@@ -25,8 +25,8 @@ class _DetailPageState extends State<DetailPage> {
             Image(
               image: AssetImage(widget.rowData.src),
               fit: BoxFit.scaleDown,
-              width: 40,
-              height: 40,
+              width: 30,
+              height: 30,
             ),
             Text(
               '${widget.rowData.number}',
