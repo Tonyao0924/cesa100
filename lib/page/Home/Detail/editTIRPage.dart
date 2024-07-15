@@ -10,7 +10,7 @@ class EditTIRPage extends StatefulWidget {
 class _EditTIRPageState extends State<EditTIRPage> {
   List<double> data = [0, 2, 98, 0, 0]; // 目前的資料，以百分比表示
   List<Color> colors = [Colors.red, Colors.orange, Colors.green, Colors.blue, Colors.red];
-  List<String> labels = ["300", "200", "126", "90"];
+  List<String> labels = ["90", "126", "200", "300"];
 
   @override
   Widget build(BuildContext context) {
@@ -34,9 +34,6 @@ class _EditTIRPageState extends State<EditTIRPage> {
             SizedBox(
               width: 280, // 控制圖表的寬度
               height: 300, // 控制圖表的高度
-              // child: CustomPaint(
-              //   painter: BarChartPainter(data, colors, labels),
-              // ),
               child: CustomPaint(
                 painter: BarChartPainter2(data, colors, labels),
               ),
@@ -67,6 +64,8 @@ class BarChartPainter2 extends CustomPainter {
     double labelHeight = 200; // 刻度文字的高度
     double barHeight = totalHeight - labelHeight; // 值條的高度
     double separatorWidth = 2; // 分隔線的寬度
+    double firstHigh = 0.0;
+    double lastHigh = 0.0;
 
     // 计算刻度文字的垂直位置数组
     List<double> labelXPositions = [];
@@ -85,8 +84,15 @@ class BarChartPainter2 extends CustomPainter {
       );
 
       currentX += barWidth;
-      // 计算刻度文字的水平位置
       double offsetX = currentX - separatorWidth / 2 - 16 / 2;
+      if (i == 0) {
+        firstHigh = offsetX;
+      }
+      if (i == data.length - 1) {
+        lastHigh = offsetX;
+      }
+
+
       labelXPositions.add(offsetX);
 
       // 繪製分隔線
@@ -102,42 +108,42 @@ class BarChartPainter2 extends CustomPainter {
     // 調整刻度文字的位置，防止溢出
     double maxYPosition = labelXPositions.reduce((value, element) => value > element ? value : element);
     double minYPosition = labelXPositions.reduce((value, element) => value < element ? value : element);
-    // double overflowTop = totalHeight - maxYPosition;
-    // double overflowBottom = minYPosition;
-    // if (overflowTop < 0) {
-    //   labelYPositions = labelYPositions.map((pos) => pos - overflowTop).toList();
-    // }
-    //
-    // if (overflowBottom < 0) {
-    //   labelYPositions = labelYPositions.map((pos) => pos + overflowBottom).toList();
-    // }
-    // if (labelYPositions[0] < firstHigh) labelYPositions[0] = firstHigh;
-    // for (int i = 1; i < labels.length; i++) {
-    //   if (labelYPositions[i] - labelYPositions[i - 1] < 25) {
-    //     labelYPositions[i] = labelYPositions[i - 1] + 25;
-    //   }
-    // }
-    //
-    // if (labelYPositions[3] > lastHigh) {
-    //   labelYPositions[3] = lastHigh;
-    // }
-    // for (int i = labels.length - 2; i >= 0; i--) {
-    //   if ((labelYPositions[i + 1] - labelYPositions[i]) < 25) {
-    //     labelYPositions[i] = labelYPositions[i + 1] - 25;
-    //   }
-    // }
+    double overflowTop = totalHeight - maxYPosition;
+    double overflowBottom = minYPosition;
+    if (overflowTop < 0) {
+      labelXPositions = labelXPositions.map((pos) => pos - overflowTop).toList();
+    }
+
+    if (overflowBottom < 0) {
+      labelXPositions = labelXPositions.map((pos) => pos + overflowBottom).toList();
+    }
+    if (labelXPositions[0] < firstHigh) labelXPositions[0] = firstHigh;
+    for (int i = 1; i < labels.length; i++) {
+      if (labelXPositions[i] - labelXPositions[i - 1] < 35) {
+        labelXPositions[i] = labelXPositions[i - 1] + 35;
+      }
+    }
+
+    if (labelXPositions[3] > lastHigh) {
+      labelXPositions[3] = lastHigh;
+    }
+    for (int i = labels.length - 2; i >= 0; i--) {
+      if ((labelXPositions[i + 1] - labelXPositions[i]) < 35) {
+        labelXPositions[i] = labelXPositions[i + 1] - 35;
+      }
+    }
 
     // 繪製刻度文字
-    // for (int i = 0; i < labels.length; i++) {
-    //   if (i < labelYPositions.length) {
-    //     drawText(
-    //       canvas,
-    //       labels[i],
-    //       Offset(-5, labelYPositions[i]),
-    //       TextStyle(color: Colors.black, fontSize: 16),
-    //     );
-    //   }
-    // }
+    for (int i = 0; i < labels.length; i++) {
+      if (i < labelXPositions.length) {
+        drawText(
+          canvas,
+          labels[i],
+          Offset(labelXPositions[i], 260),
+          TextStyle(color: Colors.black, fontSize: 16),
+        );
+      }
+    }
 
     if (location[0] < 25) {
       location[0] = 25;
@@ -160,38 +166,41 @@ class BarChartPainter2 extends CustomPainter {
     }
 
     print(location);
-    // if (data.isNotEmpty) {
-    //   //繪製虛線
-    //   drawFoldedLine(canvas, Offset(barWidth / 5, 0), totalWidth / 2 - 20);
+    if (data.isNotEmpty) {
+      //繪製虛線
+      drawFoldedLine(canvas, Offset(barHeight / 5, 0), totalWidth / 2 - 20);
     //   drawstraightLine(canvas, Offset(barWidth / 5, location[0]), totalWidth / 2 - 20);
     //   drawMidStraightLine(canvas, Offset(barWidth / 3, location[1]), totalWidth / 2);
     //   drawstraightLine(canvas, Offset(barWidth / 5, location[2]), totalWidth / 2 - 20);
     //   drawEndFoldedLine(canvas, Offset(barWidth / 5, 310), totalWidth / 2 - 20);
     //   //繪製文字
     //   drawText(canvas, 'Very High', Offset(barWidth / 5 + 40, -40), TextStyle(color: Colors.black54, fontSize: 16));
-    //   drawText(canvas, 'High', Offset(barWidth / 5 + 40, location[0]-10), TextStyle(color: Colors.black54, fontSize: 16));
-    //   drawText(canvas, 'Target', Offset(barWidth / 5 + 40, location[1]-10), TextStyle(color: Colors.black54, fontSize: 16));
-    //   drawText(canvas, 'Low', Offset(barWidth / 5 + 40, location[2]-10), TextStyle(color: Colors.black54, fontSize: 16));
+    //   drawText(
+    //       canvas, 'High', Offset(barWidth / 5 + 40, location[0] - 10), TextStyle(color: Colors.black54, fontSize: 16));
+    //   drawText(canvas, 'Target', Offset(barWidth / 5 + 40, location[1] - 10),
+    //       TextStyle(color: Colors.black54, fontSize: 16));
+    //   drawText(
+    //       canvas, 'Low', Offset(barWidth / 5 + 40, location[2] - 10), TextStyle(color: Colors.black54, fontSize: 16));
     //   drawText(canvas, 'Very Low', Offset(barWidth / 5 + 40, 320), TextStyle(color: Colors.black54, fontSize: 16));
     //   //繪製百分比
     //   drawText(canvas, '${data[0].toStringAsFixed(0)}%', Offset(barWidth - 80, -20),
     //       TextStyle(color: Colors.black54, fontSize: 16, fontWeight: FontWeight.bold));
-    //   drawText(canvas, '${data[1].toStringAsFixed(0)}%', Offset(barWidth - 80, location[0]-10),
+    //   drawText(canvas, '${data[1].toStringAsFixed(0)}%', Offset(barWidth - 80, location[0] - 10),
     //       TextStyle(color: Colors.black54, fontSize: 16, fontWeight: FontWeight.bold));
-    //   drawText(canvas, '${data[3].toStringAsFixed(0)}%', Offset(barWidth - 80, location[2]-10),
+    //   drawText(canvas, '${data[3].toStringAsFixed(0)}%', Offset(barWidth - 80, location[2] - 10),
     //       TextStyle(color: Colors.black54, fontSize: 16, fontWeight: FontWeight.bold));
     //   drawText(canvas, '${data[4].toStringAsFixed(0)}%', Offset(barWidth - 80, 310),
     //       TextStyle(color: Colors.black54, fontSize: 16, fontWeight: FontWeight.bold));
     //
     //   drawLine(canvas, -10, location[0]);
     //   drawLine(canvas, location[2], 320);
-    //   drawText(canvas, '${(data[0] + data[1]).toStringAsFixed(0)}%', Offset(250, (-10+location[0])/2-12),
+    //   drawText(canvas, '${(data[0] + data[1]).toStringAsFixed(0)}%', Offset(250, (-10 + location[0]) / 2 - 12),
     //       TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold));
-    //   drawText(canvas, '${(data[2]).toStringAsFixed(0)}%', Offset(250, location[1]-12),
+    //   drawText(canvas, '${(data[2]).toStringAsFixed(0)}%', Offset(250, location[1] - 12),
     //       TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold));
-    //   drawText(canvas, '${(data[3] + data[4]).toStringAsFixed(0)}%', Offset(250, (320+location[2])/2-12),
+    //   drawText(canvas, '${(data[3] + data[4]).toStringAsFixed(0)}%', Offset(250, (320 + location[2]) / 2 - 12),
     //       TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold));
-    // }
+    }
   }
 
   void drawText(Canvas canvas, String text, Offset offset, TextStyle style) {
@@ -345,7 +354,7 @@ class BarChartPainter extends CustomPainter {
     double tmp = 0.0; // 暫存值
     List<double> location = [0, 0, 0];
 
-    // 计算刻度文字的垂直位置数组
+    // 計算刻度文字的垂直位置數組
     List<double> labelYPositions = [];
 
     for (int i = 0; i < data.length; i++) {

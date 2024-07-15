@@ -31,7 +31,7 @@ class _DetailPageState extends State<DetailPage> {
             Text(
               '${widget.rowData.number}',
               style: TextStyle(
-                fontSize: 24,
+                fontSize: 20,
                 color: Colors.black,
                 fontWeight: FontWeight.bold,
               ),

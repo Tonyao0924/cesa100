@@ -175,7 +175,6 @@ class _DetailItemState extends State<DetailItem> {
 
   @override
   Widget build(BuildContext context) {
-    print('123456');
     int width = MediaQuery.of(context).size.width.toInt();
     int height = MediaQuery.of(context).size.height.toInt();
     if (_tooltipBehavior == null && _crosshairBehavior == null || futureData == null) {
@@ -190,15 +189,112 @@ class _DetailItemState extends State<DetailItem> {
       child: Column(
         children: [
           Container(
-            padding: EdgeInsets.symmetric(horizontal: width * 0.05),
+            padding: EdgeInsets.symmetric(horizontal: _chartState == 0 ? width * 0.17 : width * 0.05, vertical: _chartState == 0 ? height * 0.035 : 0),
             child: Row(
               mainAxisAlignment:
                   _chartState == 1 || _chartState == 2 ? MainAxisAlignment.center : MainAxisAlignment.spaceBetween,
               children: [
-                if (_chartState == 0 || _chartState == 1)
+                if (_chartState == 0)
                   Expanded(
                     child: Row(
-                      mainAxisAlignment: _chartState == 0 ? MainAxisAlignment.start : MainAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: '${widget.rowData.bloodSugar}',
+                                  style: TextStyle(fontSize: 40, color: Color(0xff808080), fontWeight: FontWeight.bold),
+                                ),
+                                WidgetSpan(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: Image.asset(
+                                          'assets/home/arrow_-90angle.png',
+                                          fit: BoxFit.scaleDown,
+                                        ),
+                                      ),
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: const Text(
+                                          'mg/dl',
+                                          style: TextStyle(
+                                            fontSize: 10, // 這裡保持原來的字體大小
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                if (_chartState == 0)
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Spacer(),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: '${widget.rowData.temperature}',
+                                  style: const TextStyle(
+                                    fontSize: 40,
+                                    color: Color(0xff808080),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                WidgetSpan(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: Image.asset(
+                                          'assets/home/arrow_45angle.png',
+                                          fit: BoxFit.scaleDown,
+                                        ),
+                                      ),
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: const Text(
+                                          ' ℃',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                if (_chartState == 1)
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         FittedBox(
                           fit: BoxFit.scaleDown,
@@ -208,14 +304,15 @@ class _DetailItemState extends State<DetailItem> {
                                 TextSpan(
                                   text: '${widget.rowData.bloodSugar}',
                                   style: TextStyle(
-                                    fontSize: _chartState == 1 ? 80 : 40, // 放大這裡的字體
-                                    color: Colors.black,
+                                    fontSize: 80, // 放大這裡的字體
+                                    color: Color(0xff808080),
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                TextSpan(
+                                const TextSpan(
                                   text: 'mg/dl',
-                                  style: const TextStyle(
-                                    fontSize: 10, // 這裡保持原來的字體大小
+                                  style: TextStyle(
+                                    fontSize: 15, // 這裡保持原來的字體大小
                                     color: Colors.black,
                                   ),
                                 ),
@@ -224,8 +321,8 @@ class _DetailItemState extends State<DetailItem> {
                           ),
                         ),
                         SizedBox(
-                          width: _chartState == 1 ? 50 : 20,
-                          height: _chartState == 1 ? 50 : 20,
+                          width: 50,
+                          height: 50,
                           child: Image.asset(
                             'assets/home/arrow_-90angle.png',
                             fit: BoxFit.scaleDown,
@@ -234,12 +331,11 @@ class _DetailItemState extends State<DetailItem> {
                       ],
                     ),
                   ),
-                if (_chartState == 0 || _chartState == 2)
+                if (_chartState == 2)
                   Expanded(
                     child: Row(
-                      mainAxisAlignment: _chartState == 0 ? MainAxisAlignment.end : MainAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        if (_chartState == 0) Spacer(),
                         FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text.rich(
@@ -248,14 +344,15 @@ class _DetailItemState extends State<DetailItem> {
                                 TextSpan(
                                   text: '${widget.rowData.temperature}',
                                   style: TextStyle(
-                                    fontSize: _chartState == 2 ? 80 : 40, // 放大這裡的字體
-                                    color: Colors.black,
+                                    fontSize: 80, // 放大這裡的字體
+                                    color: Color(0xff808080),
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                                 TextSpan(
                                   text: ' ℃',
                                   style: const TextStyle(
-                                    fontSize: 10, // 這裡保持原來的字體大小
+                                    fontSize: 15, // 這裡保持原來的字體大小
                                     color: Colors.black,
                                   ),
                                 ),
@@ -264,8 +361,8 @@ class _DetailItemState extends State<DetailItem> {
                           ),
                         ),
                         SizedBox(
-                          width: _chartState == 2 ? 50 : 20,
-                          height: _chartState == 2 ? 50 : 20,
+                          width: 50,
+                          height: 50,
                           child: Image.asset(
                             'assets/home/arrow_45angle.png',
                             fit: BoxFit.scaleDown,
@@ -280,7 +377,6 @@ class _DetailItemState extends State<DetailItem> {
           Expanded(
             child: Stack(
               children: [
-                // 图表部分
                 Positioned.fill(
                   child: Container(
                     padding: EdgeInsets.only(bottom: height * 0.03),
@@ -292,10 +388,10 @@ class _DetailItemState extends State<DetailItem> {
                         zoomPanBehavior: _zoomPanBehavior,
                         tooltipBehavior: _tooltipBehavior,
                         crosshairBehavior: _crosshairBehavior,
-                        plotAreaBorderWidth: 2, //外框線粗度
+                        plotAreaBorderWidth: 4, //外框線粗度
+                        plotAreaBorderColor: Colors.black12,
                         onActualRangeChanged: (ActualRangeChangedArgs args) {
                           _debounce?.cancel();
-
                           _debounce = Timer(const Duration(milliseconds: 100), () {
                             if (args.visibleMin != 0) {
                               setState(() {
@@ -341,18 +437,19 @@ class _DetailItemState extends State<DetailItem> {
                           });
                         },
                         primaryXAxis: DateTimeAxis(
-                          // intervalType: DateTimeIntervalType.minutes,
                           title: const AxisTitle(text: 'Time'),
                           rangePadding: ChartRangePadding.round,
                           initialVisibleMinimum: minX,
                           initialVisibleMaximum: maxX,
-                          // autoScrollingDeltaType: DateTimeIntervalType.months, //自動滾動Delta類型
+                          majorGridLines: MajorGridLines(width: 1, color: Colors.black12), // 主分個格寬度
+                          minorGridLines: MinorGridLines(width: 1, color: Colors.black12), // 次分隔線粗度
+                          majorTickLines: MajorTickLines(width: 0), // 隱藏主要刻度線
+                          minorTickLines: MinorTickLines(width: 0), // 隱藏次要刻度線
                         ),
                         primaryYAxis: NumericAxis(
                           interval: 40,
-                          // interval: primaryYAxisInterval,
-                          // minimum: primaryYAxisMin,
-                          // maximum: primaryYAxisMax,
+                          minimum: 0, // 这里可以根据需要调整
+                          maximum: 280, // 这里可以根据需要调整
                           title: AxisTitle(
                             text: 'mg/dl',
                             textStyle: TextStyle(
@@ -362,14 +459,18 @@ class _DetailItemState extends State<DetailItem> {
                           labelStyle: TextStyle(
                             color: _chartState == 0 || _chartState == 1 ? Colors.deepOrange : Colors.transparent,
                           ),
+                          majorGridLines: MajorGridLines(width: 1, color: Colors.transparent), // 主分隔線粗度
+                          minorGridLines: MinorGridLines(width: 1, color: Colors.transparent), // 次分隔線粗度
+                          majorTickLines: MajorTickLines(width: 0), // 隱藏主要刻度線
+                          minorTickLines: MinorTickLines(width: 0), // 隱藏次要刻度線
                         ),
                         axes: <ChartAxis>[
                           NumericAxis(
                             name: 'secondaryYAxis',
                             opposedPosition: true,
-                            // interval: secondaryYAxisInterval,
-                            // minimum: secondaryYAxisMin,
-                            // maximum: secondaryYAxisMax,
+                            interval: 5,
+                            minimum: 15,
+                            maximum: 50,
                             title: AxisTitle(
                               text: '℃',
                               textStyle: TextStyle(
@@ -379,6 +480,10 @@ class _DetailItemState extends State<DetailItem> {
                             labelStyle: TextStyle(
                               color: _chartState == 0 || _chartState == 2 ? Colors.blue : Colors.transparent,
                             ),
+                            majorGridLines: MajorGridLines(width: 1, color: Colors.black12), // 主分個格寬度
+                            minorGridLines: MinorGridLines(width: 1, color: Colors.black12), // 次分隔線粗度
+                            majorTickLines: MajorTickLines(width: 0), // 隱藏主要刻度線
+                            minorTickLines: MinorTickLines(width: 0), // 隱藏次要刻度線
                           ),
                         ],
                         series: <CartesianSeries>[
@@ -428,21 +533,21 @@ class _DetailItemState extends State<DetailItem> {
                 Positioned(
                   left: 0,
                   right: 0,
-                  bottom: 0,
+                  bottom: height * 0.025,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     margin: const EdgeInsets.only(bottom: 15),
                     child: Row(
                       children: [
                         Text(
-                          'Avg. BG：\n${avgBloodSugar.toStringAsFixed(2)}',
+                          'Avg.：${avgBloodSugar.toStringAsFixed(1)}',
                           style: TextStyle(
                             color: Colors.deepOrangeAccent,
                           ),
                         ),
                         const Spacer(),
                         Text(
-                          'Avg. TEMP：\n${avgTemperature.toStringAsFixed(1)}',
+                          'Avg.：${avgTemperature.toStringAsFixed(1)}',
                           style: TextStyle(
                             color: Colors.blue,
                           ),
@@ -465,7 +570,7 @@ class _DetailItemState extends State<DetailItem> {
                     fontSize: 14,
                   ),
                 ),
-              )
+              ),
             ],
           ),
           GestureDetector(
@@ -507,7 +612,6 @@ class _DetailItemState extends State<DetailItem> {
   }
 
   List<Widget> _getTextList(List<int> displayBloodSugarTIR, List<int> displayTemperatureTIR, int length) {
-    print('1111111');
     List<Color> colors = [Colors.red, Colors.blue, Colors.green, Colors.orange, Colors.red];
 
     double calculatePercentage(int value, int length) {
@@ -608,10 +712,6 @@ class _DetailItemState extends State<DetailItem> {
     }
 
     if (_chartState == 0 || _chartState == 2) {
-      widgets.add(
-        SizedBox(height: 5),
-      );
-
       widgets.add(
         Container(
           width: MediaQuery.of(context).size.width * 0.9,
