@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:cesa100/commonComponents/GlobalVariables.dart';
 import 'package:cesa100/commonComponents/totalDialog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -235,7 +236,7 @@ class _EditTIRPageState extends State<EditTIRPage> {
               };
               print(data);
               final response = await http.put(
-                Uri.parse('http://192.168.101.101:3000/modifyranges'),
+                Uri.parse('${GlobalVariables.serverIP}modifyranges'),
                 headers: {
                   'Content-Type': 'application/json',
                 },

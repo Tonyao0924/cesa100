@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:cesa100/commonComponents/GlobalVariables.dart';
 import 'package:cesa100/page/Home/Detail/editTIRPage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -147,7 +148,7 @@ class _DetailItemState extends State<DetailItem> {
   }
 
   Future<List<dynamic>> fetchData() async {
-    final response = await http.get(Uri.parse('http://192.168.101.101:3000/sensorData'));
+    final response = await http.get(Uri.parse('${GlobalVariables.serverIP}sensorData'));
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
@@ -156,7 +157,7 @@ class _DetailItemState extends State<DetailItem> {
   }
 
   Future<List<dynamic>> fetchTIRData() async {
-    final response = await http.get(Uri.parse('http://192.168.101.101:3000/ranges'));
+    final response = await http.get(Uri.parse('${GlobalVariables.serverIP}ranges'));
     if (response.statusCode == 200) {
       // print(json.decode(response.body));
       return json.decode(response.body);
