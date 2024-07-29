@@ -32,6 +32,7 @@ class _HomePageState extends State<HomePage> with BleCallback2 {
     bleProxy.removeBleCallback(this);
   }
 
+  // 藍芽接受資料的func
   @override
   void onDataReceived(String deviceId, String serviceUuid, String characteristicUuid, Uint8List data) {
     if (characteristicUuid == '6e6c31cc-3bd6-fe13-124d-9611451cd8f3') {
@@ -217,6 +218,7 @@ class _HomePageState extends State<HomePage> with BleCallback2 {
     );
   }
 
+  // 寫入資料
   Future<void> writeData() async {
     List<int> parameter = [1, 3, 10, 0, 0, 2, 88, -3, 168];
     Uint8List myData = Uint8List.fromList(parameter);

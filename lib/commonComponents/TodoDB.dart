@@ -18,6 +18,7 @@ class TodoDB {
       potential INTEGER
     )''';
 
+  // 初始化資料庫並獲取資料酷
   static Future<Database> initializeDatabase() async {
     return openDatabase(
       join(await getDatabasesPath(), dbName),
@@ -32,6 +33,7 @@ class TodoDB {
     );
   }
 
+  //初始化資料庫
   static Future<void> initialize() async {
     final Database database = await initializeDatabase();
     List<Map<String, dynamic>> result = await database.rawQuery('SELECT * FROM app_settings LIMIT 1');
@@ -47,6 +49,7 @@ class TodoDB {
     }
   }
 
+  // 更新設定的Func
   static Future<void> updateSetting(BuildContext context) async {
     final Database database = await initializeDatabase();
     await database.update('app_settings', {

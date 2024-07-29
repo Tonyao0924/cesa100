@@ -12,7 +12,7 @@ Timer? _timer;
 void showToast(BuildContext context, String message) {
   int height = MediaQuery.of(context).size.height.toInt();
 
-  // 移除当前显示的 Toast
+  // 移除當前顯示的 Toast
   if (_currentOverlay != null) {
     _currentOverlay?.remove();
     _timer?.cancel();
@@ -46,15 +46,15 @@ void showToast(BuildContext context, String message) {
 
   Overlay.of(context).insert(overlayEntry);
 
-  // 显示 Toast 一段时间后移除
+  // 顯示 Toast 一段時間後移除
   _timer = Timer(const Duration(seconds: 2), () {
     if (_currentOverlay != null) {
       _currentOverlay!.remove();
     }
-    // 更新当前 OverlayEntry
+    // 更新當前 OverlayEntry
     _currentOverlay = null;
   });
-  // 更新当前 OverlayEntry
+  // 更新當前 OverlayEntry
   _currentOverlay = overlayEntry;
 }
 

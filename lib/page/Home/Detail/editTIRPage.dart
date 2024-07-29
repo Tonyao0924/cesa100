@@ -26,19 +26,21 @@ class _EditTIRPageState extends State<EditTIRPage> {
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(0.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 250, // 控制圖表的寬度
-              height: 300, // 控制圖表的高度
-              child: CustomPaint(
-                painter: BarChartPainter2(data, colors, labels),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(0.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 250, // 控制圖表的寬度
+                height: 300, // 控制圖表的高度
+                child: CustomPaint(
+                  painter: BarChartPainter2(data, colors, labels),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -173,39 +175,39 @@ class BarChartPainter2 extends CustomPainter {
       //繪製虛線
       drawFoldedLine(canvas, Offset(0, barHeight * 2 + barHeight / 4), totalHeight / 2 - 60);
       drawstraightLine(canvas, Offset(location[0], barHeight + 80), totalHeight / 2 - 60 - 45);
-      drawMidStraightLine(canvas, Offset(location[1], barHeight + 80), totalHeight / 3);
+      drawMidStraightLine(canvas, Offset(location[1], barHeight + 80), totalHeight / 3 - 10);
       drawstraightLine(canvas, Offset(location[2], barHeight + 80), totalHeight / 2 - 60 - 45);
       drawEndFoldedLine(canvas, Offset(totalWidth + 12, barHeight * 2 + barHeight / 4), totalHeight / 2 - 60);
       //繪製文字
       drawText(canvas, 'Low+', Offset(-30, barHeight * 2), TextStyle(color: Colors.black54, fontSize: 14));
+      drawText(canvas, 'Low', Offset(location[0], barHeight * 2 - 20), TextStyle(color: Colors.black54, fontSize: 14));
       drawText(
-          canvas, 'Low', Offset(location[0], barHeight * 2 - 20), TextStyle(color: Colors.black54, fontSize: 14));
-      drawText(canvas, 'Target', Offset(location[1], barHeight * 2 - 20),
-          TextStyle(color: Colors.black54, fontSize: 14));
-      drawText(
-          canvas, 'High', Offset(location[2], barHeight * 2 - 20), TextStyle(color: Colors.black54, fontSize: 14));
+          canvas, 'Target', Offset(location[1], barHeight * 2 - 20), TextStyle(color: Colors.black54, fontSize: 14));
+      drawText(canvas, 'High', Offset(location[2], barHeight * 2 - 20), TextStyle(color: Colors.black54, fontSize: 14));
       drawText(canvas, 'High+', Offset(290, barHeight * 2), TextStyle(color: Colors.black54, fontSize: 14));
       //   //繪製百分比
       drawText(canvas, '${data[0].toStringAsFixed(0)}%', Offset(0, barHeight + 15),
           TextStyle(color: Colors.black54, fontSize: 14, fontWeight: FontWeight.bold));
       drawText(canvas, '${data[1].toStringAsFixed(0)}%', Offset(location[0], barHeight + 15),
           TextStyle(color: Colors.black54, fontSize: 14, fontWeight: FontWeight.bold));
-        drawText(canvas, '${data[3].toStringAsFixed(0)}%', Offset(location[2], barHeight + 15),
-            TextStyle(color: Colors.black54, fontSize: 14, fontWeight: FontWeight.bold));
-        drawText(canvas, '${data[4].toStringAsFixed(0)}%', Offset(272, barHeight + 15),
-            TextStyle(color: Colors.black54, fontSize: 14, fontWeight: FontWeight.bold));
-        // 畫data0跟data1的蓋子 畫data3跟data4的蓋子
-        drawLine(canvas, -6, location[0]);
-        drawLine(canvas, location[2], 272);
-      //   drawText(canvas, '${(data[0] + data[1]).toStringAsFixed(0)}%', Offset(250, (-10 + location[0]) / 2 - 12),
-      //       TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold));
-      //   drawText(canvas, '${(data[2]).toStringAsFixed(0)}%', Offset(250, location[1] - 12),
-      //       TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold));
-      //   drawText(canvas, '${(data[3] + data[4]).toStringAsFixed(0)}%', Offset(250, (320 + location[2]) / 2 - 12),
-      //       TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold));
+      drawText(canvas, '${data[3].toStringAsFixed(0)}%', Offset(location[2], barHeight + 15),
+          TextStyle(color: Colors.black54, fontSize: 14, fontWeight: FontWeight.bold));
+      drawText(canvas, '${data[4].toStringAsFixed(0)}%', Offset(272, barHeight + 15),
+          TextStyle(color: Colors.black54, fontSize: 14, fontWeight: FontWeight.bold));
+      // 畫data0跟data1的蓋子 畫data3跟data4的蓋子
+      drawLine(canvas, -6, location[0]);
+      drawLine(canvas, location[2], 272);
+      // 繪製最上方的三個百分比
+        drawText(canvas, '${(data[0] + data[1]).toStringAsFixed(0)}%', Offset((location[0]) / 2, 60),
+            TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold));
+        drawText(canvas, '${(data[2]).toStringAsFixed(0)}%', Offset(location[1], 60),
+            TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold));
+        drawText(canvas, '${(data[3] + data[4]).toStringAsFixed(0)}%', Offset((272 + location[2]) / 2, 60),
+            TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold));
     }
   }
 
+  // 繪製文字
   void drawText(Canvas canvas, String text, Offset offset, TextStyle style) {
     final TextSpan span = TextSpan(text: text, style: style);
     final TextPainter tp = TextPainter(text: span, textAlign: TextAlign.left, textDirection: TextDirection.ltr);
@@ -216,6 +218,7 @@ class BarChartPainter2 extends CustomPainter {
     tp.paint(canvas, centeredOffset);
   }
 
+  // 繪製最左邊的虛像
   void drawFoldedLine(Canvas canvas, Offset start, double height) {
     final Paint paint = Paint()
       ..color = Colors.grey
@@ -245,6 +248,7 @@ class BarChartPainter2 extends CustomPainter {
     }
   }
 
+  // 繪製第二條跟第四條虛線
   void drawstraightLine(Canvas canvas, Offset start, double height) {
     final Paint paint = Paint()
       ..color = Colors.grey
@@ -270,6 +274,7 @@ class BarChartPainter2 extends CustomPainter {
     }
   }
 
+  // 繪製中線
   void drawMidStraightLine(Canvas canvas, Offset start, double height) {
     final Paint paint = Paint()
       ..color = Colors.grey
@@ -293,6 +298,7 @@ class BarChartPainter2 extends CustomPainter {
     }
   }
 
+  // 繪製最右邊的虛線
   void drawEndFoldedLine(Canvas canvas, Offset start, double height) {
     final Paint paint = Paint()
       ..color = Colors.grey
@@ -320,12 +326,13 @@ class BarChartPainter2 extends CustomPainter {
     }
   }
 
+  //繪製上面的實線
   void drawLine(Canvas canvas, double start, double end) {
     final Paint paint = Paint()
       ..color = Colors.grey
       ..strokeWidth = 1.0;
 
-    Offset startO = Offset(start, 100);
+    Offset startO = Offset(start, 110);
     canvas.drawLine(startO, Offset(startO.dx, startO.dy - 20), paint);
     startO = Offset(startO.dx, startO.dy - 20);
     canvas.drawLine(startO, Offset(startO.dx + (end - start), startO.dy), paint);

@@ -80,6 +80,7 @@ class _DetailItemState extends State<DetailItem> {
     );
   }
 
+  // 畫出圖表
   Future<void> drawChart() async {
     futureData = await fetchData();
     futureTIRData = await fetchTIRData();
@@ -122,6 +123,7 @@ class _DetailItemState extends State<DetailItem> {
     setState(() {});
   }
 
+  // 放資料到TIR陣列當中
   void putTIRData(double current, double temperature) {
     if (current >= bloodSugarData[0]) {
       bloodSugarTIR[0]++;
@@ -147,6 +149,7 @@ class _DetailItemState extends State<DetailItem> {
     }
   }
 
+  // 解析資料
   Future<List<dynamic>> fetchData() async {
     final response = await http.get(Uri.parse('${GlobalVariables.serverIP}sensorData'));
     if (response.statusCode == 200) {
@@ -156,6 +159,7 @@ class _DetailItemState extends State<DetailItem> {
     }
   }
 
+  // 拿取TIR Ranges的間隔值
   Future<List<dynamic>> fetchTIRData() async {
     final response = await http.get(Uri.parse('${GlobalVariables.serverIP}ranges'));
     if (response.statusCode == 200) {
@@ -166,6 +170,7 @@ class _DetailItemState extends State<DetailItem> {
     }
   }
 
+  // 變換顯示狀態
   void _toggleChartState() {
     setState(() {
       _chartState = (_chartState + 1) % 3;
@@ -178,6 +183,8 @@ class _DetailItemState extends State<DetailItem> {
   Widget build(BuildContext context) {
     int width = MediaQuery.of(context).size.width.toInt();
     int height = MediaQuery.of(context).size.height.toInt();
+
+    // 當資料還沒讀到得時候 做的事件
     if (_tooltipBehavior == null && _crosshairBehavior == null || futureData == null) {
       return const Scaffold(
         body: Center(
@@ -612,6 +619,7 @@ class _DetailItemState extends State<DetailItem> {
     );
   }
 
+  // 繪製TIR顯示
   List<Widget> _getTextList(List<int> displayBloodSugarTIR, List<int> displayTemperatureTIR, int length) {
     List<Color> colors = [Colors.red, Colors.blue, Colors.green, Colors.orange, Colors.red];
 

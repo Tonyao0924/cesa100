@@ -38,6 +38,7 @@ class _HomeListState extends State<HomeList> {
     sortData();
   }
 
+  // 將資料排序好
   void sortData(){
     _dataLens.sort((a, b) {
       if (a.bloodSugar > 200 || a.temperature > 40) {
@@ -284,6 +285,7 @@ class _HomeListState extends State<HomeList> {
     );
   }
 
+  // 寫入機器的parameter
   Future<void> writeData() async {
     List<int> parameter = [1, 3, 10, 0, 0, 2, 88, -3, 168];
     Uint8List myData = Uint8List.fromList(parameter);

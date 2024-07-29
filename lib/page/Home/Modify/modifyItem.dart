@@ -20,6 +20,7 @@ class _ModifyItemState extends State<ModifyItem> {
   final picker = ImagePicker();
   final ImagePicker _picker = ImagePicker();
 
+  //選擇照片
   Future getImageGallery() async {
     final pickedFile = await picker.pickImage(
       source: ImageSource.gallery,
@@ -35,6 +36,7 @@ class _ModifyItemState extends State<ModifyItem> {
     });
   }
 
+  // 打開相機 並使用相機拍照
   Future<void> _pickImageFromCamera() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.camera);
 
@@ -214,6 +216,7 @@ class _ModifyItemState extends State<ModifyItem> {
     );
   }
 
+  // 底部選單列
   Future<void> _showCustomModalBottomSheet(int width, int height) async {
     return showModalBottomSheet(
       context: context,
