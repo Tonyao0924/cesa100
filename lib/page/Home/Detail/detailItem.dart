@@ -197,7 +197,9 @@ class _DetailItemState extends State<DetailItem> {
       child: Column(
         children: [
           Container(
-            padding: EdgeInsets.symmetric(horizontal: _chartState == 0 ? width * 0.17 : width * 0.05, vertical: _chartState == 0 ? height * 0.035 : 0),
+            padding: EdgeInsets.symmetric(
+                horizontal: _chartState == 0 ? width * 0.17 : width * 0.05,
+                vertical: _chartState == 0 ? height * 0.035 : 0),
             child: Row(
               mainAxisAlignment:
                   _chartState == 1 || _chartState == 2 ? MainAxisAlignment.center : MainAxisAlignment.spaceBetween,
@@ -387,7 +389,7 @@ class _DetailItemState extends State<DetailItem> {
               children: [
                 Positioned.fill(
                   child: Container(
-                    padding: EdgeInsets.only(bottom: height * 0.03),
+                    padding: EdgeInsets.only(bottom: height * 0.03, top: 20),
                     child: GestureDetector(
                       onTap: () {
                         _toggleChartState();
@@ -445,7 +447,7 @@ class _DetailItemState extends State<DetailItem> {
                           });
                         },
                         primaryXAxis: DateTimeAxis(
-                          title: const AxisTitle(text: 'Time'),
+                          // title: const AxisTitle(text: 'Time'),
                           rangePadding: ChartRangePadding.round,
                           initialVisibleMinimum: minX,
                           initialVisibleMaximum: maxX,
@@ -458,12 +460,12 @@ class _DetailItemState extends State<DetailItem> {
                           interval: 40,
                           minimum: 0, // 这里可以根据需要调整
                           maximum: 280, // 这里可以根据需要调整
-                          title: AxisTitle(
-                            text: 'mg/dl',
-                            textStyle: TextStyle(
-                              color: _chartState == 0 || _chartState == 1 ? Colors.deepOrange : Colors.transparent,
-                            ),
-                          ),
+                          // title: AxisTitle(
+                          //   text: 'mg/dl',
+                          //   textStyle: TextStyle(
+                          //     color: _chartState == 0 || _chartState == 1 ? Colors.deepOrange : Colors.transparent,
+                          //   ),
+                          // ),
                           labelStyle: TextStyle(
                             color: _chartState == 0 || _chartState == 1 ? Colors.deepOrange : Colors.transparent,
                           ),
@@ -479,12 +481,12 @@ class _DetailItemState extends State<DetailItem> {
                             interval: 5,
                             minimum: 15,
                             maximum: 50,
-                            title: AxisTitle(
-                              text: '℃',
-                              textStyle: TextStyle(
-                                color: _chartState == 0 || _chartState == 2 ? Colors.blue : Colors.transparent,
-                              ),
-                            ),
+                            // title: AxisTitle(
+                            //   text: '℃',
+                            //   textStyle: TextStyle(
+                            //     color: _chartState == 0 || _chartState == 2 ? Colors.blue : Colors.transparent,
+                            //   ),
+                            // ),
                             labelStyle: TextStyle(
                               color: _chartState == 0 || _chartState == 2 ? Colors.blue : Colors.transparent,
                             ),
@@ -519,29 +521,49 @@ class _DetailItemState extends State<DetailItem> {
                   ),
                 ),
                 if (_chartState == 0 || _chartState == 1)
-                  const Positioned(
+                  Positioned(
                     left: 10,
-                    child: Image(
-                      image: AssetImage('assets/home/bloodsugar.png'),
-                      fit: BoxFit.scaleDown,
-                      width: 20,
-                      height: 20,
+                    child: Row(
+                      children: [
+                        const Image(
+                          image: AssetImage('assets/home/bloodsugar.png'),
+                          fit: BoxFit.scaleDown,
+                          width: 20,
+                          height: 20,
+                        ),
+                        Text(
+                          'mg/dl',
+                          style: TextStyle(
+                            color: _chartState == 0 || _chartState == 1 ? Colors.deepOrange : Colors.transparent,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 if (_chartState == 0 || _chartState == 2)
-                  const Positioned(
+                  Positioned(
                     right: 10,
-                    child: Image(
-                      image: AssetImage('assets/home/temperature.png'),
-                      fit: BoxFit.scaleDown,
-                      width: 20,
-                      height: 20,
+                    child: Row(
+                      children: [
+                        Text(
+                          '℃',
+                          style: TextStyle(
+                            color: _chartState == 0 || _chartState == 2 ? Colors.blue : Colors.transparent,
+                          ),
+                        ),
+                        const Image(
+                          image: AssetImage('assets/home/temperature.png'),
+                          fit: BoxFit.scaleDown,
+                          width: 20,
+                          height: 20,
+                        ),
+                      ],
                     ),
                   ),
                 Positioned(
                   left: 0,
                   right: 0,
-                  bottom: height * 0.025,
+                  bottom: 0,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     margin: const EdgeInsets.only(bottom: 15),
@@ -550,14 +572,14 @@ class _DetailItemState extends State<DetailItem> {
                         Text(
                           'Avg.：${avgBloodSugar.toStringAsFixed(1)}',
                           style: TextStyle(
-                            color: Colors.deepOrangeAccent,
+                            color: _chartState != 2 ? Colors.deepOrangeAccent : Colors.transparent,
                           ),
                         ),
                         const Spacer(),
                         Text(
                           'Avg.：${avgTemperature.toStringAsFixed(1)}',
                           style: TextStyle(
-                            color: Colors.blue,
+                            color: _chartState != 1 ? Colors.blue : Colors.transparent,
                           ),
                         ),
                       ],
