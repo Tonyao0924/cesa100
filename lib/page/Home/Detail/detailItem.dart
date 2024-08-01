@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:syncfusion_flutter_charts/charts.dart';
+import 'package:intl/intl.dart';
+
 
 import '../../../commonComponents/chartData.dart';
 import '../Home/petlist.dart';
@@ -49,6 +51,9 @@ class _DetailItemState extends State<DetailItem> {
   late int lastBgNonZeroIndex;
   late int firstTempNonZeroIndex;
   late int lastTempNonZeroIndex;
+  DateTime? previousMinX;
+  DateTime? previousMaxX;
+
 
   @override
   void initState() {
@@ -61,8 +66,8 @@ class _DetailItemState extends State<DetailItem> {
       selectionRectBorderWidth: 1,
       selectionRectColor: Colors.grey,
       zoomMode: ZoomMode.x,
-      enablePanning: true,
-      enablePinching: true,
+      enablePanning: true, // 左右滾動
+      // enablePinching: true, // 手勢縮放圖表大小
     );
     _tooltipBehavior = TooltipBehavior(
       enable: true,
@@ -114,6 +119,7 @@ class _DetailItemState extends State<DetailItem> {
       DateTime lastTime = DateTime.parse(futureData![futureData!.length - 1]['DateTime']);
       minX = firstTime;
       maxX = lastTime;
+      minX = maxX!.subtract(Duration(hours: 3));
       firstinit = false;
     }
     avgBloodSugar = totalCurrent.reduce((a, b) => a + b) / totalCurrent.length;
@@ -389,7 +395,7 @@ class _DetailItemState extends State<DetailItem> {
               children: [
                 Positioned.fill(
                   child: Container(
-                    padding: EdgeInsets.only(bottom: height * 0.03, top: 20),
+                    padding: EdgeInsets.only(bottom: height * 0.03, top: 40),
                     child: GestureDetector(
                       onTap: () {
                         _toggleChartState();
@@ -410,6 +416,18 @@ class _DetailItemState extends State<DetailItem> {
                                 print('------');
                                 print(minX);
                                 print(maxX);
+                                if (previousMinX != null && previousMaxX != null) {
+                                  int previousRange = (previousMaxX!.millisecondsSinceEpoch - previousMinX!.millisecondsSinceEpoch) as int;
+                                  int currentRange = (maxX!.millisecondsSinceEpoch - minX!.millisecondsSinceEpoch) as int;
+                                  if (currentRange < previousRange) {
+                                    print('放大');
+                                  } else {
+                                    print('缩小');
+                                  }
+                                  print(' $currentRange $previousRange');
+                                }
+                                previousMinX = minX;
+                                previousMaxX = maxX;
                                 if (futureData != null) {
                                   List<dynamic> data = futureData!;
                                   totalCurrent = [];
@@ -455,6 +473,7 @@ class _DetailItemState extends State<DetailItem> {
                           minorGridLines: MinorGridLines(width: 1, color: Colors.black12), // 次分隔線粗度
                           majorTickLines: MajorTickLines(width: 0), // 隱藏主要刻度線
                           minorTickLines: MinorTickLines(width: 0), // 隱藏次要刻度線
+                          dateFormat: DateFormat.H(), // 只顯示小時
                         ),
                         primaryYAxis: NumericAxis(
                           interval: 40,
@@ -523,7 +542,7 @@ class _DetailItemState extends State<DetailItem> {
                 if (_chartState == 0 || _chartState == 1)
                   Positioned(
                     left: 10,
-                    child: Row(
+                    child: Column(
                       children: [
                         const Image(
                           image: AssetImage('assets/home/bloodsugar.png'),
@@ -543,19 +562,19 @@ class _DetailItemState extends State<DetailItem> {
                 if (_chartState == 0 || _chartState == 2)
                   Positioned(
                     right: 10,
-                    child: Row(
+                    child: Column(
                       children: [
-                        Text(
-                          '℃',
-                          style: TextStyle(
-                            color: _chartState == 0 || _chartState == 2 ? Colors.blue : Colors.transparent,
-                          ),
-                        ),
                         const Image(
                           image: AssetImage('assets/home/temperature.png'),
                           fit: BoxFit.scaleDown,
                           width: 20,
                           height: 20,
+                        ),
+                        Text(
+                          '℃',
+                          style: TextStyle(
+                            color: _chartState == 0 || _chartState == 2 ? Colors.blue : Colors.transparent,
+                          ),
                         ),
                       ],
                     ),
