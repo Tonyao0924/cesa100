@@ -185,11 +185,11 @@ class _DetailItemState extends State<DetailItem> {
     });
   }
 
-  void circulationLoop(){
+  void circulationLoop() {
     setState(() {
-      if(initCirculation != 24){
+      if (initCirculation != 24) {
         initCirculation *= 2;
-      }else{
+      } else {
         initCirculation = 3;
       }
       minX = maxX!.subtract(Duration(hours: initCirculation));
@@ -223,8 +223,9 @@ class _DetailItemState extends State<DetailItem> {
               borderRadius: BorderRadius.circular(20),
             ),
             margin: EdgeInsets.symmetric(
-                horizontal: width * 0.02,
-                vertical: 10),
+              horizontal: width * 0.02,
+              vertical: 10,
+            ),
             padding: EdgeInsets.symmetric(
                 horizontal: _chartState == 0 ? width * 0.15 : width * 0.03,
                 vertical: _chartState == 0 ? height * 0.035 : 0),
@@ -416,7 +417,7 @@ class _DetailItemState extends State<DetailItem> {
             child: Container(
               margin: EdgeInsets.symmetric(
                 horizontal: width * 0.02,
-                vertical: 10,
+                // vertical: 10,
               ),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -597,19 +598,16 @@ class _DetailItemState extends State<DetailItem> {
                         SizedBox(width: 10),
                         Expanded(
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               TextButton(
                                 style: ButtonStyle(
                                   foregroundColor: MaterialStateProperty.resolveWith(
-                                        (states) {
-                                      return states.contains(MaterialState.pressed)
-                                          ? iconHoverColor
-                                          : iconColor;
+                                    (states) {
+                                      return states.contains(MaterialState.pressed) ? iconHoverColor : iconColor;
                                     },
                                   ),
-                                  overlayColor:
-                                  MaterialStateProperty.all(Colors.transparent),
+                                  overlayColor: MaterialStateProperty.all(Colors.transparent),
                                 ),
                                 onPressed: () {
                                   circulationLoop();
@@ -717,53 +715,69 @@ class _DetailItemState extends State<DetailItem> {
               ),
             ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  'Time In Range',
-                  style: TextStyle(
-                    fontSize: 14,
-                  ),
+          Container(
+            height: 80,
+            margin: EdgeInsets.symmetric(
+              horizontal: width * 0.02,
+              vertical: 10,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'Time In Range',
+                        style: TextStyle(
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
-          GestureDetector(
-            onTap: () async {
-              Navigator.push(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (context, animation, secondaryAnimation) => EditTIRPage(),
-                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                    const begin = Offset(1.0, 0.0);
-                    const end = Offset.zero;
-                    const curve = Curves.ease;
-                    var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                    return SlideTransition(
-                      position: animation.drive(tween),
-                      child: child,
+                GestureDetector(
+                  onTap: () async {
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) => EditTIRPage(),
+                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                          const begin = Offset(1.0, 0.0);
+                          const end = Offset.zero;
+                          const curve = Curves.ease;
+                          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                          return SlideTransition(
+                            position: animation.drive(tween),
+                            child: child,
+                          );
+                        },
+                      ),
                     );
                   },
-                ),
-              );
-            },
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: width * 0.05),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: _getTextList(displayBloodSugarTIR, displayTemperatureTIR, dataCount),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: width * 0.05),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: _getTextList(displayBloodSugarTIR, displayTemperatureTIR, dataCount),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-          SizedBox(height: height * 0.03),
+          SizedBox(height: height * 0.02),
         ],
       ),
     );
