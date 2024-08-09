@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:syncfusion_flutter_core/core.dart';
 
 import 'package:cesa100/commonComponents/GlobalVariables.dart';
 import 'package:cesa100/page/Home/Detail/editTIRPage.dart';
@@ -51,9 +52,8 @@ class _DetailItemState extends State<DetailItem> {
   late int lastBgNonZeroIndex;
   late int firstTempNonZeroIndex;
   late int lastTempNonZeroIndex;
-  DateTime? previousMinX;
-  DateTime? previousMaxX;
   int initCirculation = 3;
+  late RangeController _rangeController;
 
   @override
   void initState() {
@@ -78,9 +78,9 @@ class _DetailItemState extends State<DetailItem> {
     _crosshairBehavior = CrosshairBehavior(
       enable: true,
       lineColor: Colors.red,
-      lineDashArray: <double>[5, 5],
+      lineDashArray: <double>[3, 5],
       lineWidth: 2,
-      // lineType: CrosshairLineType.horizontal,
+      lineType: CrosshairLineType.both,
       shouldAlwaysShow: true,
     );
   }
@@ -120,6 +120,10 @@ class _DetailItemState extends State<DetailItem> {
       minX = firstTime;
       maxX = lastTime;
       minX = maxX!.subtract(Duration(hours: 3)); // 預設為最後一筆減去三小時
+      _rangeController = RangeController(
+        start: minX,
+        end: maxX,
+      );
       firstinit = false;
     }
     avgBloodSugar = totalCurrent.reduce((a, b) => a + b) / totalCurrent.length;
@@ -186,17 +190,19 @@ class _DetailItemState extends State<DetailItem> {
   }
 
   void circulationLoop() {
+    if (initCirculation != 24) {
+      initCirculation *= 2;
+    } else {
+      initCirculation = 3;
+    }
     setState(() {
-      if (initCirculation != 24) {
-        initCirculation *= 2;
-      } else {
-        initCirculation = 3;
-      }
-      minX = maxX!.subtract(Duration(hours: initCirculation));
-      maxX = maxX;
+      // minX = maxX!.subtract(Duration(hours: initCirculation));
+      // maxX = maxX;
       print(initCirculation);
-      print(minX);
-      print(maxX);
+      print(minX.millisecondsSinceEpoch.toDouble());
+      print(maxX.millisecondsSinceEpoch.toDouble());
+      _rangeController.start = minX;
+      _rangeController.end = maxX;
     });
   }
 
@@ -227,7 +233,7 @@ class _DetailItemState extends State<DetailItem> {
               vertical: 10,
             ),
             padding: EdgeInsets.symmetric(
-                horizontal: _chartState == 0 ? width * 0.15 : width * 0.03,
+                // horizontal: _chartState == 0 ? width * 0.05 : width * 0.03,
                 vertical: _chartState == 0 ? height * 0.035 : 0),
             child: Row(
               mainAxisAlignment:
@@ -236,7 +242,7 @@ class _DetailItemState extends State<DetailItem> {
                 if (_chartState == 0)
                   Expanded(
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         FittedBox(
                           fit: BoxFit.scaleDown,
@@ -282,9 +288,8 @@ class _DetailItemState extends State<DetailItem> {
                 if (_chartState == 0)
                   Expanded(
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Spacer(),
                         FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text.rich(
@@ -438,94 +443,83 @@ class _DetailItemState extends State<DetailItem> {
                           crosshairBehavior: _crosshairBehavior,
                           plotAreaBorderWidth: 4, //外框線粗度
                           plotAreaBorderColor: Colors.black12,
-                          onActualRangeChanged: (ActualRangeChangedArgs args) {
-                            _debounce?.cancel();
-                            _debounce = Timer(const Duration(milliseconds: 100), () {
-                              if (args.visibleMin != 0) {
-                                setState(() {
-                                  minX = DateTime.fromMillisecondsSinceEpoch((args.visibleMin).toInt());
-                                  maxX = DateTime.fromMillisecondsSinceEpoch((args.visibleMax).toInt());
-                                  print('------');
-                                  print(minX);
-                                  print(maxX);
-                                  if (previousMinX != null && previousMaxX != null) {
-                                    int previousRange = (previousMaxX!.millisecondsSinceEpoch -
-                                        previousMinX!.millisecondsSinceEpoch) as int;
-                                    int currentRange =
-                                        (maxX!.millisecondsSinceEpoch - minX!.millisecondsSinceEpoch) as int;
-                                    if (currentRange < previousRange) {
-                                      print('放大');
-                                    } else {
-                                      print('缩小');
-                                    }
-                                    print(' $currentRange $previousRange');
-                                  }
-                                  previousMinX = minX;
-                                  previousMaxX = maxX;
-                                  if (futureData != null) {
-                                    List<dynamic> data = futureData!;
-                                    totalCurrent = [];
-                                    totalTemperature = [];
-                                    bloodSugarTIR = [0, 0, 0, 0, 0];
-                                    temperatureTIR = [0, 0, 0, 0, 0];
-                                    dataCount = 0;
-                                    for (var item in data) {
-                                      DateTime itemDateTime = DateTime.parse(item['DateTime']);
-                                      if (itemDateTime.isAfter(minX) && itemDateTime.isBefore(maxX)) {
-                                        // print('DateTime: ${item['DateTime']}, Current_A: ${item['Current_A']}, Temperature_C: ${item['Temperature_C']}, machine_id: ${item['machine_id']}');
-                                        double current = item['Current_A'] is double
-                                            ? item['Current_A']
-                                            : item['Current_A'].toDouble();
-                                        double temperature = item['Temperature_C'] is double
-                                            ? item['Temperature_C']
-                                            : item['Temperature_C'].toDouble();
-                                        totalCurrent.add(current);
-                                        totalTemperature.add(temperature);
-                                        putTIRData(current, temperature);
-                                        dataCount++;
-                                      }
-                                    }
-                                    avgBloodSugar = totalCurrent.isNotEmpty
-                                        ? totalCurrent.reduce((a, b) => a + b) / totalCurrent.length
-                                        : 0.0;
-                                    avgTemperature = totalTemperature.isNotEmpty
-                                        ? totalTemperature.reduce((a, b) => a + b) / totalTemperature.length
-                                        : 0.0;
-                                    displayTemperatureTIR = temperatureTIR;
-                                    displayBloodSugarTIR = bloodSugarTIR;
-                                  }
-                                });
-                              }
-                            });
-                          },
+                          onActualRangeChanged: _onActualRangeChanged,
+                          // onActualRangeChanged: (ActualRangeChangedArgs args) {
+                          //   _debounce?.cancel();
+                          //   _debounce = Timer(const Duration(milliseconds: 100), () {
+                          //     if (args.visibleMin != 0) {
+                          //       setState(() {
+                          //         minX = DateTime.fromMillisecondsSinceEpoch((args.visibleMin).toInt());
+                          //         maxX = DateTime.fromMillisecondsSinceEpoch((args.visibleMax).toInt());
+                          //         print('------');
+                          //         print(minX);
+                          //         print(maxX);
+                          //         if (futureData != null) {
+                          //           List<dynamic> data = futureData!;
+                          //           totalCurrent = [];
+                          //           totalTemperature = [];
+                          //           bloodSugarTIR = [0, 0, 0, 0, 0];
+                          //           temperatureTIR = [0, 0, 0, 0, 0];
+                          //           dataCount = 0;
+                          //           for (var item in data) {
+                          //             DateTime itemDateTime = DateTime.parse(item['DateTime']);
+                          //             if (itemDateTime.isAfter(minX) && itemDateTime.isBefore(maxX)) {
+                          //               // print('DateTime: ${item['DateTime']}, Current_A: ${item['Current_A']}, Temperature_C: ${item['Temperature_C']}, machine_id: ${item['machine_id']}');
+                          //               double current = item['Current_A'] is double
+                          //                   ? item['Current_A']
+                          //                   : item['Current_A'].toDouble();
+                          //               double temperature = item['Temperature_C'] is double
+                          //                   ? item['Temperature_C']
+                          //                   : item['Temperature_C'].toDouble();
+                          //               totalCurrent.add(current);
+                          //               totalTemperature.add(temperature);
+                          //               putTIRData(current, temperature);
+                          //               dataCount++;
+                          //             }
+                          //           }
+                          //           avgBloodSugar = totalCurrent.isNotEmpty
+                          //               ? totalCurrent.reduce((a, b) => a + b) / totalCurrent.length
+                          //               : 0.0;
+                          //           avgTemperature = totalTemperature.isNotEmpty
+                          //               ? totalTemperature.reduce((a, b) => a + b) / totalTemperature.length
+                          //               : 0.0;
+                          //           displayTemperatureTIR = temperatureTIR;
+                          //           displayBloodSugarTIR = bloodSugarTIR;
+                          //         }
+                          //       });
+                          //     }
+                          //   });
+                          // },
                           primaryXAxis: DateTimeAxis(
                             // title: const AxisTitle(text: 'Time'),
                             rangePadding: ChartRangePadding.round,
-                            initialVisibleMinimum: minX,
-                            initialVisibleMaximum: maxX,
-                            majorGridLines: MajorGridLines(width: 1, color: Colors.black12), // 主分個格寬度
-                            minorGridLines: MinorGridLines(width: 1, color: Colors.black12), // 次分隔線粗度
+                            // initialVisibleMinimum: minX,
+                            // initialVisibleMaximum: maxX,
+                            rangeController: _rangeController,
+                            autoScrollingDelta: initCirculation,
+                            majorGridLines: MajorGridLines(width: 0, color: Colors.black12), // 主分個格寬度
+                            minorGridLines: MinorGridLines(width: 0, color: Colors.black12), // 次分隔線粗度
                             majorTickLines: MajorTickLines(width: 0), // 隱藏主要刻度線
                             minorTickLines: MinorTickLines(width: 0), // 隱藏次要刻度線
-                            dateFormat: DateFormat.H(), // 只顯示小時
+                            dateFormat: DateFormat('HH:mm'),
                           ),
                           primaryYAxis: NumericAxis(
                             interval: 40,
-                            minimum: 0, // 这里可以根据需要调整
-                            maximum: 280, // 这里可以根据需要调整
-                            // title: AxisTitle(
-                            //   text: 'mg/dl',
-                            //   textStyle: TextStyle(
-                            //     color: _chartState == 0 || _chartState == 1 ? Colors.deepOrange : Colors.transparent,
-                            //   ),
-                            // ),
+                            minimum: 0,
+                            maximum: 280,
                             labelStyle: TextStyle(
                               color: _chartState == 0 || _chartState == 1 ? Colors.deepOrange : Colors.transparent,
                             ),
-                            majorGridLines: MajorGridLines(width: 1, color: Colors.transparent), // 主分隔線粗度
-                            minorGridLines: MinorGridLines(width: 1, color: Colors.transparent), // 次分隔線粗度
+                            majorGridLines: MajorGridLines(
+                              width: 1,
+                              dashArray: [5, 5], // 設置虛線樣式
+                              color: Colors.black12,
+                            ),
+                            // majorGridLines: MajorGridLines(width: 0, color: Colors.transparent), // 主分隔線粗度
+                            minorGridLines: MinorGridLines(width: 1, color: Colors.black12), // 次分隔線粗度
                             majorTickLines: MajorTickLines(width: 0), // 隱藏主要刻度線
                             minorTickLines: MinorTickLines(width: 0), // 隱藏次要刻度線
+                            numberFormat: NumberFormat('##0'),
                           ),
                           axes: <ChartAxis>[
                             NumericAxis(
@@ -543,10 +537,16 @@ class _DetailItemState extends State<DetailItem> {
                               labelStyle: TextStyle(
                                 color: _chartState == 0 || _chartState == 2 ? Colors.blue : Colors.transparent,
                               ),
-                              majorGridLines: MajorGridLines(width: 1, color: Colors.black12), // 主分個格寬度
-                              minorGridLines: MinorGridLines(width: 1, color: Colors.black12), // 次分隔線粗度
+                              majorGridLines: MajorGridLines(
+                                width: 1,
+                                dashArray: [5, 5], // 設置虛線樣式
+                                color: Colors.black12,
+                              ),
+                              // majorGridLines: MajorGridLines(width: 0, color: Colors.black12), // 主分個格寬度
+                              minorGridLines: MinorGridLines(width: 0, color: Colors.black12), // 次分隔線粗度
                               majorTickLines: MajorTickLines(width: 0), // 隱藏主要刻度線
                               minorTickLines: MinorTickLines(width: 0), // 隱藏次要刻度線
+                              numberFormat: NumberFormat('##0'),
                             ),
                           ],
                           series: <CartesianSeries>[
@@ -801,7 +801,7 @@ class _DetailItemState extends State<DetailItem> {
     if (_chartState == 0 || _chartState == 1) {
       widgets.add(
         Container(
-          width: MediaQuery.of(context).size.width * 0.9,
+          width: MediaQuery.of(context).size.width * 0.85,
           child: Row(
             children: [
               Expanded(
@@ -895,7 +895,7 @@ class _DetailItemState extends State<DetailItem> {
     if (_chartState == 0 || _chartState == 2) {
       widgets.add(
         Container(
-          width: MediaQuery.of(context).size.width * 0.9,
+          width: MediaQuery.of(context).size.width * 0.85,
           child: Row(
             children: [
               Spacer(
@@ -985,5 +985,50 @@ class _DetailItemState extends State<DetailItem> {
     }
 
     return widgets;
+  }
+
+  void _onActualRangeChanged(ActualRangeChangedArgs args) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 100), () {
+      if (args.visibleMin != 0) {
+        setState(() {
+          minX = DateTime.fromMillisecondsSinceEpoch((args.visibleMin).toInt());
+          maxX = DateTime.fromMillisecondsSinceEpoch((args.visibleMax).toInt());
+
+          // 更新 _rangeController 的范围
+          _rangeController.start = minX;
+          _rangeController.end = maxX;
+
+          // 更新图表数据
+          if (futureData != null) {
+            _updateChartData();
+          }
+        });
+      }
+    });
+  }
+
+  void _updateChartData() {
+    totalCurrent = [];
+    totalTemperature = [];
+    bloodSugarTIR = [0, 0, 0, 0, 0];
+    temperatureTIR = [0, 0, 0, 0, 0];
+    dataCount = 0;
+    for (var item in futureData!) {
+      DateTime itemDateTime = DateTime.parse(item['DateTime']);
+      if (itemDateTime.isAfter(minX) && itemDateTime.isBefore(maxX)) {
+        double current = item['Current_A'] is double ? item['Current_A'] : item['Current_A'].toDouble();
+        double temperature = item['Temperature_C'] is double ? item['Temperature_C'] : item['Temperature_C'].toDouble();
+        totalCurrent.add(current);
+        totalTemperature.add(temperature);
+        putTIRData(current, temperature);
+        dataCount++;
+      }
+    }
+    avgBloodSugar = totalCurrent.isNotEmpty ? totalCurrent.reduce((a, b) => a + b) / totalCurrent.length : 0.0;
+    avgTemperature =
+        totalTemperature.isNotEmpty ? totalTemperature.reduce((a, b) => a + b) / totalTemperature.length : 0.0;
+    displayTemperatureTIR = temperatureTIR;
+    displayBloodSugarTIR = bloodSugarTIR;
   }
 }
