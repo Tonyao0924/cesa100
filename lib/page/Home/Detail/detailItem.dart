@@ -190,14 +190,14 @@ class _DetailItemState extends State<DetailItem> {
   }
 
   void circulationLoop() {
-    if (initCirculation != 24) {
-      initCirculation *= 2;
-    } else {
-      initCirculation = 3;
-    }
     setState(() {
-      // minX = maxX!.subtract(Duration(hours: initCirculation));
-      // maxX = maxX;
+      if (initCirculation != 24) {
+        initCirculation *= 2;
+      } else {
+        initCirculation = 3;
+      }
+      minX = maxX!.subtract(Duration(hours: initCirculation));
+      maxX = maxX;
       print(initCirculation);
       print(minX.millisecondsSinceEpoch.toDouble());
       print(maxX.millisecondsSinceEpoch.toDouble());
@@ -493,10 +493,11 @@ class _DetailItemState extends State<DetailItem> {
                           primaryXAxis: DateTimeAxis(
                             // title: const AxisTitle(text: 'Time'),
                             rangePadding: ChartRangePadding.round,
-                            // initialVisibleMinimum: minX,
-                            // initialVisibleMaximum: maxX,
+                            initialVisibleMinimum: _rangeController.start,
+                            initialVisibleMaximum: _rangeController.end,
+                            // minimum: _rangeController.start,
+                            // maximum: _rangeController.end,
                             rangeController: _rangeController,
-                            autoScrollingDelta: initCirculation,
                             majorGridLines: MajorGridLines(width: 0, color: Colors.black12), // 主分個格寬度
                             minorGridLines: MinorGridLines(width: 0, color: Colors.black12), // 次分隔線粗度
                             majorTickLines: MajorTickLines(width: 0), // 隱藏主要刻度線
@@ -992,14 +993,22 @@ class _DetailItemState extends State<DetailItem> {
     _debounce = Timer(const Duration(milliseconds: 100), () {
       if (args.visibleMin != 0) {
         setState(() {
-          minX = DateTime.fromMillisecondsSinceEpoch((args.visibleMin).toInt());
-          maxX = DateTime.fromMillisecondsSinceEpoch((args.visibleMax).toInt());
+          // 設定靈敏度值
+          double sensitivity = 0.5;  // 設置為你想要的靈敏度值
 
-          // 更新 _rangeController 的范围
-          _rangeController.start = minX;
-          _rangeController.end = maxX;
+          // 取得當前的可見範圍的最小值和最大值
+          DateTime minX = DateTime.fromMillisecondsSinceEpoch((args.visibleMin).toInt());
+          DateTime maxX = DateTime.fromMillisecondsSinceEpoch((args.visibleMax).toInt());
 
-          // 更新图表数据
+          // 計算新的可見範圍，應用靈敏度
+          DateTime newMinX = minX.add(Duration(milliseconds: ((minX.millisecondsSinceEpoch - _rangeController.start.millisecondsSinceEpoch) * sensitivity).toInt()));
+          DateTime newMaxX = maxX.add(Duration(milliseconds: ((maxX.millisecondsSinceEpoch - _rangeController.end.millisecondsSinceEpoch) * sensitivity).toInt()));
+
+          // 更新 _rangeController 的範圍，應用計算結果
+          _rangeController.start = newMinX;
+          _rangeController.end = newMaxX;
+
+          // 更新圖表數據
           if (futureData != null) {
             _updateChartData();
           }
@@ -1007,6 +1016,7 @@ class _DetailItemState extends State<DetailItem> {
       }
     });
   }
+
 
   void _updateChartData() {
     totalCurrent = [];

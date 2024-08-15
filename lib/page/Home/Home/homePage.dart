@@ -16,37 +16,37 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with BleCallback2 {
+class _HomePageState extends State<HomePage>{
   double _scale2 = 1;
   late BLEDevice result;
 
   @override
   void initState() {
     super.initState();
-    bleProxy.addBleCallback(this);
+    // bleProxy.addBleCallback(this);
   }
 
   @override
   void dispose() {
     super.dispose();
-    bleProxy.removeBleCallback(this);
+    // bleProxy.removeBleCallback(this);
   }
 
-  // 藍芽接受資料的func
-  @override
-  void onDataReceived(String deviceId, String serviceUuid, String characteristicUuid, Uint8List data) {
-    if (characteristicUuid == '6e6c31cc-3bd6-fe13-124d-9611451cd8f3') {
-      print(data);
-      if(data[0] == 255){
-        FlutterTtcBle.disconnect(deviceId: result.deviceId);
-      }
-    }else if(characteristicUuid == '6e6c31cc-3bd6-fe13-124d-9611451cd8f4'){
-      print(data);
-      double rawValue = ((data[0] * 0x100) + data[1]) / 100;
-      String temperature = rawValue.toStringAsFixed(3);
-      print('temperature');
-    }
-  }
+  // // 藍芽接受資料的func
+  // @override
+  // void onDataReceived(String deviceId, String serviceUuid, String characteristicUuid, Uint8List data) {
+  //   if (characteristicUuid == '6e6c31cc-3bd6-fe13-124d-9611451cd8f3') {
+  //     print(data);
+  //     if(data[0] == 255){
+  //       FlutterTtcBle.disconnect(deviceId: result.deviceId);
+  //     }
+  //   }else if(characteristicUuid == '6e6c31cc-3bd6-fe13-124d-9611451cd8f4'){
+  //     print(data);
+  //     double rawValue = ((data[0] * 0x100) + data[1]) / 100;
+  //     String temperature = rawValue.toStringAsFixed(3);
+  //     print('temperature');
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
