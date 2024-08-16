@@ -27,6 +27,7 @@ class _HomeListState extends State<HomeList> with BleCallback2 {
   String query = '';
   List<petRowData> _dataLens = dataLens;
   bool alreadyConnect = false;
+  bool isDispose = false;
 
   void onQueryChanged(String newQuery) {
     setState(() {
@@ -46,6 +47,7 @@ class _HomeListState extends State<HomeList> with BleCallback2 {
   @override
   void dispose() {
     super.dispose();
+    isDispose = true;
     bleProxy.removeBleCallback(this);
   }
 
@@ -136,9 +138,9 @@ class _HomeListState extends State<HomeList> with BleCallback2 {
                     if (tmp is BLEDevice) {
                       result = tmp;
                       print(result.deviceId);
-                      FlutterTtcBle.connect(deviceId: result.deviceId).then((value) => print('已連線'));
-                      Timer.periodic(const Duration(seconds: 1), (timer) async {
-                        final x = await FlutterTtcBle.isConnected(deviceId: result.deviceId);
+                      await FlutterTtcBle.connect(deviceId: result.deviceId);
+                      Timer.periodic(const Duration(seconds: 2), (timer) async {
+                        bool x = await FlutterTtcBle.isConnected(deviceId: result.deviceId);
                         if (x) {
                           alreadyConnect = true;
                           String deviceIdToCheck = result.deviceId;
@@ -163,8 +165,9 @@ class _HomeListState extends State<HomeList> with BleCallback2 {
                               serviceUuid: '184247d0-7cbc-11e9-089e-2a86e4085a59',
                               characteristicUuid: '6e6c31cc-3bd6-fe13-124d-9611451cd8f3',
                             ).then((value) => print(value));
-                            final x = await FlutterTtcBle.isConnected(deviceId: result.deviceId);
-                            if(x == false)
+                            bool x = await FlutterTtcBle.isConnected(deviceId: result.deviceId);
+                            print(x);
+                            if(x == false || isDispose)
                               timer.cancel();
                             // Timer(const Duration(milliseconds: 500), () async {
                             //   await FlutterTtcBle.readCharacteristic(
@@ -177,9 +180,12 @@ class _HomeListState extends State<HomeList> with BleCallback2 {
                         } else {
                           print('$x 連線失敗');
                           if(alreadyConnect == false){
+                            await FlutterTtcBle.connect(deviceId: result.deviceId);
+                            print(result);
                             print(result.deviceId);
-                            FlutterTtcBle.connect(deviceId: result.deviceId).then((value) => print('已連線'));
                           }
+                          if(isDispose)
+                            timer.cancel();
                         }
                       });
                     } else {
@@ -336,14 +342,14 @@ class _HomeListState extends State<HomeList> with BleCallback2 {
     List<int> parameter = List.generate(9, (index) => 2);
     // List<int> parameter = [0, 0, 0, 0, 3, 2, 88, -3, 168];
     parameter[0] = 0x01;
-    parameter[1] = 0 >> 8; // Quiet Time (High Byte)
-    parameter[2] = 0 & 0xFF; // Quiet Time (Low Byte)
+    parameter[1] = 3000 >> 8; // Quiet Time (High Byte)
+    parameter[2] = 3000 & 0xFF; // Quiet Time (Low Byte)
     parameter[3] = 3 >> 8; // Sample Interval (High Byte)
     parameter[4] = 3 & 0xFF; // Sample Interval (Low Byte)
-    parameter[5] = 0 >> 8; // Running Count (High Byte)
-    parameter[6] = 0 & 0xFF; // Running Count (Low Byte)
-    parameter[7] = 0 >> 8; // Init E (High Byte)
-    parameter[8] = 0 & 0xFF; // Init E (Low Byte)
+    parameter[5] = 100 >> 8; // Running Count (High Byte)
+    parameter[6] = 100 & 0xFF; // Running Count (Low Byte)
+    parameter[7] = 100 >> 8; // Init E (High Byte)
+    parameter[8] = 100 & 0xFF; // Init E (Low Byte)
     parameter.addAll(encodedTime.toList());
     Uint8List myData = Uint8List.fromList(parameter);
     print('-------');
