@@ -160,6 +160,7 @@ class _HomeListState extends State<HomeList> with BleCallback2 {
                           await writeData();
                           print('寫入成功');
                           Timer.periodic(const Duration(seconds: 1), (timer) async {
+                            print(result.deviceId);
                             await FlutterTtcBle.readCharacteristic(
                               deviceId: result.deviceId,
                               serviceUuid: '184247d0-7cbc-11e9-089e-2a86e4085a59',
@@ -167,8 +168,7 @@ class _HomeListState extends State<HomeList> with BleCallback2 {
                             ).then((value) => print(value));
                             bool x = await FlutterTtcBle.isConnected(deviceId: result.deviceId);
                             print(x);
-                            if(x == false || isDispose)
-                              timer.cancel();
+                            if (x == false || isDispose) timer.cancel();
                             // Timer(const Duration(milliseconds: 500), () async {
                             //   await FlutterTtcBle.readCharacteristic(
                             //     deviceId: result.deviceId,
@@ -179,13 +179,12 @@ class _HomeListState extends State<HomeList> with BleCallback2 {
                           });
                         } else {
                           print('$x 連線失敗');
-                          if(alreadyConnect == false){
+                          if (alreadyConnect == false) {
                             await FlutterTtcBle.connect(deviceId: result.deviceId);
                             print(result);
                             print(result.deviceId);
                           }
-                          if(isDispose)
-                            timer.cancel();
+                          if (isDispose) timer.cancel();
                         }
                       });
                     } else {
@@ -346,8 +345,8 @@ class _HomeListState extends State<HomeList> with BleCallback2 {
     parameter[2] = 3000 & 0xFF; // Quiet Time (Low Byte)
     parameter[3] = 3 >> 8; // Sample Interval (High Byte)
     parameter[4] = 3 & 0xFF; // Sample Interval (Low Byte)
-    parameter[5] = 100 >> 8; // Running Count (High Byte)
-    parameter[6] = 100 & 0xFF; // Running Count (Low Byte)
+    parameter[5] = 1 >> 8; // Running Count (High Byte)
+    parameter[6] = 1 & 0xFF; // Running Count (Low Byte)
     parameter[7] = 100 >> 8; // Init E (High Byte)
     parameter[8] = 100 & 0xFF; // Init E (Low Byte)
     parameter.addAll(encodedTime.toList());
@@ -382,6 +381,7 @@ class _HomeListState extends State<HomeList> with BleCallback2 {
 
     return Uint8List(4)
       ..[0] = (encodedTime >> 24) & 0xFF
+
       ..[1] = (encodedTime >> 16) & 0xFF
       ..[2] = (encodedTime >> 8) & 0xFF
       ..[3] = encodedTime & 0xFF;
@@ -407,8 +407,20 @@ class _HomeListState extends State<HomeList> with BleCallback2 {
     print(characteristicUuid);
     if (characteristicUuid == '6e6c31cc-3bd6-fe13-124d-9611451cd8f3') {
       print(data);
-      if (data[0] == 255) {
+      if (data[0] > 4 || data[0] < 1) {
         FlutterTtcBle.disconnect(deviceId: result.deviceId);
+      } else {
+        var bytes = data;
+        for (int i = 0; i < bytes[0]; i++) {
+          int index = i * 8;
+          Uint8List dataX =
+              Uint8List.fromList([bytes[index + 1], bytes[index + 2], bytes[index + 3], bytes[index + 4]]);
+          Time timeX = decodeTime(dataX);
+          double y = (0.9 - ((bytes[index + 5] * 0x100 + bytes[index + 6]).toDouble() / 1000)) /
+              100000; // 電壓(mV) 轉換成 電流 (A)
+          double t = (((bytes[index + 7] * 0x100 + bytes[index + 8]).toDouble() / 100)); // 溫度
+          print('時間：$timeX 電流：$y 溫度：$t');
+        }
       }
     } else if (characteristicUuid == '6e6c31cc-3bd6-fe13-124d-9611451cd8f4') {
       print(data);
