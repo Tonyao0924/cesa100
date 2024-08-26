@@ -9,6 +9,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_ttc_ble/flutter_ttc_ble.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';  // 用於編碼 JSON
+import 'package:intl/intl.dart';
 
 import '../../../commonComponents/totalDialog.dart';
 import '../Detail/time.dart';
@@ -39,9 +42,9 @@ class _HomeListState extends State<HomeList> with BleCallback2 {
   @override
   void initState() {
     super.initState();
+    bleProxy.addBleCallback(this);
     sortData();
     getData();
-    bleProxy.addBleCallback(this);
   }
 
   @override
@@ -52,13 +55,51 @@ class _HomeListState extends State<HomeList> with BleCallback2 {
   }
 
   //循環拿資料
-  void getData() {
-    // Timer.periodic(const Duration(seconds: 1), (timer1) async {
-    //   print('拿資料');
-    //   List<Map<String, dynamic>> deviceIds = await TodoDB.getAllDeviceIds();
-    //   print(deviceIds);
-    //   print(deviceIds.length);
-    // });
+  Future<void> getData() async {
+    List<Map<String, dynamic>> deviceIds = await TodoDB.getAllDeviceIds();
+    FlutterTtcBle.startLeScan((resultDeviceInformation) async {
+      result = resultDeviceInformation;
+      FlutterTtcBle.stopLeScan();
+    });
+    Timer.periodic(const Duration(seconds: 10), (timer) async {
+      if(deviceIds.isEmpty){
+        deviceIds = await TodoDB.getAllDeviceIds();
+      }else{
+        timer.cancel();
+        Timer.periodic(const Duration(seconds: 10), (timer1) async {
+          print('拿資料');
+          print(deviceIds);
+          result.deviceId = deviceIds[0]['device_id'];
+          FlutterTtcBle.connect(deviceId: result.deviceId);
+          Timer.periodic(const Duration(seconds: 1), (timer) async {
+            bool x = await FlutterTtcBle.isConnected(deviceId: result.deviceId);
+            if (x) {
+              alreadyConnect = true;
+              print('$x 連線成功');
+              timer.cancel();
+              showToast(context, '連線成功');
+              // await writeData();
+              Timer.periodic(const Duration(seconds: 1), (timer) async {
+                await FlutterTtcBle.readCharacteristic(
+                  deviceId: result.deviceId,
+                  serviceUuid: '184247d0-7cbc-11e9-089e-2a86e4085a59',
+                  characteristicUuid: '6e6c31cc-3bd6-fe13-124d-9611451cd8f3',
+                ).then((value) => print(value));
+                bool x = await FlutterTtcBle.isConnected(deviceId: result.deviceId);
+                print(x);
+                if (x == false || isDispose) timer.cancel();
+              });
+            } else {
+              print('$x 連線失敗');
+              if (alreadyConnect == false) {
+                await FlutterTtcBle.connect(deviceId: result.deviceId);
+              }
+              if (isDispose) timer.cancel();
+            }
+          });
+        });
+      }
+    });
   }
 
   // 將資料排序好
@@ -145,7 +186,6 @@ class _HomeListState extends State<HomeList> with BleCallback2 {
                           alreadyConnect = true;
                           String deviceIdToCheck = result.deviceId;
                           bool exists = await TodoDB.isDeviceIdExists(deviceIdToCheck);
-
                           if (exists) {
                             print('Device ID already exists in the database.');
                           } else {
@@ -343,8 +383,8 @@ class _HomeListState extends State<HomeList> with BleCallback2 {
     parameter[0] = 0x01;
     parameter[1] = 3000 >> 8; // Quiet Time (High Byte)
     parameter[2] = 3000 & 0xFF; // Quiet Time (Low Byte)
-    parameter[3] = 3 >> 8; // Sample Interval (High Byte)
-    parameter[4] = 3 & 0xFF; // Sample Interval (Low Byte)
+    parameter[3] = 10 >> 8; // Sample Interval (High Byte)
+    parameter[4] = 10 & 0xFF; // Sample Interval (Low Byte)
     parameter[5] = 1 >> 8; // Running Count (High Byte)
     parameter[6] = 1 & 0xFF; // Running Count (Low Byte)
     parameter[7] = 100 >> 8; // Init E (High Byte)
@@ -362,10 +402,13 @@ class _HomeListState extends State<HomeList> with BleCallback2 {
       writeType: CharacteristicWriteType.writeNoResponse,
     ).then((value) {
       if (value == false) {
-        writeData();
-        print('寫入data失敗');
+        Timer(const Duration(seconds: 1), () async {
+          writeData();
+          print('寫入data失敗');
+        });
       } else {
         print('寫入data成功');
+        // getData();
       }
     });
   }
@@ -381,7 +424,6 @@ class _HomeListState extends State<HomeList> with BleCallback2 {
 
     return Uint8List(4)
       ..[0] = (encodedTime >> 24) & 0xFF
-
       ..[1] = (encodedTime >> 16) & 0xFF
       ..[2] = (encodedTime >> 8) & 0xFF
       ..[3] = encodedTime & 0xFF;
@@ -403,7 +445,7 @@ class _HomeListState extends State<HomeList> with BleCallback2 {
 
   // Read data in this Func.
   @override
-  void onDataReceived(String deviceId, String serviceUuid, String characteristicUuid, Uint8List data) {
+  Future<void> onDataReceived(String deviceId, String serviceUuid, String characteristicUuid, Uint8List data) async {
     print(characteristicUuid);
     if (characteristicUuid == '6e6c31cc-3bd6-fe13-124d-9611451cd8f3') {
       print(data);
@@ -416,10 +458,33 @@ class _HomeListState extends State<HomeList> with BleCallback2 {
           Uint8List dataX =
               Uint8List.fromList([bytes[index + 1], bytes[index + 2], bytes[index + 3], bytes[index + 4]]);
           Time timeX = decodeTime(dataX);
-          double y = (0.9 - ((bytes[index + 5] * 0x100 + bytes[index + 6]).toDouble() / 1000)) /
-              100000; // 電壓(mV) 轉換成 電流 (A)
+          double y =
+              -(0.9 - ((bytes[index + 5] * 0x100 + bytes[index + 6]).toDouble() / 1000)) * 1000; // 電壓(mV) 轉換成 電流 (A)
           double t = (((bytes[index + 7] * 0x100 + bytes[index + 8]).toDouble() / 100)); // 溫度
           print('時間：$timeX 電流：$y 溫度：$t');
+          DateTime thisTime = DateTime(timeX.year, timeX.month, timeX.day, timeX.hour, timeX.minute, timeX.second);
+          print(thisTime);
+          String formattedTimestamp = DateFormat("yyyy-MM-ddTHH:mm:ssZ").format(thisTime);
+          final Map<String, dynamic> data = {
+            "timestamp": formattedTimestamp,
+            "Current_A": y,
+            "Temperature_C": t,
+            "machine_id": 1
+          };
+          final Uri url = Uri.parse('http://172.16.200.77:3000/sensorData');
+          final headers = {
+            'Content-Type': 'application/json; charset=UTF-8',
+          };
+          final response = await http.post(
+            url,
+            headers: headers,
+            body: jsonEncode(data),
+          );
+          if (response.statusCode == 200) {
+            print('數據發送成功');
+          } else {
+            print('發送失敗，狀態碼：${response.statusCode}');
+          }
         }
       }
     } else if (characteristicUuid == '6e6c31cc-3bd6-fe13-124d-9611451cd8f4') {
