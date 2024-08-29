@@ -48,12 +48,18 @@ class _DetailItemState extends State<DetailItem> {
   bool firstinit = true;
   int dataCount = 0; //資料總數量
   int _chartState = 0; // 0: Both, 1: Blood Sugar, 2: Temperature
-  late int firstBgNonZeroIndex;
-  late int lastBgNonZeroIndex;
-  late int firstTempNonZeroIndex;
-  late int lastTempNonZeroIndex;
+  late int firstBgNonZeroIndex; // 紀錄TIR血糖最靠左非0數值
+  late int lastBgNonZeroIndex; // 紀錄TIR血糖最靠右非0數值
+  late int firstTempNonZeroIndex; // 紀錄TIR溫度最靠左非0數值
+  late int lastTempNonZeroIndex; // 紀錄TIR溫度最靠右非0數值
   int initCirculation = 3;
   late RangeController _rangeController;
+  double zoomP = 0.5;
+  double zoomF = 0.2;
+  double chartZoomP = 0.5;
+  double chartZoomF = 0.2;
+  DateTimeAxisController? axisController1;
+  DateTimeAxisController? axisController2;
 
   @override
   void initState() {
@@ -125,6 +131,8 @@ class _DetailItemState extends State<DetailItem> {
         end: maxX,
       );
       firstinit = false;
+      print(minX);
+      print(maxX);
     }
     avgBloodSugar = totalCurrent.reduce((a, b) => a + b) / totalCurrent.length;
     avgTemperature = totalTemperature.reduce((a, b) => a + b) / totalTemperature.length;
@@ -197,10 +205,9 @@ class _DetailItemState extends State<DetailItem> {
         initCirculation = 3;
       }
       minX = maxX!.subtract(Duration(hours: initCirculation));
-      maxX = maxX;
       print(initCirculation);
-      print(minX.millisecondsSinceEpoch.toDouble());
-      print(maxX.millisecondsSinceEpoch.toDouble());
+      print(minX);
+      print(maxX);
       _rangeController.start = minX;
       _rangeController.end = maxX;
     });
@@ -227,6 +234,14 @@ class _DetailItemState extends State<DetailItem> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2), // 陰影顏色和透明度
+                  spreadRadius: 2, // 陰影擴散半徑
+                  blurRadius: 2, // 陰影模糊半徑
+                  offset: Offset(2, 2), // 陰影偏移量 (水平, 垂直)
+                ),
+              ],
             ),
             margin: EdgeInsets.symmetric(
               horizontal: width * 0.02,
@@ -234,7 +249,7 @@ class _DetailItemState extends State<DetailItem> {
             ),
             padding: EdgeInsets.symmetric(
                 // horizontal: _chartState == 0 ? width * 0.05 : width * 0.03,
-                vertical: _chartState == 0 ? height * 0.035 : 0),
+                vertical: _chartState == 0 ? height * 0.017 : 0),
             child: Row(
               mainAxisAlignment:
                   _chartState == 1 || _chartState == 2 ? MainAxisAlignment.center : MainAxisAlignment.spaceBetween,
@@ -250,8 +265,8 @@ class _DetailItemState extends State<DetailItem> {
                             TextSpan(
                               children: [
                                 TextSpan(
-                                  text: '${widget.rowData.bloodSugar}',
-                                  style: TextStyle(fontSize: 40, color: Color(0xff808080), fontWeight: FontWeight.bold),
+                                  text: '${(widget.rowData.bloodSugar).toStringAsFixed(0)}',
+                                  style: TextStyle(fontSize: 60, color: Color(0xff808080), fontWeight: FontWeight.bold),
                                 ),
                                 WidgetSpan(
                                   child: Column(
@@ -296,12 +311,9 @@ class _DetailItemState extends State<DetailItem> {
                             TextSpan(
                               children: [
                                 TextSpan(
-                                  text: '${widget.rowData.temperature}',
+                                  text: '${(widget.rowData.temperature).toStringAsFixed(0)}',
                                   style: const TextStyle(
-                                    fontSize: 40,
-                                    color: Color(0xff808080),
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                      fontSize: 60, color: Color(0xff808080), fontWeight: FontWeight.bold),
                                 ),
                                 WidgetSpan(
                                   child: Column(
@@ -427,6 +439,14 @@ class _DetailItemState extends State<DetailItem> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2), // 陰影顏色和透明度
+                    spreadRadius: 2, // 陰影擴散半徑
+                    blurRadius: 2, // 陰影模糊半徑
+                    offset: Offset(2, 2), // 陰影偏移量 (水平, 垂直)
+                  ),
+                ],
               ),
               child: Stack(
                 children: [
@@ -444,65 +464,48 @@ class _DetailItemState extends State<DetailItem> {
                           plotAreaBorderWidth: 4, //外框線粗度
                           plotAreaBorderColor: Colors.black12,
                           onActualRangeChanged: _onActualRangeChanged,
-                          // onActualRangeChanged: (ActualRangeChangedArgs args) {
-                          //   _debounce?.cancel();
-                          //   _debounce = Timer(const Duration(milliseconds: 100), () {
-                          //     if (args.visibleMin != 0) {
-                          //       setState(() {
-                          //         minX = DateTime.fromMillisecondsSinceEpoch((args.visibleMin).toInt());
-                          //         maxX = DateTime.fromMillisecondsSinceEpoch((args.visibleMax).toInt());
-                          //         print('------');
-                          //         print(minX);
-                          //         print(maxX);
-                          //         if (futureData != null) {
-                          //           List<dynamic> data = futureData!;
-                          //           totalCurrent = [];
-                          //           totalTemperature = [];
-                          //           bloodSugarTIR = [0, 0, 0, 0, 0];
-                          //           temperatureTIR = [0, 0, 0, 0, 0];
-                          //           dataCount = 0;
-                          //           for (var item in data) {
-                          //             DateTime itemDateTime = DateTime.parse(item['DateTime']);
-                          //             if (itemDateTime.isAfter(minX) && itemDateTime.isBefore(maxX)) {
-                          //               // print('DateTime: ${item['DateTime']}, Current_A: ${item['Current_A']}, Temperature_C: ${item['Temperature_C']}, machine_id: ${item['machine_id']}');
-                          //               double current = item['Current_A'] is double
-                          //                   ? item['Current_A']
-                          //                   : item['Current_A'].toDouble();
-                          //               double temperature = item['Temperature_C'] is double
-                          //                   ? item['Temperature_C']
-                          //                   : item['Temperature_C'].toDouble();
-                          //               totalCurrent.add(current);
-                          //               totalTemperature.add(temperature);
-                          //               putTIRData(current, temperature);
-                          //               dataCount++;
-                          //             }
-                          //           }
-                          //           avgBloodSugar = totalCurrent.isNotEmpty
-                          //               ? totalCurrent.reduce((a, b) => a + b) / totalCurrent.length
-                          //               : 0.0;
-                          //           avgTemperature = totalTemperature.isNotEmpty
-                          //               ? totalTemperature.reduce((a, b) => a + b) / totalTemperature.length
-                          //               : 0.0;
-                          //           displayTemperatureTIR = temperatureTIR;
-                          //           displayBloodSugarTIR = bloodSugarTIR;
-                          //         }
-                          //       });
-                          //     }
-                          //   });
-                          // },
+                          onZooming: (ZoomPanArgs args) {
+                            if (args.axis!.name == 'primaryXAxis') {
+                              zoomP = args.currentZoomPosition;
+                              zoomF = args.currentZoomFactor;
+                              print('--------');
+                              print(zoomP);
+                              print(zoomF);
+                              axisController1!.zoomFactor = zoomF;
+                              axisController1!.zoomPosition = zoomP;
+                            }
+                          },
                           primaryXAxis: DateTimeAxis(
+                            name: 'primaryXAxis',
                             // title: const AxisTitle(text: 'Time'),
-                            rangePadding: ChartRangePadding.round,
+                            rangePadding: ChartRangePadding.additional,
                             initialVisibleMinimum: _rangeController.start,
                             initialVisibleMaximum: _rangeController.end,
-                            // minimum: _rangeController.start,
-                            // maximum: _rangeController.end,
                             rangeController: _rangeController,
                             majorGridLines: MajorGridLines(width: 0, color: Colors.black12), // 主分個格寬度
                             minorGridLines: MinorGridLines(width: 0, color: Colors.black12), // 次分隔線粗度
                             majorTickLines: MajorTickLines(width: 0), // 隱藏主要刻度線
                             minorTickLines: MinorTickLines(width: 0), // 隱藏次要刻度線
+                            intervalType: DateTimeIntervalType.hours, // 確保每小時顯示一次標籤
+                            interval: initCirculation / 3, // 每1個單位顯示一次標籤
                             dateFormat: DateFormat('HH:mm'),
+                            // initialZoomFactor: zoomF,
+                            // initialZoomPosition: zoomP,
+                            axisLabelFormatter: (AxisLabelRenderDetails details) {
+                              final DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(details.value.toInt());
+
+                              // 判斷是否為00:00
+                              if (dateTime.hour == 0 && dateTime.minute == 0) {
+                                return ChartAxisLabel(
+                                    DateFormat('MM/dd').format(dateTime), TextStyle(color: Colors.black));
+                              } else {
+                                return ChartAxisLabel(
+                                    DateFormat('HH:mm').format(dateTime), TextStyle(color: Colors.black));
+                              }
+                            },
+                            onRendererCreated: (DateTimeAxisController controller) {
+                              axisController1 = controller;
+                            },
                           ),
                           primaryYAxis: NumericAxis(
                             interval: 40,
@@ -725,6 +728,14 @@ class _DetailItemState extends State<DetailItem> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2), // 陰影顏色和透明度
+                  spreadRadius: 2, // 陰影擴散半徑
+                  blurRadius: 2, // 陰影模糊半徑
+                  offset: Offset(2, 2), // 陰影偏移量 (水平, 垂直)
+                ),
+              ],
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -748,7 +759,11 @@ class _DetailItemState extends State<DetailItem> {
                     Navigator.push(
                       context,
                       PageRouteBuilder(
-                        pageBuilder: (context, animation, secondaryAnimation) => EditTIRPage(),
+                        pageBuilder: (context, animation, secondaryAnimation) => EditTIRPage(
+                          displayBloodSugarTIR: displayBloodSugarTIR,
+                          displayTemperatureTIR: displayTemperatureTIR,
+                          dataCount: dataCount,
+                        ),
                         transitionsBuilder: (context, animation, secondaryAnimation, child) {
                           const begin = Offset(1.0, 0.0);
                           const end = Offset.zero;
@@ -994,15 +1009,20 @@ class _DetailItemState extends State<DetailItem> {
       if (args.visibleMin != 0) {
         setState(() {
           // 設定靈敏度值
-          double sensitivity = 0.5;  // 設置為你想要的靈敏度值
+          double sensitivity = 0.5; // 設置為你想要的靈敏度值
 
           // 取得當前的可見範圍的最小值和最大值
-          DateTime minX = DateTime.fromMillisecondsSinceEpoch((args.visibleMin).toInt());
-          DateTime maxX = DateTime.fromMillisecondsSinceEpoch((args.visibleMax).toInt());
+          minX = DateTime.fromMillisecondsSinceEpoch((args.visibleMin).toInt());
+          maxX = DateTime.fromMillisecondsSinceEpoch((args.visibleMax).toInt());
 
           // 計算新的可見範圍，應用靈敏度
-          DateTime newMinX = minX.add(Duration(milliseconds: ((minX.millisecondsSinceEpoch - _rangeController.start.millisecondsSinceEpoch) * sensitivity).toInt()));
-          DateTime newMaxX = maxX.add(Duration(milliseconds: ((maxX.millisecondsSinceEpoch - _rangeController.end.millisecondsSinceEpoch) * sensitivity).toInt()));
+          DateTime newMinX = minX.add(Duration(
+              milliseconds:
+                  ((minX.millisecondsSinceEpoch - _rangeController.start.millisecondsSinceEpoch) * sensitivity)
+                      .toInt()));
+          DateTime newMaxX = maxX.add(Duration(
+              milliseconds:
+                  ((maxX.millisecondsSinceEpoch - _rangeController.end.millisecondsSinceEpoch) * sensitivity).toInt()));
 
           // 更新 _rangeController 的範圍，應用計算結果
           _rangeController.start = newMinX;
@@ -1016,7 +1036,6 @@ class _DetailItemState extends State<DetailItem> {
       }
     });
   }
-
 
   void _updateChartData() {
     totalCurrent = [];

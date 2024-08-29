@@ -1,16 +1,39 @@
 import 'package:flutter/material.dart';
 
 class EditTIRPage extends StatefulWidget {
-  const EditTIRPage({Key? key}) : super(key: key);
+  final List<int> displayBloodSugarTIR;
+  final List<int> displayTemperatureTIR;
+  final int dataCount;
+  const EditTIRPage(
+      {Key? key, required this.displayBloodSugarTIR, required this.displayTemperatureTIR, required this.dataCount})
+      : super(key: key);
 
   @override
   State<EditTIRPage> createState() => _EditTIRPageState();
 }
 
 class _EditTIRPageState extends State<EditTIRPage> {
-  List<double> data = [0, 2, 98, 0, 0]; // 目前的資料，以百分比表示
+  List<int> data = [0, 2, 98, 0, 0]; // 目前的資料，以百分比表示
   List<Color> colors = [Colors.red, Colors.orange, Colors.green, Colors.blue, Colors.red];
   List<String> labels = ["90", "126", "200", "300"];
+  late List<double> displayBloodSugarTIR;
+  late List<double> displayTemperatureTIR;
+
+  double calculatePercentage(int value, int length) {
+    return length > 0 ? (value / length) * 100 : 0;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    displayBloodSugarTIR = [];
+    displayTemperatureTIR = [];
+
+    for(int i = 0 ; i < widget.displayTemperatureTIR.length ; i++){
+      displayBloodSugarTIR.add(calculatePercentage(widget.displayBloodSugarTIR[i], widget.dataCount));
+      displayTemperatureTIR.add(calculatePercentage(widget.displayTemperatureTIR[i], widget.dataCount));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,33 +49,46 @@ class _EditTIRPageState extends State<EditTIRPage> {
           ),
         ),
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(0.0),
-          child: Row(
+      body: Column(
+        children: [
+          Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SizedBox(
                 width: 250, // 控制圖表的寬度
                 height: 300, // 控制圖表的高度
                 child: CustomPaint(
-                  painter: BarChartPainter2(data, colors, labels),
+                  painter: BarChartPainter2('temperature：', 'mg/dl', displayBloodSugarTIR, colors, labels),
                 ),
               ),
             ],
           ),
-        ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 250, // 控制圖表的寬度
+                height: 300, // 控制圖表的高度
+                child: CustomPaint(
+                  painter: BarChartPainter2('Temperature：', '℃', displayTemperatureTIR, colors, labels),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 }
 
 class BarChartPainter2 extends CustomPainter {
+  final String title;
+  final String unit;
   final List<double> data;
   final List<Color> colors;
   final List<String> labels;
 
-  BarChartPainter2(this.data, this.colors, this.labels);
+  BarChartPainter2(this.title, this.unit, this.data, this.colors, this.labels);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -73,11 +109,8 @@ class BarChartPainter2 extends CustomPainter {
 
     for (int i = 0; i < data.length; i++) {
       double barWidth = data[i] > 0 ? data[i] * (totalWidth - spacing * (data.length - 1)) / 100 : 1; // 如果數值為0，顯示寬度為1
-
       Color barColor = data[i] > 0 ? colors[i] : Colors.grey; // 如果數值為0，顏色設置為灰色
-
       Paint barPaint = Paint()..color = barColor;
-
       if (i != 0 && i != 1) {
         location[i - 2] = (currentX + tmp) / 2;
       }
@@ -179,12 +212,14 @@ class BarChartPainter2 extends CustomPainter {
       drawstraightLine(canvas, Offset(location[2], barHeight + 80), totalHeight / 2 - 60 - 45);
       drawEndFoldedLine(canvas, Offset(totalWidth + 12, barHeight * 2 + barHeight / 4), totalHeight / 2 - 60);
       //繪製文字
+      drawTextNoCenter(canvas, title, Offset(-50, 10), TextStyle(color: Colors.black, fontSize: 18));
       drawText(canvas, 'Low+', Offset(-30, barHeight * 2), TextStyle(color: Colors.black54, fontSize: 14));
       drawText(canvas, 'Low', Offset(location[0], barHeight * 2 - 20), TextStyle(color: Colors.black54, fontSize: 14));
       drawText(
           canvas, 'Target', Offset(location[1], barHeight * 2 - 20), TextStyle(color: Colors.black54, fontSize: 14));
       drawText(canvas, 'High', Offset(location[2], barHeight * 2 - 20), TextStyle(color: Colors.black54, fontSize: 14));
       drawText(canvas, 'High+', Offset(290, barHeight * 2), TextStyle(color: Colors.black54, fontSize: 14));
+      drawText(canvas, unit, Offset(290, 262), TextStyle(color: Colors.black87, fontSize: 12));
       //   //繪製百分比
       drawText(canvas, '${data[0].toStringAsFixed(0)}%', Offset(0, barHeight + 15),
           TextStyle(color: Colors.black54, fontSize: 14, fontWeight: FontWeight.bold));
@@ -198,12 +233,12 @@ class BarChartPainter2 extends CustomPainter {
       drawLine(canvas, -6, location[0]);
       drawLine(canvas, location[2], 272);
       // 繪製最上方的三個百分比
-        drawText(canvas, '${(data[0] + data[1]).toStringAsFixed(0)}%', Offset((location[0]) / 2, 60),
-            TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold));
-        drawText(canvas, '${(data[2]).toStringAsFixed(0)}%', Offset(location[1], 60),
-            TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold));
-        drawText(canvas, '${(data[3] + data[4]).toStringAsFixed(0)}%', Offset((272 + location[2]) / 2, 60),
-            TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold));
+      drawText(canvas, '${(data[0] + data[1]).toStringAsFixed(0)}%', Offset((location[0]) / 2, 60),
+          TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold));
+      drawText(canvas, '${(data[2]).toStringAsFixed(0)}%', Offset(location[1], 60),
+          TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold));
+      drawText(canvas, '${(data[3] + data[4]).toStringAsFixed(0)}%', Offset((272 + location[2]) / 2, 60),
+          TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold));
     }
   }
 
@@ -216,6 +251,14 @@ class BarChartPainter2 extends CustomPainter {
     final double textWidth = tp.width;
     final Offset centeredOffset = Offset(offset.dx - textWidth / 2, offset.dy);
     tp.paint(canvas, centeredOffset);
+  }
+
+  void drawTextNoCenter(Canvas canvas, String text, Offset offset, TextStyle style) {
+    final TextSpan span = TextSpan(text: text, style: style);
+    final TextPainter tp = TextPainter(text: span, textAlign: TextAlign.left, textDirection: TextDirection.ltr);
+    tp.layout();
+    // 直接使用傳入的 offset，不再進行偏移調整
+    tp.paint(canvas, offset);
   }
 
   // 繪製最左邊的虛像

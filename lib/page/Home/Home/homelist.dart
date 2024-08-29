@@ -383,8 +383,8 @@ class _HomeListState extends State<HomeList> with BleCallback2 {
     parameter[0] = 0x01;
     parameter[1] = 3000 >> 8; // Quiet Time (High Byte)
     parameter[2] = 3000 & 0xFF; // Quiet Time (Low Byte)
-    parameter[3] = 10 >> 8; // Sample Interval (High Byte)
-    parameter[4] = 10 & 0xFF; // Sample Interval (Low Byte)
+    parameter[3] = 60 >> 8; // Sample Interval (High Byte)
+    parameter[4] = 60 & 0xFF; // Sample Interval (Low Byte)
     parameter[5] = 1 >> 8; // Running Count (High Byte)
     parameter[6] = 1 & 0xFF; // Running Count (Low Byte)
     parameter[7] = 100 >> 8; // Init E (High Byte)
@@ -459,7 +459,7 @@ class _HomeListState extends State<HomeList> with BleCallback2 {
               Uint8List.fromList([bytes[index + 1], bytes[index + 2], bytes[index + 3], bytes[index + 4]]);
           Time timeX = decodeTime(dataX);
           double y =
-              -(0.9 - ((bytes[index + 5] * 0x100 + bytes[index + 6]).toDouble() / 1000)) * 1000; // 電壓(mV) 轉換成 電流 (A)
+              -(0.9 - ((bytes[index + 5] * 0x100 + bytes[index + 6]).toDouble() / 1000)) * 1000-500; // 電壓(mV) 轉換成 電流 (A)
           double t = (((bytes[index + 7] * 0x100 + bytes[index + 8]).toDouble() / 100)); // 溫度
           print('時間：$timeX 電流：$y 溫度：$t');
           DateTime thisTime = DateTime(timeX.year, timeX.month, timeX.day, timeX.hour, timeX.minute, timeX.second);
