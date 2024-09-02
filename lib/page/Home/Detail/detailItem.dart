@@ -198,6 +198,9 @@ class _DetailItemState extends State<DetailItem> {
   }
 
   void circulationLoop() {
+    print('------first------');
+    print(minX);
+    print(maxX);
     setState(() {
       if (initCirculation != 24) {
         initCirculation *= 2;
@@ -205,9 +208,6 @@ class _DetailItemState extends State<DetailItem> {
         initCirculation = 3;
       }
       minX = maxX!.subtract(Duration(hours: initCirculation));
-      print(initCirculation);
-      print(minX);
-      print(maxX);
       _rangeController.start = minX;
       _rangeController.end = maxX;
     });
@@ -468,9 +468,9 @@ class _DetailItemState extends State<DetailItem> {
                             if (args.axis!.name == 'primaryXAxis') {
                               zoomP = args.currentZoomPosition;
                               zoomF = args.currentZoomFactor;
-                              print('--------');
-                              print(zoomP);
-                              print(zoomF);
+                              // print('--------');
+                              // print(zoomP);
+                              // print(zoomF);
                               axisController1!.zoomFactor = zoomF;
                               axisController1!.zoomPosition = zoomP;
                             }
@@ -488,9 +488,10 @@ class _DetailItemState extends State<DetailItem> {
                             minorTickLines: MinorTickLines(width: 0), // 隱藏次要刻度線
                             intervalType: DateTimeIntervalType.hours, // 確保每小時顯示一次標籤
                             interval: initCirculation / 3, // 每1個單位顯示一次標籤
+                            // interval: 1,
                             dateFormat: DateFormat('HH:mm'),
                             // initialZoomFactor: zoomF,
-                            // initialZoomPosition: zoomP,
+                            // initialZoomPosition: 0.5,
                             axisLabelFormatter: (AxisLabelRenderDetails details) {
                               final DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(details.value.toInt());
 
@@ -649,46 +650,6 @@ class _DetailItemState extends State<DetailItem> {
                       ],
                     ),
                   ),
-                  // if (_chartState == 0 || _chartState == 1)
-                  //   Positioned(
-                  //     left: 10,
-                  //     child: Column(
-                  //       children: [
-                  //         const Image(
-                  //           image: AssetImage('assets/home/bloodsugar.png'),
-                  //           fit: BoxFit.scaleDown,
-                  //           width: 20,
-                  //           height: 20,
-                  //         ),
-                  //         Text(
-                  //           'mg/dl',
-                  //           style: TextStyle(
-                  //             color: _chartState == 0 || _chartState == 1 ? Colors.deepOrange : Colors.transparent,
-                  //           ),
-                  //         ),
-                  //       ],
-                  //     ),
-                  //   ),
-                  // if (_chartState == 0 || _chartState == 2)
-                  //   Positioned(
-                  //     right: 10,
-                  //     child: Column(
-                  //       children: [
-                  //         const Image(
-                  //           image: AssetImage('assets/home/temperature.png'),
-                  //           fit: BoxFit.scaleDown,
-                  //           width: 20,
-                  //           height: 20,
-                  //         ),
-                  //         Text(
-                  //           '℃',
-                  //           style: TextStyle(
-                  //             color: _chartState == 0 || _chartState == 2 ? Colors.blue : Colors.transparent,
-                  //           ),
-                  //         ),
-                  //       ],
-                  //     ),
-                  //   ),
                   Positioned(
                     left: 0,
                     right: 0,
@@ -1007,6 +968,8 @@ class _DetailItemState extends State<DetailItem> {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 100), () {
       if (args.visibleMin != 0) {
+        print('---一開始的資料$maxX  $minX');
+        print(DateTime.fromMillisecondsSinceEpoch((args.visibleMax).toInt()));
         setState(() {
           // 設定靈敏度值
           double sensitivity = 0.5; // 設置為你想要的靈敏度值
@@ -1015,7 +978,7 @@ class _DetailItemState extends State<DetailItem> {
           minX = DateTime.fromMillisecondsSinceEpoch((args.visibleMin).toInt());
           maxX = DateTime.fromMillisecondsSinceEpoch((args.visibleMax).toInt());
 
-          // 計算新的可見範圍，應用靈敏度
+          // // 計算新的可見範圍，應用靈敏度
           DateTime newMinX = minX.add(Duration(
               milliseconds:
                   ((minX.millisecondsSinceEpoch - _rangeController.start.millisecondsSinceEpoch) * sensitivity)
@@ -1023,6 +986,7 @@ class _DetailItemState extends State<DetailItem> {
           DateTime newMaxX = maxX.add(Duration(
               milliseconds:
                   ((maxX.millisecondsSinceEpoch - _rangeController.end.millisecondsSinceEpoch) * sensitivity).toInt()));
+          print('---一後來的資料$maxX   $newMaxX');
 
           // 更新 _rangeController 的範圍，應用計算結果
           _rangeController.start = newMinX;

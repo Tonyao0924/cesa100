@@ -58,7 +58,7 @@ class _EditTIRPageState extends State<EditTIRPage> {
                 width: 250, // 控制圖表的寬度
                 height: 300, // 控制圖表的高度
                 child: CustomPaint(
-                  painter: BarChartPainter2('temperature：', 'mg/dl', displayBloodSugarTIR, colors, labels),
+                  painter: BarChartPainter2('Blood Sugar：', 'mg/dl', displayBloodSugarTIR, colors, labels),
                 ),
               ),
             ],
