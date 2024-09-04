@@ -108,6 +108,7 @@ class _DetailItemState extends State<DetailItem> {
       bloodSugarData.add(item['current_2'].toDouble());
       bloodSugarData.add(item['current_3'].toDouble());
       bloodSugarData.add(item['current_4'].toDouble());
+      break;
     }
     for (var item in futureData!) {
       DateTime tmp = DateTime.parse(item['DateTime']);
@@ -459,8 +460,8 @@ class _DetailItemState extends State<DetailItem> {
                         },
                         child: SfCartesianChart(
                           zoomPanBehavior: _zoomPanBehavior,
-                          tooltipBehavior: _tooltipBehavior,
-                          crosshairBehavior: _crosshairBehavior,
+                          // tooltipBehavior: _tooltipBehavior,
+                          // crosshairBehavior: _crosshairBehavior,
                           plotAreaBorderWidth: 4, //外框線粗度
                           plotAreaBorderColor: Colors.black12,
                           onActualRangeChanged: _onActualRangeChanged,
@@ -717,13 +718,20 @@ class _DetailItemState extends State<DetailItem> {
                 ),
                 GestureDetector(
                   onTap: () async {
+                    var displayBloodSugarTIR2 = displayBloodSugarTIR.reversed.toList();
+                    var displayTemperatureTIR2 = displayTemperatureTIR.reversed.toList();
+                    var bloodSugarData2 = bloodSugarData.reversed.toList();
+                    var temperatureData2 = temperatureData.reversed.toList();
+
                     Navigator.push(
                       context,
                       PageRouteBuilder(
                         pageBuilder: (context, animation, secondaryAnimation) => EditTIRPage(
-                          displayBloodSugarTIR: displayBloodSugarTIR,
-                          displayTemperatureTIR: displayTemperatureTIR,
+                          displayBloodSugarTIR: displayBloodSugarTIR2,
+                          displayTemperatureTIR: displayTemperatureTIR2,
                           dataCount: dataCount,
+                          bloodSugarData: bloodSugarData2,
+                          temperatureData: temperatureData2,
                         ),
                         transitionsBuilder: (context, animation, secondaryAnimation, child) {
                           const begin = Offset(1.0, 0.0);

@@ -4,8 +4,15 @@ class EditTIRPage extends StatefulWidget {
   final List<int> displayBloodSugarTIR;
   final List<int> displayTemperatureTIR;
   final int dataCount;
+  final List<double> bloodSugarData;
+  final List<double> temperatureData;
   const EditTIRPage(
-      {Key? key, required this.displayBloodSugarTIR, required this.displayTemperatureTIR, required this.dataCount})
+      {Key? key,
+      required this.displayBloodSugarTIR,
+      required this.displayTemperatureTIR,
+      required this.dataCount,
+      required this.bloodSugarData,
+      required this.temperatureData})
       : super(key: key);
 
   @override
@@ -29,7 +36,8 @@ class _EditTIRPageState extends State<EditTIRPage> {
     displayBloodSugarTIR = [];
     displayTemperatureTIR = [];
 
-    for(int i = 0 ; i < widget.displayTemperatureTIR.length ; i++){
+    print(widget.bloodSugarData);
+    for (int i = 0; i < widget.displayTemperatureTIR.length; i++) {
       displayBloodSugarTIR.add(calculatePercentage(widget.displayBloodSugarTIR[i], widget.dataCount));
       displayTemperatureTIR.add(calculatePercentage(widget.displayTemperatureTIR[i], widget.dataCount));
     }
@@ -48,6 +56,15 @@ class _EditTIRPageState extends State<EditTIRPage> {
             fontWeight: FontWeight.bold,
           ),
         ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              // todo 資料庫更新資料
+              print('資料庫更新資料');
+            },
+            icon: Icon(Icons.check),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -58,7 +75,7 @@ class _EditTIRPageState extends State<EditTIRPage> {
                 width: 250, // 控制圖表的寬度
                 height: 300, // 控制圖表的高度
                 child: CustomPaint(
-                  painter: BarChartPainter2('Blood Sugar：', 'mg/dl', displayBloodSugarTIR, colors, labels),
+                  painter: BarChartPainter2('Blood Glucos：', 'mg/dl', displayBloodSugarTIR, colors, widget.bloodSugarData),
                 ),
               ),
             ],
@@ -70,7 +87,7 @@ class _EditTIRPageState extends State<EditTIRPage> {
                 width: 250, // 控制圖表的寬度
                 height: 300, // 控制圖表的高度
                 child: CustomPaint(
-                  painter: BarChartPainter2('Temperature：', '℃', displayTemperatureTIR, colors, labels),
+                  painter: BarChartPainter2('Temperature：', '℃', displayTemperatureTIR, colors, widget.temperatureData),
                 ),
               ),
             ],
@@ -86,7 +103,7 @@ class BarChartPainter2 extends CustomPainter {
   final String unit;
   final List<double> data;
   final List<Color> colors;
-  final List<String> labels;
+  final List<double> labels;
 
   BarChartPainter2(this.title, this.unit, this.data, this.colors, this.labels);
 
@@ -170,14 +187,16 @@ class BarChartPainter2 extends CustomPainter {
       }
     }
 
+    bool isTemperature = (title == 'Temperature：');
     // 繪製刻度文字
     for (int i = 0; i < labels.length; i++) {
       if (i < labelXPositions.length) {
-        drawText(
+        drawTextBtn(
           canvas,
           labels[i],
           Offset(labelXPositions[i], 260),
           TextStyle(color: Colors.black, fontSize: 16),
+          isTemperature: isTemperature, // 傳遞 isTemperature 參數
         );
       }
     }
@@ -259,6 +278,18 @@ class BarChartPainter2 extends CustomPainter {
     tp.layout();
     // 直接使用傳入的 offset，不再進行偏移調整
     tp.paint(canvas, offset);
+  }
+
+  // 繪製文字按鈕
+  void drawTextBtn(Canvas canvas, double text, Offset offset, TextStyle style, {bool isTemperature = false}) {
+    String toText = isTemperature ? text.toStringAsFixed(1) : text.toStringAsFixed(0);
+    final TextSpan span = TextSpan(text: toText, style: style);
+    final TextPainter tp = TextPainter(text: span, textAlign: TextAlign.left, textDirection: TextDirection.ltr);
+    tp.layout();
+    // 调整偏移量以使文字水平居中
+    final double textWidth = tp.width;
+    final Offset centeredOffset = Offset(offset.dx - textWidth / 2, offset.dy);
+    tp.paint(canvas, centeredOffset);
   }
 
   // 繪製最左邊的虛像
