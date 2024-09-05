@@ -75,23 +75,40 @@ class _EditTIRPageState extends State<EditTIRPage> {
                 width: 250, // 控制圖表的寬度
                 height: 300, // 控制圖表的高度
                 child: CustomPaint(
-                  painter: BarChartPainter2('Blood Glucos：', 'mg/dl', displayBloodSugarTIR, colors, widget.bloodSugarData),
+                  painter:
+                      BarChartPainter2('Blood Glucos：', 'mg/dl', displayBloodSugarTIR, colors, widget.bloodSugarData),
                 ),
               ),
             ],
           ),
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              SizedBox(
-                width: 250, // 控制圖表的寬度
-                height: 300, // 控制圖表的高度
-                child: CustomPaint(
-                  painter: BarChartPainter2('Temperature：', '℃', displayTemperatureTIR, colors, widget.temperatureData),
+              SizedBox(width: 50),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  'Edit TIR：',
+                  style: TextStyle(
+                    fontSize: 18,
+                  ),
                 ),
               ),
             ],
           ),
+          TextButton(onPressed: (){}, child: Text('${widget.bloodSugarData[0]}'))
+          // Row(
+          //   mainAxisAlignment: MainAxisAlignment.center,
+          //   children: [
+          //     SizedBox(
+          //       width: 250, // 控制圖表的寬度
+          //       height: 300, // 控制圖表的高度
+          //       child: CustomPaint(
+          //         painter: BarChartPainter2('Temperature：', '℃', displayTemperatureTIR, colors, widget.temperatureData),
+          //       ),
+          //     ),
+          //   ],
+          // ),
         ],
       ),
     );
@@ -159,6 +176,7 @@ class BarChartPainter2 extends CustomPainter {
         );
       }
     }
+
     // 調整刻度文字的位置，防止溢出
     double maxYPosition = labelXPositions.reduce((value, element) => value > element ? value : element);
     double minYPosition = labelXPositions.reduce((value, element) => value < element ? value : element);
@@ -201,7 +219,7 @@ class BarChartPainter2 extends CustomPainter {
       }
     }
 
-    print(location);
+    // print(location);
     if (location[0] < 25) {
       location[0] = 25;
     }
@@ -222,7 +240,7 @@ class BarChartPainter2 extends CustomPainter {
       }
     }
 
-    print(location);
+    // print(location);
     if (data.isNotEmpty) {
       //繪製虛線
       drawFoldedLine(canvas, Offset(0, barHeight * 2 + barHeight / 4), totalHeight / 2 - 60);
@@ -307,8 +325,8 @@ class BarChartPainter2 extends CustomPainter {
       current = Offset(current.dx - (dashHeight + dashSpace), current.dy);
     }
 
-    print(current.dy);
-    print(start.dy - height);
+    // print(current.dy);
+    // print(start.dy - height);
     while (current.dy > start.dy - height) {
       double remainingSpace = current.dy - (start.dy - height);
 
@@ -333,8 +351,8 @@ class BarChartPainter2 extends CustomPainter {
 
     Offset current = Offset(start.dx, start.dy); // 调整起始高度，使其与其他方法相同
 
-    print(current.dy);
-    print(start.dy - height);
+    // print(current.dy);
+    // print(start.dy - height);
     while (current.dy > start.dy - height) {
       double remainingSpace = current.dy - (start.dy - height);
 
@@ -450,7 +468,7 @@ class BarChartPainter extends CustomPainter {
       Color barColor = data[i] > 0 ? colors[i] : Colors.grey; // 如果數值為0，顏色設置為灰色
 
       Paint barPaint = Paint()..color = barColor;
-      print(currentY);
+      // print(currentY);
       if (i != 0 && i != 1) {
         location[i - 2] = (currentY + tmp) / 2;
       }
@@ -543,7 +561,7 @@ class BarChartPainter extends CustomPainter {
       }
     }
 
-    print(location);
+    // print(location);
     if (data.isNotEmpty) {
       //繪製虛線
       drawFoldedLine(canvas, Offset(barWidth / 5, 0), totalWidth / 2 - 20);
