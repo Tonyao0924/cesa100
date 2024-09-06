@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../commonComponents/constants.dart';
+import 'editTIRDialog.dart';
+
 class EditTIRPage extends StatefulWidget {
   final List<int> displayBloodSugarTIR;
   final List<int> displayTemperatureTIR;
@@ -68,47 +71,123 @@ class _EditTIRPageState extends State<EditTIRPage> {
       ),
       body: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(
-                width: 250, // 控制圖表的寬度
-                height: 300, // 控制圖表的高度
-                child: CustomPaint(
-                  painter:
-                      BarChartPainter2('Blood Glucos：', 'mg/dl', displayBloodSugarTIR, colors, widget.bloodSugarData),
-                ),
-              ),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              SizedBox(width: 50),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  'Edit TIR：',
-                  style: TextStyle(
-                    fontSize: 18,
+          Container(
+            margin: EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.all(Radius.circular(10)),
+            ),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 30),
+                  child: Row(
+                    children: [
+                      Text(
+                        'Blood Glucos：',
+                        style: TextStyle(
+                          fontSize: 18,
+                        ),
+                      ),
+                      Spacer(),
+                      TextButton(
+                        style: ButtonStyle(
+                          foregroundColor: MaterialStateProperty.resolveWith(
+                                (states) {
+                              return states.contains(MaterialState.pressed) ? iconHoverColor : iconColor;
+                            },
+                          ),
+                          overlayColor: MaterialStateProperty.all(Colors.transparent),
+                        ),
+                        onPressed: () {
+                          openEditTIRDialog(context, widget.bloodSugarData);
+                        },
+                        child: Text.rich(
+                          WidgetSpan(
+                            child: Icon(
+                              Icons.settings,
+                              size: 26,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            ],
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 250, // 控制圖表的寬度
+                      height: 250, // 控制圖表的高度
+                      child: CustomPaint(
+                        painter:
+                        BarChartPainter2('Blood Glucos：', 'mg/dl', displayBloodSugarTIR, colors, widget.bloodSugarData),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-          TextButton(onPressed: (){}, child: Text('${widget.bloodSugarData[0]}'))
-          // Row(
-          //   mainAxisAlignment: MainAxisAlignment.center,
-          //   children: [
-          //     SizedBox(
-          //       width: 250, // 控制圖表的寬度
-          //       height: 300, // 控制圖表的高度
-          //       child: CustomPaint(
-          //         painter: BarChartPainter2('Temperature：', '℃', displayTemperatureTIR, colors, widget.temperatureData),
-          //       ),
-          //     ),
-          //   ],
-          // ),
+          Container(
+            margin: EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.all(Radius.circular(10)),
+            ),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 30),
+                  child: Row(
+                    children: [
+                      Text(
+                        'Temperature：',
+                        style: TextStyle(
+                          fontSize: 18,
+                        ),
+                      ),
+                      Spacer(),
+                      TextButton(
+                        style: ButtonStyle(
+                          foregroundColor: MaterialStateProperty.resolveWith(
+                                (states) {
+                              return states.contains(MaterialState.pressed) ? iconHoverColor : iconColor;
+                            },
+                          ),
+                          overlayColor: MaterialStateProperty.all(Colors.transparent),
+                        ),
+                        onPressed: () {
+
+                        },
+                        child: Text.rich(
+                          WidgetSpan(
+                            child: Icon(
+                              Icons.settings,
+                              size: 26,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 250, // 控制圖表的寬度
+                      height: 250, // 控制圖表的高度
+                      child: CustomPaint(
+                        painter: BarChartPainter2('Temperature：', '℃', displayTemperatureTIR, colors, widget.temperatureData),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -151,7 +230,7 @@ class BarChartPainter2 extends CustomPainter {
       tmp = currentX;
       // 繪製值條
       canvas.drawRect(
-        Rect.fromLTWH(currentX, totalHeight - barHeight, barWidth, barHeight / 2),
+        Rect.fromLTWH(currentX, totalHeight - 100, barWidth, 50),
         barPaint,
       );
 
@@ -212,7 +291,7 @@ class BarChartPainter2 extends CustomPainter {
         drawTextBtn(
           canvas,
           labels[i],
-          Offset(labelXPositions[i], 260),
+          Offset(labelXPositions[i], 220),
           TextStyle(color: Colors.black, fontSize: 16),
           isTemperature: isTemperature, // 傳遞 isTemperature 參數
         );
@@ -243,20 +322,19 @@ class BarChartPainter2 extends CustomPainter {
     // print(location);
     if (data.isNotEmpty) {
       //繪製虛線
-      drawFoldedLine(canvas, Offset(0, barHeight * 2 + barHeight / 4), totalHeight / 2 - 60);
-      drawstraightLine(canvas, Offset(location[0], barHeight + 80), totalHeight / 2 - 60 - 45);
-      drawMidStraightLine(canvas, Offset(location[1], barHeight + 80), totalHeight / 3 - 10);
-      drawstraightLine(canvas, Offset(location[2], barHeight + 80), totalHeight / 2 - 60 - 45);
-      drawEndFoldedLine(canvas, Offset(totalWidth + 12, barHeight * 2 + barHeight / 4), totalHeight / 2 - 60);
+      drawFoldedLine(canvas, Offset(0, barHeight * 3.5), 90);
+      drawstraightLine(canvas, Offset(location[0], barHeight + 80), 45);
+      drawMidStraightLine(canvas, Offset(location[1], barHeight + 65), totalHeight / 3 - 10);
+      drawstraightLine(canvas, Offset(location[2], barHeight + 80), 45);
+      drawEndFoldedLine(canvas, Offset(totalWidth + 12, barHeight * 3.5), 90);
       //繪製文字
-      drawTextNoCenter(canvas, title, Offset(-50, 10), TextStyle(color: Colors.black, fontSize: 18));
-      drawText(canvas, 'Low+', Offset(-30, barHeight * 2), TextStyle(color: Colors.black54, fontSize: 14));
-      drawText(canvas, 'Low', Offset(location[0], barHeight * 2 - 20), TextStyle(color: Colors.black54, fontSize: 14));
-      drawText(
-          canvas, 'Target', Offset(location[1], barHeight * 2 - 20), TextStyle(color: Colors.black54, fontSize: 14));
-      drawText(canvas, 'High', Offset(location[2], barHeight * 2 - 20), TextStyle(color: Colors.black54, fontSize: 14));
-      drawText(canvas, 'High+', Offset(290, barHeight * 2), TextStyle(color: Colors.black54, fontSize: 14));
-      drawText(canvas, unit, Offset(290, 262), TextStyle(color: Colors.black87, fontSize: 12));
+      // drawTextNoCenter(canvas, title, Offset(-50, 10), TextStyle(color: Colors.black, fontSize: 18)); // 繪製title
+      drawText(canvas, 'Low+', Offset(-30, barHeight * 3), TextStyle(color: Colors.black54, fontSize: 14));
+      drawText(canvas, 'Low', Offset(location[0], barHeight * 2.6), TextStyle(color: Colors.black54, fontSize: 14));
+      drawText(canvas, 'Target', Offset(location[1], barHeight * 2.6), TextStyle(color: Colors.black54, fontSize: 14));
+      drawText(canvas, 'High', Offset(location[2], barHeight * 2.6), TextStyle(color: Colors.black54, fontSize: 14));
+      drawText(canvas, 'High+', Offset(290, barHeight * 3), TextStyle(color: Colors.black54, fontSize: 14));
+      drawText(canvas, unit, Offset(290, 222), TextStyle(color: Colors.black87, fontSize: 12));
       //   //繪製百分比
       drawText(canvas, '${data[0].toStringAsFixed(0)}%', Offset(0, barHeight + 15),
           TextStyle(color: Colors.black54, fontSize: 14, fontWeight: FontWeight.bold));
@@ -270,11 +348,11 @@ class BarChartPainter2 extends CustomPainter {
       drawLine(canvas, -6, location[0]);
       drawLine(canvas, location[2], 272);
       // 繪製最上方的三個百分比
-      drawText(canvas, '${(data[0] + data[1]).toStringAsFixed(0)}%', Offset((location[0]) / 2, 60),
+      drawText(canvas, '${(data[0] + data[1]).toStringAsFixed(0)}%', Offset((location[0]) / 2, 10),
           TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold));
-      drawText(canvas, '${(data[2]).toStringAsFixed(0)}%', Offset(location[1], 60),
+      drawText(canvas, '${(data[2]).toStringAsFixed(0)}%', Offset(location[1], 10),
           TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold));
-      drawText(canvas, '${(data[3] + data[4]).toStringAsFixed(0)}%', Offset((272 + location[2]) / 2, 60),
+      drawText(canvas, '${(data[3] + data[4]).toStringAsFixed(0)}%', Offset((272 + location[2]) / 2, 10),
           TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold));
     }
   }
@@ -424,7 +502,7 @@ class BarChartPainter2 extends CustomPainter {
       ..color = Colors.grey
       ..strokeWidth = 1.0;
 
-    Offset startO = Offset(start, 110);
+    Offset startO = Offset(start, 60);
     canvas.drawLine(startO, Offset(startO.dx, startO.dy - 20), paint);
     startO = Offset(startO.dx, startO.dy - 20);
     canvas.drawLine(startO, Offset(startO.dx + (end - start), startO.dy), paint);
