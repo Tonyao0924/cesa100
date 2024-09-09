@@ -99,8 +99,11 @@ class _EditTIRPageState extends State<EditTIRPage> {
                           ),
                           overlayColor: MaterialStateProperty.all(Colors.transparent),
                         ),
-                        onPressed: () {
-                          openEditTIRDialog(context, widget.bloodSugarData);
+                        onPressed: () async {
+                          var returnData = await openEditBGTIRDialog(context, widget.bloodSugarData);
+                          setState(() {
+                            print(returnData);
+                          });
                         },
                         child: Text.rich(
                           WidgetSpan(
@@ -158,8 +161,9 @@ class _EditTIRPageState extends State<EditTIRPage> {
                           ),
                           overlayColor: MaterialStateProperty.all(Colors.transparent),
                         ),
-                        onPressed: () {
-
+                        onPressed: () async {
+                          var returnData = await openEditTEMPTIRDialog(context, widget.temperatureData);
+                          print(returnData);
                         },
                         child: Text.rich(
                           WidgetSpan(
