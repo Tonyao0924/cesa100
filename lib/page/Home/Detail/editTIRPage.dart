@@ -1,4 +1,8 @@
+import 'dart:convert';
+
+import 'package:cesa100/commonComponents/totalDialog.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http; // For http requests
 
 import '../../../commonComponents/constants.dart';
 import 'editTIRDialog.dart';
@@ -6,6 +10,8 @@ import 'editTIRDialog.dart';
 class EditTIRPage extends StatefulWidget {
   final List<int> displayBloodSugarTIR;
   final List<int> displayTemperatureTIR;
+  final List<double> totalCurrent;
+  final List<double> totalTemperature;
   final int dataCount;
   final List<double> bloodSugarData;
   final List<double> temperatureData;
@@ -13,6 +19,8 @@ class EditTIRPage extends StatefulWidget {
       {Key? key,
       required this.displayBloodSugarTIR,
       required this.displayTemperatureTIR,
+      required this.totalCurrent,
+      required this.totalTemperature,
       required this.dataCount,
       required this.bloodSugarData,
       required this.temperatureData})
@@ -25,9 +33,12 @@ class EditTIRPage extends StatefulWidget {
 class _EditTIRPageState extends State<EditTIRPage> {
   List<int> data = [0, 2, 98, 0, 0]; // 目前的資料，以百分比表示
   List<Color> colors = [Colors.red, Colors.orange, Colors.green, Colors.blue, Colors.red];
-  List<String> labels = ["90", "126", "200", "300"];
   late List<double> displayBloodSugarTIR;
   late List<double> displayTemperatureTIR;
+  late List<double> bloodSugarData;
+  late List<double> temperatureData;
+  List<int> bloodSugarTIR = [0, 0, 0, 0, 0]; //暫存血糖資料的TIR
+  List<int> temperatureTIR = [0, 0, 0, 0, 0]; //暫存溫度資料的TIR
 
   double calculatePercentage(int value, int length) {
     return length > 0 ? (value / length) * 100 : 0;
@@ -38,11 +49,84 @@ class _EditTIRPageState extends State<EditTIRPage> {
     super.initState();
     displayBloodSugarTIR = [];
     displayTemperatureTIR = [];
+    bloodSugarData = widget.bloodSugarData;
+    temperatureData = widget.temperatureData;
 
-    print(widget.bloodSugarData);
+    print(bloodSugarData);
+    bloodSugarTIR = widget.displayBloodSugarTIR;
+    temperatureTIR = widget.displayTemperatureTIR;
     for (int i = 0; i < widget.displayTemperatureTIR.length; i++) {
       displayBloodSugarTIR.add(calculatePercentage(widget.displayBloodSugarTIR[i], widget.dataCount));
       displayTemperatureTIR.add(calculatePercentage(widget.displayTemperatureTIR[i], widget.dataCount));
+    }
+    print(widget.displayTemperatureTIR);
+  }
+
+  // 放資料到TIR陣列當中
+  void putTIRData(double current, double temperature) {
+    if (current >= bloodSugarData[0]) {
+      bloodSugarTIR[0]++;
+    } else if (current >= bloodSugarData[1]) {
+      bloodSugarTIR[1]++;
+    } else if (current >= bloodSugarData[2]) {
+      bloodSugarTIR[2]++;
+    } else if (current >= bloodSugarData[3]) {
+      bloodSugarTIR[3]++;
+    } else {
+      bloodSugarTIR[4]++;
+    }
+    if (temperature >= temperatureData[0]) {
+      temperatureTIR[0]++;
+    } else if (temperature >= temperatureData[1]) {
+      temperatureTIR[1]++;
+    } else if (temperature >= temperatureData[2]) {
+      temperatureTIR[2]++;
+    } else if (temperature >= temperatureData[3]) {
+      temperatureTIR[3]++;
+    } else {
+      temperatureTIR[4]++;
+    }
+  }
+
+  Future<bool> updateRanges() async {
+    final url = Uri.parse('http://172.16.200.77:3000/modifyranges');
+
+    // 準備要發送的數據
+    final data = {
+      "machine_id": 1,
+      "temperature_1": temperatureData[3],
+      "temperature_2": temperatureData[2],
+      "temperature_3": temperatureData[1],
+      "temperature_4": temperatureData[0],
+      "current_1": bloodSugarData[3],
+      "current_2": bloodSugarData[2],
+      "current_3": bloodSugarData[1],
+      "current_4": bloodSugarData[0]
+    };
+
+    try {
+      // 發送 PUT 請求
+      final response = await http.put(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(data), // 將數據編碼為 JSON 格式
+      );
+
+      if (response.statusCode == 200) {
+        // 成功回應
+        print('資料已成功更新');
+        return true;
+      } else {
+        // 處理非 200 狀態碼
+        print('更新失敗，狀態碼: ${response.statusCode}');
+        return false;
+      }
+    } catch (e) {
+      // 捕捉異常
+      print('發生錯誤: $e');
+      return false;
     }
   }
 
@@ -61,9 +145,16 @@ class _EditTIRPageState extends State<EditTIRPage> {
         ),
         actions: [
           IconButton(
-            onPressed: () {
-              // todo 資料庫更新資料
+            onPressed: () async {
+              bool putSuccess = await updateRanges();
+              if(putSuccess){
+                showToast(context, '資料更新成功');
+              }else{
+                showToast(context, '資料更新失敗');
+              }
               print('資料庫更新資料');
+              List<int> resultTIR = bloodSugarTIR + temperatureTIR;
+              Navigator.of(context).pop(resultTIR); // 返回選擇的數值
             },
             icon: Icon(Icons.check),
           ),
@@ -93,17 +184,40 @@ class _EditTIRPageState extends State<EditTIRPage> {
                       TextButton(
                         style: ButtonStyle(
                           foregroundColor: MaterialStateProperty.resolveWith(
-                                (states) {
+                            (states) {
                               return states.contains(MaterialState.pressed) ? iconHoverColor : iconColor;
                             },
                           ),
                           overlayColor: MaterialStateProperty.all(Colors.transparent),
                         ),
                         onPressed: () async {
-                          var returnData = await openEditBGTIRDialog(context, widget.bloodSugarData);
-                          setState(() {
-                            print(returnData);
-                          });
+                          var returnData = await openEditBGTIRDialog(context, bloodSugarData);
+                          if (returnData != null) {
+                            setState(() {
+                              bloodSugarData = returnData;
+                            });
+                            print(bloodSugarData);
+                            bloodSugarTIR = [0, 0, 0, 0, 0];
+                            for(int i = 0 ; i < widget.totalCurrent.length ; i++){
+                              double current = widget.totalCurrent[i];
+                              if (current <= bloodSugarData[0]) {
+                                bloodSugarTIR[0]++;
+                              } else if (current <= bloodSugarData[1]) {
+                                bloodSugarTIR[1]++;
+                              } else if (current <= bloodSugarData[2]) {
+                                bloodSugarTIR[2]++;
+                              } else if (current <= bloodSugarData[3]) {
+                                bloodSugarTIR[3]++;
+                              } else {
+                                bloodSugarTIR[4]++;
+                              }
+                            }
+                            print(bloodSugarTIR);
+                            displayBloodSugarTIR.clear();
+                            for (int i = 0; i < bloodSugarTIR.length; i++) {
+                              displayBloodSugarTIR.add(calculatePercentage(bloodSugarTIR[i], widget.dataCount));
+                            }
+                          }
                         },
                         child: Text.rich(
                           WidgetSpan(
@@ -125,7 +239,7 @@ class _EditTIRPageState extends State<EditTIRPage> {
                       height: 250, // 控制圖表的高度
                       child: CustomPaint(
                         painter:
-                        BarChartPainter2('Blood Glucos：', 'mg/dl', displayBloodSugarTIR, colors, widget.bloodSugarData),
+                            BarChartPainter2('Blood Glucos：', 'mg/dl', displayBloodSugarTIR, colors, bloodSugarData),
                       ),
                     ),
                   ],
@@ -155,15 +269,38 @@ class _EditTIRPageState extends State<EditTIRPage> {
                       TextButton(
                         style: ButtonStyle(
                           foregroundColor: MaterialStateProperty.resolveWith(
-                                (states) {
+                            (states) {
                               return states.contains(MaterialState.pressed) ? iconHoverColor : iconColor;
                             },
                           ),
                           overlayColor: MaterialStateProperty.all(Colors.transparent),
                         ),
                         onPressed: () async {
-                          var returnData = await openEditTEMPTIRDialog(context, widget.temperatureData);
-                          print(returnData);
+                          var returnData = await openEditTEMPTIRDialog(context, temperatureData);
+                          if (returnData != null) {
+                            setState(() {
+                              temperatureData = returnData;
+                            });
+                            temperatureTIR = [0, 0, 0, 0, 0];
+                            for(int i = 0 ; i < widget.totalTemperature.length ; i++){
+                              double current = widget.totalTemperature[i];
+                              if (current <= temperatureData[0]) {
+                                temperatureTIR[0]++;
+                              } else if (current <= temperatureData[1]) {
+                                temperatureTIR[1]++;
+                              } else if (current <= temperatureData[2]) {
+                                temperatureTIR[2]++;
+                              } else if (current <= temperatureData[3]) {
+                                temperatureTIR[3]++;
+                              } else {
+                                temperatureTIR[4]++;
+                              }
+                            }
+                            displayTemperatureTIR.clear();
+                            for (int i = 0; i < temperatureTIR.length; i++) {
+                              displayTemperatureTIR.add(calculatePercentage(temperatureTIR[i], widget.dataCount));
+                            }
+                          }
                         },
                         child: Text.rich(
                           WidgetSpan(
@@ -184,7 +321,7 @@ class _EditTIRPageState extends State<EditTIRPage> {
                       width: 250, // 控制圖表的寬度
                       height: 250, // 控制圖表的高度
                       child: CustomPaint(
-                        painter: BarChartPainter2('Temperature：', '℃', displayTemperatureTIR, colors, widget.temperatureData),
+                        painter: BarChartPainter2('Temperature：', '℃', displayTemperatureTIR, colors, temperatureData),
                       ),
                     ),
                   ],

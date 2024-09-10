@@ -28,7 +28,7 @@ class _DetailItemState extends State<DetailItem> {
   late TooltipBehavior _tooltipBehavior;
   late CrosshairBehavior _crosshairBehavior; // 十字線
   List<dynamic>? futureData; //讀取資料
-  List<dynamic>? futureTIRData;
+  List<dynamic>? futureTIRData; //讀取TIR資料
   List<ChartData> bloodSugarLens = []; //圖表血糖軸
   List<ChartData> temperatureLens = []; //圖表溫度軸
   List<int> displayBloodSugarTIR = [0, 0, 0, 0, 0]; //顯示血糖用的TIR
@@ -52,12 +52,10 @@ class _DetailItemState extends State<DetailItem> {
   late int lastBgNonZeroIndex; // 紀錄TIR血糖最靠右非0數值
   late int firstTempNonZeroIndex; // 紀錄TIR溫度最靠左非0數值
   late int lastTempNonZeroIndex; // 紀錄TIR溫度最靠右非0數值
-  int initCirculation = 3;
+  int initCirculation = 3; // 圖表顯示幾小時內資料
   late RangeController _rangeController;
   double zoomP = 0.5;
   double zoomF = 0.2;
-  double chartZoomP = 0.5;
-  double chartZoomF = 0.2;
   DateTimeAxisController? axisController1;
   DateTimeAxisController? axisController2;
 
@@ -199,7 +197,6 @@ class _DetailItemState extends State<DetailItem> {
   }
 
   void circulationLoop() {
-    print('------first------');
     print(minX);
     print(maxX);
     setState(() {
@@ -248,9 +245,7 @@ class _DetailItemState extends State<DetailItem> {
               horizontal: width * 0.02,
               vertical: 10,
             ),
-            padding: EdgeInsets.symmetric(
-                // horizontal: _chartState == 0 ? width * 0.05 : width * 0.03,
-                vertical: _chartState == 0 ? height * 0.017 : 0),
+            padding: EdgeInsets.symmetric(vertical: _chartState == 0 ? height * 0.017 : 0),
             child: Row(
               mainAxisAlignment:
                   _chartState == 1 || _chartState == 2 ? MainAxisAlignment.center : MainAxisAlignment.spaceBetween,
@@ -469,9 +464,6 @@ class _DetailItemState extends State<DetailItem> {
                             if (args.axis!.name == 'primaryXAxis') {
                               zoomP = args.currentZoomPosition;
                               zoomF = args.currentZoomFactor;
-                              // print('--------');
-                              // print(zoomP);
-                              // print(zoomF);
                               axisController1!.zoomFactor = zoomF;
                               axisController1!.zoomPosition = zoomP;
                             }
@@ -723,12 +715,14 @@ class _DetailItemState extends State<DetailItem> {
                     var bloodSugarData2 = bloodSugarData.reversed.toList();
                     var temperatureData2 = temperatureData.reversed.toList();
 
-                    Navigator.push(
+                    var resultTIR = await Navigator.push(
                       context,
                       PageRouteBuilder(
                         pageBuilder: (context, animation, secondaryAnimation) => EditTIRPage(
                           displayBloodSugarTIR: displayBloodSugarTIR2,
                           displayTemperatureTIR: displayTemperatureTIR2,
+                          totalCurrent: totalCurrent,
+                          totalTemperature: totalTemperature,
                           dataCount: dataCount,
                           bloodSugarData: bloodSugarData2,
                           temperatureData: temperatureData2,
@@ -745,6 +739,18 @@ class _DetailItemState extends State<DetailItem> {
                         },
                       ),
                     );
+                    if (resultTIR == null) {
+                      print('no value');
+                    } else {
+                      print(displayBloodSugarTIR);
+                      print(displayTemperatureTIR);
+                      setState(() {
+                        displayBloodSugarTIR = resultTIR.sublist(0, 5);
+                        displayTemperatureTIR = resultTIR.sublist(5, 10);
+                      });
+                      print(displayBloodSugarTIR);
+                      print(displayTemperatureTIR);
+                    }
                   },
                   child: Container(
                     padding: EdgeInsets.symmetric(horizontal: width * 0.05),
@@ -799,20 +805,6 @@ class _DetailItemState extends State<DetailItem> {
                     fit: BoxFit.scaleDown,
                   ),
                 ),
-                // child: Align(
-                //   alignment: Alignment.center,
-                //   child: FittedBox(
-                //     fit: BoxFit.scaleDown,
-                //     child: Text(
-                //       'BG. ',
-                //       style: TextStyle(
-                //         fontSize: 14,
-                //         fontWeight: FontWeight.bold,
-                //         color: Colors.deepOrangeAccent,
-                //       ),
-                //     ),
-                //   ),
-                // ),
               ),
               Expanded(
                 flex: 14,
@@ -945,23 +937,6 @@ class _DetailItemState extends State<DetailItem> {
                     fit: BoxFit.scaleDown,
                   ),
                 ),
-                // child: FittedBox(
-                //   fit: BoxFit.scaleDown,
-                //   child: Align(
-                //     alignment: Alignment.center,
-                //     child: FittedBox(
-                //       fit: BoxFit.scaleDown,
-                //       child: Text(
-                //         ' TEMP.',
-                //         style: TextStyle(
-                //           fontSize: 14,
-                //           fontWeight: FontWeight.bold,
-                //           color: Colors.blue,
-                //         ),
-                //       ),
-                //     ),
-                //   ),
-                // ),
               ),
             ],
           ),
