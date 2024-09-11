@@ -108,6 +108,7 @@ class _DetailItemState extends State<DetailItem> {
       bloodSugarData.add(item['current_4'].toDouble());
       break;
     }
+    print(bloodSugarData);
     for (var item in futureData!) {
       DateTime tmp = DateTime.parse(item['DateTime']);
       double current = item['Current_A'] is double ? item['Current_A'] : item['Current_A'].toDouble();
@@ -142,24 +143,24 @@ class _DetailItemState extends State<DetailItem> {
 
   // 放資料到TIR陣列當中
   void putTIRData(double current, double temperature) {
-    if (current >= bloodSugarData[0]) {
+    if (current <= bloodSugarData[0]) {
       bloodSugarTIR[0]++;
-    } else if (current >= bloodSugarData[1]) {
+    } else if (current <= bloodSugarData[1]) {
       bloodSugarTIR[1]++;
-    } else if (current >= bloodSugarData[2]) {
+    } else if (current <= bloodSugarData[2]) {
       bloodSugarTIR[2]++;
-    } else if (current >= bloodSugarData[3]) {
+    } else if (current <= bloodSugarData[3]) {
       bloodSugarTIR[3]++;
     } else {
       bloodSugarTIR[4]++;
     }
-    if (temperature >= temperatureData[0]) {
+    if (temperature <= temperatureData[0]) {
       temperatureTIR[0]++;
-    } else if (temperature >= temperatureData[1]) {
+    } else if (temperature <= temperatureData[1]) {
       temperatureTIR[1]++;
-    } else if (temperature >= temperatureData[2]) {
+    } else if (temperature <= temperatureData[2]) {
       temperatureTIR[2]++;
-    } else if (temperature >= temperatureData[3]) {
+    } else if (temperature <= temperatureData[3]) {
       temperatureTIR[3]++;
     } else {
       temperatureTIR[4]++;
@@ -245,7 +246,7 @@ class _DetailItemState extends State<DetailItem> {
               horizontal: width * 0.02,
               vertical: 10,
             ),
-            padding: EdgeInsets.symmetric(vertical: _chartState == 0 ? height * 0.017 : 0),
+            padding: EdgeInsets.symmetric(vertical: _chartState == 0 ? height * 0.008 : 0),
             child: Row(
               mainAxisAlignment:
                   _chartState == 1 || _chartState == 2 ? MainAxisAlignment.center : MainAxisAlignment.spaceBetween,
@@ -262,7 +263,7 @@ class _DetailItemState extends State<DetailItem> {
                               children: [
                                 TextSpan(
                                   text: '${(widget.rowData.bloodSugar).toStringAsFixed(0)}',
-                                  style: TextStyle(fontSize: 60, color: Color(0xff808080), fontWeight: FontWeight.bold),
+                                  style: TextStyle(fontSize: 70, color: Color(0xff808080), fontWeight: FontWeight.bold),
                                 ),
                                 WidgetSpan(
                                   child: Column(
@@ -307,9 +308,9 @@ class _DetailItemState extends State<DetailItem> {
                             TextSpan(
                               children: [
                                 TextSpan(
-                                  text: '${(widget.rowData.temperature).toStringAsFixed(0)}',
+                                  text: '${(widget.rowData.temperature).toStringAsFixed(1)}',
                                   style: const TextStyle(
-                                      fontSize: 60, color: Color(0xff808080), fontWeight: FontWeight.bold),
+                                      fontSize: 70, color: Color(0xff808080), fontWeight: FontWeight.bold),
                                 ),
                                 WidgetSpan(
                                   child: Column(
@@ -354,7 +355,7 @@ class _DetailItemState extends State<DetailItem> {
                             TextSpan(
                               children: [
                                 TextSpan(
-                                  text: '${widget.rowData.bloodSugar}',
+                                  text: '${widget.rowData.bloodSugar.toStringAsFixed(0)}',
                                   style: TextStyle(
                                     fontSize: 80, // 放大這裡的字體
                                     color: Color(0xff808080),
@@ -394,7 +395,7 @@ class _DetailItemState extends State<DetailItem> {
                             TextSpan(
                               children: [
                                 TextSpan(
-                                  text: '${widget.rowData.temperature}',
+                                  text: '${widget.rowData.temperature.toStringAsFixed(1)}',
                                   style: TextStyle(
                                     fontSize: 80, // 放大這裡的字體
                                     color: Color(0xff808080),
@@ -468,6 +469,20 @@ class _DetailItemState extends State<DetailItem> {
                               axisController1!.zoomPosition = zoomP;
                             }
                           },
+                          annotations: <CartesianChartAnnotation>[
+                            CartesianChartAnnotation(
+                              widget: Container(
+                                child: Icon(
+                                  Icons.arrow_drop_up,
+                                  size: 30,
+                                  color: Colors.red,
+                                ),
+                              ),
+                              coordinateUnit: CoordinateUnit.point,
+                              x: DateTime(2024, 9, 11, 7, 32), // 顯示 marker 的 X 軸座標
+                              y: 260, // 顯示 marker 的 Y 軸座標
+                            ),
+                          ],
                           primaryXAxis: DateTimeAxis(
                             name: 'primaryXAxis',
                             // title: const AxisTitle(text: 'Time'),
@@ -710,10 +725,10 @@ class _DetailItemState extends State<DetailItem> {
                 ),
                 GestureDetector(
                   onTap: () async {
-                    var displayBloodSugarTIR2 = displayBloodSugarTIR.reversed.toList();
-                    var displayTemperatureTIR2 = displayTemperatureTIR.reversed.toList();
-                    var bloodSugarData2 = bloodSugarData.reversed.toList();
-                    var temperatureData2 = temperatureData.reversed.toList();
+                    var displayBloodSugarTIR2 = displayBloodSugarTIR;
+                    var displayTemperatureTIR2 = displayTemperatureTIR;
+                    var bloodSugarData2 = bloodSugarData;
+                    var temperatureData2 = temperatureData;
 
                     var resultTIR = await Navigator.push(
                       context,
@@ -742,14 +757,23 @@ class _DetailItemState extends State<DetailItem> {
                     if (resultTIR == null) {
                       print('no value');
                     } else {
-                      print(displayBloodSugarTIR);
-                      print(displayTemperatureTIR);
                       setState(() {
                         displayBloodSugarTIR = resultTIR.sublist(0, 5);
                         displayTemperatureTIR = resultTIR.sublist(5, 10);
                       });
-                      print(displayBloodSugarTIR);
-                      print(displayTemperatureTIR);
+                      futureTIRData = await fetchTIRData();
+                      for (var item in futureTIRData!) {
+                        temperatureData[0] = item['temperature_1'].toDouble();
+                        temperatureData[1] = item['temperature_2'].toDouble();
+                        temperatureData[2] = item['temperature_3'].toDouble();
+                        temperatureData[3] = item['temperature_4'].toDouble();
+
+                        bloodSugarData[0] = item['current_1'].toDouble();
+                        bloodSugarData[1] = item['current_2'].toDouble();
+                        bloodSugarData[2] = item['current_3'].toDouble();
+                        bloodSugarData[3] = item['current_4'].toDouble();
+                        break;
+                      }
                     }
                   },
                   child: Container(

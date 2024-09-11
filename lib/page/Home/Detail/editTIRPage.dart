@@ -32,7 +32,7 @@ class EditTIRPage extends StatefulWidget {
 
 class _EditTIRPageState extends State<EditTIRPage> {
   List<int> data = [0, 2, 98, 0, 0]; // 目前的資料，以百分比表示
-  List<Color> colors = [Colors.red, Colors.orange, Colors.green, Colors.blue, Colors.red];
+  List<Color> colors = [Colors.red, Colors.blue, Colors.green, Colors.orange, Colors.red];
   late List<double> displayBloodSugarTIR;
   late List<double> displayTemperatureTIR;
   late List<double> bloodSugarData;
@@ -94,14 +94,14 @@ class _EditTIRPageState extends State<EditTIRPage> {
     // 準備要發送的數據
     final data = {
       "machine_id": 1,
-      "temperature_1": temperatureData[3],
-      "temperature_2": temperatureData[2],
-      "temperature_3": temperatureData[1],
-      "temperature_4": temperatureData[0],
-      "current_1": bloodSugarData[3],
-      "current_2": bloodSugarData[2],
-      "current_3": bloodSugarData[1],
-      "current_4": bloodSugarData[0]
+      "temperature_1": temperatureData[0],
+      "temperature_2": temperatureData[1],
+      "temperature_3": temperatureData[2],
+      "temperature_4": temperatureData[3],
+      "current_1": bloodSugarData[0],
+      "current_2": bloodSugarData[1],
+      "current_3": bloodSugarData[2],
+      "current_4": bloodSugarData[3]
     };
 
     try {
@@ -465,7 +465,7 @@ class BarChartPainter2 extends CustomPainter {
       //繪製虛線
       drawFoldedLine(canvas, Offset(0, barHeight * 3.5), 90);
       drawstraightLine(canvas, Offset(location[0], barHeight + 80), 45);
-      drawMidStraightLine(canvas, Offset(location[1], barHeight + 65), totalHeight / 3 - 10);
+      drawMidStraightLine(canvas, Offset(location[1], barHeight + 80), 90);
       drawstraightLine(canvas, Offset(location[2], barHeight + 80), 45);
       drawEndFoldedLine(canvas, Offset(totalWidth + 12, barHeight * 3.5), 90);
       //繪製文字
@@ -487,7 +487,7 @@ class BarChartPainter2 extends CustomPainter {
           TextStyle(color: Colors.black54, fontSize: 14, fontWeight: FontWeight.bold));
       // 畫data0跟data1的蓋子 畫data3跟data4的蓋子
       drawLine(canvas, -6, location[0]);
-      drawLine(canvas, location[2], 272);
+      drawLine(canvas, location[2], 268);
       // 繪製最上方的三個百分比
       drawText(canvas, '${(data[0] + data[1]).toStringAsFixed(0)}%', Offset((location[0]) / 2, 10),
           TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold));
