@@ -58,6 +58,12 @@ class _DetailItemState extends State<DetailItem> {
   double zoomF = 0.2;
   DateTimeAxisController? axisController1;
   DateTimeAxisController? axisController2;
+  List<Map<String, dynamic>> markerPoints = [
+    {'x': DateTime(2024, 9, 12, 4, 15), 'y': 260},
+    {'x': DateTime(2024, 9, 12, 5, 30), 'y': 260},
+    {'x': DateTime(2024, 9, 12, 6, 45), 'y': 260},
+    // ...可以繼續添加更多點
+  ];
 
   @override
   void initState() {
@@ -248,10 +254,11 @@ class _DetailItemState extends State<DetailItem> {
             ),
             padding: EdgeInsets.symmetric(vertical: _chartState == 0 ? height * 0.008 : 0),
             child: Row(
-              mainAxisAlignment:
-                  _chartState == 1 || _chartState == 2 ? MainAxisAlignment.center : MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: _chartState == 1 || _chartState == 2
+                  ? MainAxisAlignment.center
+                  : MainAxisAlignment.spaceBetween,
               children: [
-                if (_chartState == 0)
+                if (_chartState == 0 || _chartState == 1)
                   Expanded(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -263,30 +270,44 @@ class _DetailItemState extends State<DetailItem> {
                               children: [
                                 TextSpan(
                                   text: '${(widget.rowData.bloodSugar).toStringAsFixed(0)}',
-                                  style: TextStyle(fontSize: 70, color: Color(0xff808080), fontWeight: FontWeight.bold),
+                                  style: TextStyle(
+                                    fontSize: _chartState == 1 ? 80 : 70,
+                                    color: Color(0xff808080),
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 WidgetSpan(
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: Image.asset(
-                                          'assets/home/arrow_-90angle.png',
-                                          fit: BoxFit.scaleDown,
+                                      if (_chartState == 0)
+                                        SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: Image.asset(
+                                            'assets/home/arrow_-90angle.png',
+                                            fit: BoxFit.scaleDown,
+                                          ),
                                         ),
-                                      ),
-                                      FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        child: const Text(
+                                      if (_chartState == 1)
+                                        const Text(
                                           'mg/dl',
                                           style: TextStyle(
-                                            fontSize: 10, // 這裡保持原來的字體大小
+                                            fontSize: 15,
                                             color: Colors.black,
                                           ),
                                         ),
-                                      ),
+                                      if (_chartState == 0)
+                                        FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: const Text(
+                                            'mg/dl',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ),
                                     ],
                                   ),
                                 ),
@@ -294,10 +315,19 @@ class _DetailItemState extends State<DetailItem> {
                             ),
                           ),
                         ),
+                        if (_chartState == 1)
+                          SizedBox(
+                            width: 50,
+                            height: 50,
+                            child: Image.asset(
+                              'assets/home/arrow_-90angle.png',
+                              fit: BoxFit.scaleDown,
+                            ),
+                          ),
                       ],
                     ),
                   ),
-                if (_chartState == 0)
+                if (_chartState == 0 || _chartState == 2)
                   Expanded(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -309,31 +339,44 @@ class _DetailItemState extends State<DetailItem> {
                               children: [
                                 TextSpan(
                                   text: '${(widget.rowData.temperature).toStringAsFixed(1)}',
-                                  style: const TextStyle(
-                                      fontSize: 70, color: Color(0xff808080), fontWeight: FontWeight.bold),
+                                  style: TextStyle(
+                                    fontSize: _chartState == 2 ? 80 : 70,
+                                    color: Color(0xff808080),
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 WidgetSpan(
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: Image.asset(
-                                          'assets/home/arrow_45angle.png',
-                                          fit: BoxFit.scaleDown,
+                                      if (_chartState == 0)
+                                        SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: Image.asset(
+                                            'assets/home/arrow_45angle.png',
+                                            fit: BoxFit.scaleDown,
+                                          ),
                                         ),
-                                      ),
-                                      FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        child: const Text(
-                                          ' ℃',
+                                      if (_chartState == 2)
+                                        const Text(
+                                          '℃',
                                           style: TextStyle(
-                                            fontSize: 10,
+                                            fontSize: 15,
                                             color: Colors.black,
                                           ),
                                         ),
-                                      ),
+                                      if (_chartState == 0)
+                                        FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: const Text(
+                                            '℃',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ),
                                     ],
                                   ),
                                 ),
@@ -341,91 +384,20 @@ class _DetailItemState extends State<DetailItem> {
                             ),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                if (_chartState == 1)
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text.rich(
-                            TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: '${widget.rowData.bloodSugar.toStringAsFixed(0)}',
-                                  style: TextStyle(
-                                    fontSize: 80, // 放大這裡的字體
-                                    color: Color(0xff808080),
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const TextSpan(
-                                  text: 'mg/dl',
-                                  style: TextStyle(
-                                    fontSize: 15, // 這裡保持原來的字體大小
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ],
+                        if (_chartState == 2)
+                          SizedBox(
+                            width: 50,
+                            height: 50,
+                            child: Image.asset(
+                              'assets/home/arrow_45angle.png',
+                              fit: BoxFit.scaleDown,
                             ),
                           ),
-                        ),
-                        SizedBox(
-                          width: 50,
-                          height: 50,
-                          child: Image.asset(
-                            'assets/home/arrow_-90angle.png',
-                            fit: BoxFit.scaleDown,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                if (_chartState == 2)
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text.rich(
-                            TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: '${widget.rowData.temperature.toStringAsFixed(1)}',
-                                  style: TextStyle(
-                                    fontSize: 80, // 放大這裡的字體
-                                    color: Color(0xff808080),
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                TextSpan(
-                                  text: ' ℃',
-                                  style: const TextStyle(
-                                    fontSize: 15, // 這裡保持原來的字體大小
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          width: 50,
-                          height: 50,
-                          child: Image.asset(
-                            'assets/home/arrow_45angle.png',
-                            fit: BoxFit.scaleDown,
-                          ),
-                        ),
                       ],
                     ),
                   ),
               ],
-            ),
+            )
           ),
           Expanded(
             child: Container(
@@ -469,20 +441,24 @@ class _DetailItemState extends State<DetailItem> {
                               axisController1!.zoomPosition = zoomP;
                             }
                           },
-                          annotations: <CartesianChartAnnotation>[
-                            CartesianChartAnnotation(
+                          annotations:  markerPoints.where((point) {
+                            // 過濾掉不在可見範圍內的標記
+                            DateTime pointX = point['x'] as DateTime;
+                            return pointX.isAfter(minX!) && pointX.isBefore(maxX!);
+                          }).map((point) {
+                            return CartesianChartAnnotation(
                               widget: Container(
                                 child: Icon(
-                                  Icons.arrow_drop_up,
+                                  Icons.arrow_drop_down,
                                   size: 30,
                                   color: Colors.red,
                                 ),
                               ),
                               coordinateUnit: CoordinateUnit.point,
-                              x: DateTime(2024, 9, 11, 7, 32), // 顯示 marker 的 X 軸座標
-                              y: 260, // 顯示 marker 的 Y 軸座標
-                            ),
-                          ],
+                              x: point['x'],  // 對應每個 marker 的 X 軸座標
+                              y: point['y'],  // 對應每個 marker 的 Y 軸座標
+                            );
+                          }).toList(),
                           primaryXAxis: DateTimeAxis(
                             name: 'primaryXAxis',
                             // title: const AxisTitle(text: 'Time'),
@@ -973,6 +949,8 @@ class _DetailItemState extends State<DetailItem> {
 
   void _onActualRangeChanged(ActualRangeChangedArgs args) {
     _debounce?.cancel();
+    minX = DateTime.fromMillisecondsSinceEpoch((args.visibleMin).toInt());
+    maxX = DateTime.fromMillisecondsSinceEpoch((args.visibleMax).toInt());
     _debounce = Timer(const Duration(milliseconds: 100), () {
       if (args.visibleMin != 0) {
         print('---一開始的資料$maxX  $minX');
