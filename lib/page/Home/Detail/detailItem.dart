@@ -59,9 +59,9 @@ class _DetailItemState extends State<DetailItem> {
   DateTimeAxisController? axisController1;
   DateTimeAxisController? axisController2;
   List<Map<String, dynamic>> markerPoints = [
-    {'x': DateTime(2024, 9, 12, 4, 15), 'y': 260},
-    {'x': DateTime(2024, 9, 12, 5, 30), 'y': 260},
-    {'x': DateTime(2024, 9, 12, 6, 45), 'y': 260},
+    {'x': DateTime(2024, 9, 13, 4, 15), 'y': 260},
+    {'x': DateTime(2024, 9, 13, 5, 30), 'y': 260},
+    {'x': DateTime(2024, 9, 13, 6, 45), 'y': 260},
     // ...可以繼續添加更多點
   ];
 
@@ -253,19 +253,19 @@ class _DetailItemState extends State<DetailItem> {
               vertical: 10,
             ),
             padding: EdgeInsets.symmetric(vertical: _chartState == 0 ? height * 0.008 : 0),
-            child: Row(
+            child:Row(
               mainAxisAlignment: _chartState == 1 || _chartState == 2
                   ? MainAxisAlignment.center
                   : MainAxisAlignment.spaceBetween,
               children: [
                 if (_chartState == 0 || _chartState == 1)
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text.rich(
+                  Expanded(  // 直接使用 Expanded
+                    child: FittedBox(  // FittedBox 包住整個 Row
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text.rich(
                             TextSpan(
                               children: [
                                 TextSpan(
@@ -314,27 +314,27 @@ class _DetailItemState extends State<DetailItem> {
                               ],
                             ),
                           ),
-                        ),
-                        if (_chartState == 1)
-                          SizedBox(
-                            width: 50,
-                            height: 50,
-                            child: Image.asset(
-                              'assets/home/arrow_-90angle.png',
-                              fit: BoxFit.scaleDown,
+                          if (_chartState == 1)
+                            SizedBox(
+                              width: 50,
+                              height: 50,
+                              child: Image.asset(
+                                'assets/home/arrow_-90angle.png',
+                                fit: BoxFit.scaleDown,
+                              ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 if (_chartState == 0 || _chartState == 2)
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text.rich(
+                  Expanded(  // 直接使用 Expanded
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text.rich(
                             TextSpan(
                               children: [
                                 TextSpan(
@@ -383,17 +383,17 @@ class _DetailItemState extends State<DetailItem> {
                               ],
                             ),
                           ),
-                        ),
-                        if (_chartState == 2)
-                          SizedBox(
-                            width: 50,
-                            height: 50,
-                            child: Image.asset(
-                              'assets/home/arrow_45angle.png',
-                              fit: BoxFit.scaleDown,
+                          if (_chartState == 2)
+                            SizedBox(
+                              width: 50,
+                              height: 50,
+                              child: Image.asset(
+                                'assets/home/arrow_45angle.png',
+                                fit: BoxFit.scaleDown,
+                              ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
               ],
@@ -447,12 +447,11 @@ class _DetailItemState extends State<DetailItem> {
                             return pointX.isAfter(minX!) && pointX.isBefore(maxX!);
                           }).map((point) {
                             return CartesianChartAnnotation(
-                              widget: Container(
-                                child: Icon(
-                                  Icons.arrow_drop_down,
-                                  size: 30,
-                                  color: Colors.red,
-                                ),
+                              region: AnnotationRegion.chart,
+                              widget: const Icon(
+                                Icons.arrow_drop_down,
+                                size: 30,
+                                color: Colors.red,
                               ),
                               coordinateUnit: CoordinateUnit.point,
                               x: point['x'],  // 對應每個 marker 的 X 軸座標
@@ -951,6 +950,7 @@ class _DetailItemState extends State<DetailItem> {
     _debounce?.cancel();
     minX = DateTime.fromMillisecondsSinceEpoch((args.visibleMin).toInt());
     maxX = DateTime.fromMillisecondsSinceEpoch((args.visibleMax).toInt());
+    print(minX);
     _debounce = Timer(const Duration(milliseconds: 100), () {
       if (args.visibleMin != 0) {
         print('---一開始的資料$maxX  $minX');
