@@ -54,14 +54,15 @@ class _DetailItemState extends State<DetailItem> {
   late int lastTempNonZeroIndex; // 紀錄TIR溫度最靠右非0數值
   int initCirculation = 3; // 圖表顯示幾小時內資料
   late RangeController _rangeController;
+  int lastId = 0; // 儲存backend最後一筆資料id
   double zoomP = 0.5;
   double zoomF = 0.2;
   DateTimeAxisController? axisController1;
   DateTimeAxisController? axisController2;
   List<Map<String, dynamic>> markerPoints = [
-    {'x': DateTime(2024, 9, 13, 4, 15), 'y': 260},
-    {'x': DateTime(2024, 9, 13, 5, 30), 'y': 260},
-    {'x': DateTime(2024, 9, 13, 6, 45), 'y': 260},
+    {'x': DateTime(2024, 9, 16, 5, 15), 'y': 270},
+    {'x': DateTime(2024, 9, 16, 5, 30), 'y': 270},
+    {'x': DateTime(2024, 9, 16, 5, 45), 'y': 270},
     // ...可以繼續添加更多點
   ];
 
@@ -114,7 +115,9 @@ class _DetailItemState extends State<DetailItem> {
       bloodSugarData.add(item['current_4'].toDouble());
       break;
     }
-    print(bloodSugarData);
+    if (futureData!.isNotEmpty) {
+      lastId = futureData!.last['id'];
+    }
     for (var item in futureData!) {
       DateTime tmp = DateTime.parse(item['DateTime']);
       double current = item['Current_A'] is double ? item['Current_A'] : item['Current_A'].toDouble();
@@ -441,13 +444,9 @@ class _DetailItemState extends State<DetailItem> {
                               axisController1!.zoomPosition = zoomP;
                             }
                           },
-                          annotations:  markerPoints.where((point) {
-                            // 過濾掉不在可見範圍內的標記
-                            DateTime pointX = point['x'] as DateTime;
-                            return pointX.isAfter(minX!) && pointX.isBefore(maxX!);
-                          }).map((point) {
+                          annotations: markerPoints.map((point) {
                             return CartesianChartAnnotation(
-                              region: AnnotationRegion.chart,
+                              region: AnnotationRegion.plotArea,
                               widget: const Icon(
                                 Icons.arrow_drop_down,
                                 size: 30,
@@ -566,22 +565,25 @@ class _DetailItemState extends State<DetailItem> {
                     right: 10,
                     child: Row(
                       children: [
-                        Column(
-                          children: [
-                            Image(
-                              image: AssetImage('assets/home/bloodsugar.png'),
-                              fit: BoxFit.scaleDown,
-                              width: 20,
-                              height: 20,
-                              color: _chartState != 2 ? Colors.deepOrange : Colors.transparent,
-                            ),
-                            Text(
-                              'mg/dl',
-                              style: TextStyle(
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Image(
+                                image: AssetImage('assets/home/bloodsugar.png'),
+                                fit: BoxFit.scaleDown,
+                                width: 20,
+                                height: 20,
                                 color: _chartState != 2 ? Colors.deepOrange : Colors.transparent,
                               ),
-                            ),
-                          ],
+                              Text(
+                                'mg/dl',
+                                style: TextStyle(
+                                  color: _chartState != 2 ? Colors.deepOrange : Colors.transparent,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         SizedBox(width: 10),
                         Expanded(
@@ -613,22 +615,50 @@ class _DetailItemState extends State<DetailItem> {
                           ),
                         ),
                         SizedBox(width: 10),
-                        Column(
-                          children: [
-                            Image(
-                              image: AssetImage('assets/home/temperature.png'),
-                              fit: BoxFit.scaleDown,
-                              width: 20,
-                              height: 20,
-                              color: _chartState != 1 ? Colors.blue : Colors.transparent,
-                            ),
-                            Text(
-                              '℃',
-                              style: TextStyle(
-                                color: _chartState != 1 ? Colors.blue : Colors.transparent,
+                        Expanded(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton(
+                                style: ButtonStyle(
+                                  foregroundColor: MaterialStateProperty.resolveWith(
+                                        (states) {
+                                      return states.contains(MaterialState.pressed) ? iconHoverColor : iconColor;
+                                    },
+                                  ),
+                                  overlayColor: MaterialStateProperty.all(Colors.transparent),
+                                ),
+                                onPressed: () {
+                                  //新增註釋頁面
+                                },
+                                child: Text.rich(
+                                  WidgetSpan(
+                                      child: Icon(
+                                        Icons.add_outlined,
+                                        size: 30,
+                                      )
+                                  ),
+                                ),
                               ),
-                            ),
-                          ],
+                              Column(
+                                children: [
+                                  Image(
+                                    image: AssetImage('assets/home/temperature.png'),
+                                    fit: BoxFit.scaleDown,
+                                    width: 20,
+                                    height: 20,
+                                    color: _chartState != 1 ? Colors.blue : Colors.transparent,
+                                  ),
+                                  Text(
+                                    '℃',
+                                    style: TextStyle(
+                                      color: _chartState != 1 ? Colors.blue : Colors.transparent,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -948,9 +978,6 @@ class _DetailItemState extends State<DetailItem> {
 
   void _onActualRangeChanged(ActualRangeChangedArgs args) {
     _debounce?.cancel();
-    minX = DateTime.fromMillisecondsSinceEpoch((args.visibleMin).toInt());
-    maxX = DateTime.fromMillisecondsSinceEpoch((args.visibleMax).toInt());
-    print(minX);
     _debounce = Timer(const Duration(milliseconds: 100), () {
       if (args.visibleMin != 0) {
         print('---一開始的資料$maxX  $minX');
