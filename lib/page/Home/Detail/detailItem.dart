@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:cesa100/page/Home/Detail/addCommentPage.dart';
 import 'package:syncfusion_flutter_core/core.dart';
 
 import 'package:cesa100/commonComponents/GlobalVariables.dart';
@@ -55,14 +56,16 @@ class _DetailItemState extends State<DetailItem> {
   int initCirculation = 3; // 圖表顯示幾小時內資料
   late RangeController _rangeController;
   int lastId = 0; // 儲存backend最後一筆資料id
+  int lastBG = 0;
+  double lastTEMP = 0.0;
   double zoomP = 0.5;
   double zoomF = 0.2;
   DateTimeAxisController? axisController1;
   DateTimeAxisController? axisController2;
   List<Map<String, dynamic>> markerPoints = [
-    {'x': DateTime(2024, 9, 16, 5, 15), 'y': 270},
-    {'x': DateTime(2024, 9, 16, 5, 30), 'y': 270},
-    {'x': DateTime(2024, 9, 16, 5, 45), 'y': 270},
+    {'x': DateTime(2024, 9, 18, 5, 15), 'y': 0},
+    {'x': DateTime(2024, 9, 18, 5, 30), 'y': 0},
+    {'x': DateTime(2024, 9, 18, 5, 45), 'y': 0},
     // ...可以繼續添加更多點
   ];
 
@@ -117,6 +120,8 @@ class _DetailItemState extends State<DetailItem> {
     }
     if (futureData!.isNotEmpty) {
       lastId = futureData!.last['id'];
+      lastBG = futureData!.last['Current_A'];
+      lastTEMP = futureData!.last['Temperature_C'];
     }
     for (var item in futureData!) {
       DateTime tmp = DateTime.parse(item['DateTime']);
@@ -448,9 +453,9 @@ class _DetailItemState extends State<DetailItem> {
                             return CartesianChartAnnotation(
                               region: AnnotationRegion.plotArea,
                               widget: const Icon(
-                                Icons.arrow_drop_down,
-                                size: 30,
-                                color: Colors.red,
+                                Icons.arrow_drop_up,
+                                size: 40,
+                                color: Colors.black45,
                               ),
                               coordinateUnit: CoordinateUnit.point,
                               x: point['x'],  // 對應每個 marker 的 X 軸座標
@@ -630,6 +635,27 @@ class _DetailItemState extends State<DetailItem> {
                                 ),
                                 onPressed: () {
                                   //新增註釋頁面
+                                  Navigator.push(
+                                    context,
+                                    PageRouteBuilder(
+                                      pageBuilder: (context, animation, secondaryAnimation) => AddCommentPage(
+                                        lastId: futureData!.last['id'],
+                                        lastBG: futureData!.last['Current_A'],
+                                        lastTEMP: futureData!.last['Temperature_C'],
+                                        lastTime: futureData!.last['DateTime'],
+                                      ),
+                                      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                        const begin = Offset(1.0, 0.0);
+                                        const end = Offset.zero;
+                                        const curve = Curves.ease;
+                                        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                                        return SlideTransition(
+                                          position: animation.drive(tween),
+                                          child: child,
+                                        );
+                                      },
+                                    ),
+                                  );
                                 },
                                 child: Text.rich(
                                   WidgetSpan(
