@@ -290,8 +290,8 @@ class _DetailItemState extends State<DetailItem> {
                                     children: [
                                       if (_chartState == 0)
                                         SizedBox(
-                                          width: 20,
-                                          height: 20,
+                                          width: 35,
+                                          height: 35,
                                           child: Image.asset(
                                             'assets/home/arrow_-90angle.png',
                                             fit: BoxFit.scaleDown,
@@ -359,8 +359,8 @@ class _DetailItemState extends State<DetailItem> {
                                     children: [
                                       if (_chartState == 0)
                                         SizedBox(
-                                          width: 20,
-                                          height: 20,
+                                          width: 35,
+                                          height: 35,
                                           child: Image.asset(
                                             'assets/home/arrow_45angle.png',
                                             fit: BoxFit.scaleDown,
