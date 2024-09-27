@@ -63,9 +63,9 @@ class _DetailItemState extends State<DetailItem> {
   DateTimeAxisController? axisController1;
   DateTimeAxisController? axisController2;
   List<Map<String, dynamic>> markerPoints = [
-    {'x': DateTime(2024, 9, 18, 5, 15), 'y': 0},
-    {'x': DateTime(2024, 9, 18, 5, 30), 'y': 0},
-    {'x': DateTime(2024, 9, 18, 5, 45), 'y': 0},
+    {'x': DateTime(2024, 9, 27, 5, 15), 'y': 0},
+    {'x': DateTime(2024, 9, 27, 5, 30), 'y': 0},
+    {'x': DateTime(2024, 9, 27, 5, 45), 'y': 0},
     // ...可以繼續添加更多點
   ];
 
