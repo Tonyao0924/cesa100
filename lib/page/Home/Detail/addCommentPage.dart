@@ -56,7 +56,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
   }
 
   Future<void> selectImage() async {
-    Uint8List img = await pickImage(ImageSource.gallery);
+    Uint8List img = await pickImage(ImageSource.camera);
     setState(() {
       _image = img;
     });
@@ -73,6 +73,8 @@ class _AddCommentPageState extends State<AddCommentPage> {
 
   @override
   Widget build(BuildContext context) {
+    int width = MediaQuery.of(context).size.width.toInt();
+    int height = MediaQuery.of(context).size.height.toInt();
     return GestureDetector(
       onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
       child: Scaffold(
@@ -284,8 +286,8 @@ class _AddCommentPageState extends State<AddCommentPage> {
                         borderRadius: BorderRadius.circular(10), // 設置圓角半徑為 10
                         child: Image.memory(
                           _image!, // 如果有圖片，則顯示選中的圖片
-                          width: 200,
-                          height: 200,
+                          width: width * 0.6,
+                          height: width * 0.6,
                           fit: BoxFit.cover, // 確保圖片填滿容器
                         ),
                       ),
