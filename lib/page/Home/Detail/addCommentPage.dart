@@ -73,7 +73,8 @@ class _AddCommentPageState extends State<AddCommentPage> {
   }
 
   void saveAnnotate() async {
-    // String resp = await StoreData().saveData(name: name, bio: bio, file: file)
+    String resp = await StoreData().saveData(name: '123', bio: '456', file: _image!);
+    print('save image.');
   }
 
   @override
@@ -103,6 +104,9 @@ class _AddCommentPageState extends State<AddCommentPage> {
                 overlayColor: MaterialStateProperty.all(Colors.transparent),
               ),
               onPressed: () async {
+                if(_image != null){
+                  saveAnnotate();
+                }
                 var result = await _sendPutRequest();
                 print(result);
                 print(_textEditingController.text);
