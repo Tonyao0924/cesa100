@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:cesa100/commonComponents/addData.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
@@ -69,6 +70,10 @@ class _AddCommentPageState extends State<AddCommentPage> {
     if (_file != null) {
       return await _file.readAsBytes();
     }
+  }
+
+  void saveAnnotate() async {
+    // String resp = await StoreData().saveData(name: name, bio: bio, file: file)
   }
 
   @override
