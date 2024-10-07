@@ -1,44 +1,81 @@
-// add data to firebase
-import 'dart:typed_data';
+import 'dart:io';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
+import 'package:image_picker/image_picker.dart';
 
+class StorageService with ChangeNotifier{
+  final firebaseStorage = FirebaseStorage.instance;
 
-final FirebaseStorage _storage = FirebaseStorage.instance;
-final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  List<String> _imageUrls = []; // images are stored in firebase as Download URLs
+  bool _isLoading = false; // loading status
+  bool _isUploading = false; // uploading status
 
-class StoreData {
-  Future<String> uploadImageToStorage(String childName, Uint8List file) async {
-    Reference ref = _storage.ref().child(childName);
-    UploadTask uploadTask = ref.putData(file);
-    TaskSnapshot snapshot = await uploadTask;
-    String downloadUrl = await snapshot.ref.getDownloadURL();
-    return downloadUrl;
+  List<String> get imageUrls => _imageUrls;
+  bool get isLoading => _isLoading;
+  bool get isUploading => _isUploading;
+
+  Future<void> fetchImages() async {
+    _isLoading = true;
+
+    final ListResult result = await firebaseStorage.ref('annotateImage/').listAll();
+
+    final urls = await Future.wait(result.items.map((ref) => ref.getDownloadURL()));
+
+    _imageUrls = urls;
+    _isLoading = false;
+    notifyListeners();
   }
 
-  Future<String> saveData({
-    required String name,
-    required String bio,
-    required Uint8List file,
-  }) async {
-    String resp = "Some Error Occurred";
-    try {
-      if(name.isNotEmpty || bio.isNotEmpty){
+  Future<void> deleteImages(String imageUrl) async{
+    try{
+      _imageUrls.remove(imageUrl);
 
-        String imageUrl = await uploadImageToStorage('annotateImage', file);
-        await _firestore.collection('userAnnotate').add({
-          'name':name,
-          'bio': bio,
-          'imageLink': imageUrl,
-        });
-        resp = 'success';
-        print('imageUrl:$imageUrl');
-      }
-    } catch (err) {
-      resp = err.toString();
+      final String path = extractPathFromUrl(imageUrl);
+      await firebaseStorage.ref(path).delete();
+    }catch(e){
+      print('Error deleting image:$e');
     }
-    return resp;
+    notifyListeners();
+  }
+
+  String extractPathFromUrl(String url){
+    Uri uri = Uri.parse(url);
+
+    String encodePath = uri.pathSegments.last;
+
+    return Uri.decodeComponent(encodePath);
+  }
+
+  Future<String> uploadImage() async {
+    _isUploading = true;
+    notifyListeners();
+    String downloadUrl = '';
+
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if(image == null)
+      return downloadUrl;
+
+    File file = File(image.path);
+
+    try{
+      String filePath = 'annotateImage/${DateTime.now()}.png';
+
+      await firebaseStorage.ref(filePath).putFile(file);
+
+      downloadUrl = await firebaseStorage.ref(filePath).getDownloadURL();
+
+      _imageUrls.add(downloadUrl);
+      notifyListeners();
+    }catch(e){
+      print('Error uploading..$e');
+    }finally{
+      _isUploading = false;
+      notifyListeners();
+      return downloadUrl;
+    }
   }
 }

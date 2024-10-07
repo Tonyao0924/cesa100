@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:cesa100/commonComponents/addData.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
@@ -32,10 +33,14 @@ class _AddCommentPageState extends State<AddCommentPage> {
   ScrollController _scrollController = ScrollController();
   TextEditingController _textEditingController = TextEditingController();
   Uint8List? _image;
+  StorageService storageService = StorageService();
+  final firebaseStorage = FirebaseStorage.instance;
+  String imagePath = '';
 
   Future<int> _sendPutRequest() async {
     try {
       String? description = _textEditingController.text.isEmpty ? null : _textEditingController.text;
+      String? imageUrl = imagePath.isEmpty ? null : imagePath;
 
       final response = await http.put(
         Uri.parse('http://172.16.200.77:3000/comment/${widget.lastId}'), // 將 id 加入 URL
@@ -44,7 +49,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
         },
         body: jsonEncode(<String, dynamic>{
           'description': description, // 可以更新 description
-          'image_path': null, // 可以更新 image_path
+          'image_path': imageUrl, // 可以更新 image_path
         }),
       );
 
@@ -57,11 +62,45 @@ class _AddCommentPageState extends State<AddCommentPage> {
   }
 
   Future<void> selectImage() async {
-    Uint8List img = await pickImage(ImageSource.camera);
-    setState(() {
-      _image = img;
-    });
-    print(_image);
+    showModalBottomSheet(
+      context: context,
+      clipBehavior: Clip.hardEdge,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: Icon(Icons.camera_alt),
+                title: Text('Camera'),
+                onTap: () async {
+                  Navigator.of(context).pop();
+                  Uint8List img = await pickImage(ImageSource.camera);
+                  setState(() {
+                    _image = img;
+                  });
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.photo_library),
+                title: Text('Gallery'),
+                onTap: () async {
+                  Navigator.of(context).pop();
+                  Uint8List img = await pickImage(ImageSource.gallery);
+                  setState(() {
+                    _image = img;
+                  });
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    // Uint8List img = await pickImage(ImageSource.camera);
+    // setState(() {
+    //   _image = img;
+    // });
+    // print(_image);
   }
 
   pickImage(ImageSource source) async {
@@ -73,8 +112,28 @@ class _AddCommentPageState extends State<AddCommentPage> {
   }
 
   void saveAnnotate() async {
-    String resp = await StoreData().saveData(name: '123', bio: '456', file: _image!);
     print('save image.');
+  }
+
+  Future<String> uploadImageToFirebase() async {
+    String downloadUrl = '';
+
+    if (_image == null) {
+      print('No image selected');
+      return downloadUrl;
+    }
+
+    try {
+      String filePath = 'annotateImage/${DateTime.now()}.png';
+      await firebaseStorage.ref(filePath).putData(_image!);
+
+      downloadUrl = await firebaseStorage.ref(filePath).getDownloadURL();
+      print('Image uploaded to Firebase: $downloadUrl');
+    } catch (e) {
+      print('Error uploading image: $e');
+    }
+
+    return downloadUrl;
   }
 
   @override
@@ -104,12 +163,13 @@ class _AddCommentPageState extends State<AddCommentPage> {
                 overlayColor: MaterialStateProperty.all(Colors.transparent),
               ),
               onPressed: () async {
-                if(_image != null){
-                  saveAnnotate();
+                if(_image != null && imagePath == ''){
+                  imagePath = await uploadImageToFirebase();
+                  print(imagePath);
                 }
+                print(imagePath);
                 var result = await _sendPutRequest();
-                print(result);
-                print(_textEditingController.text);
+                // print(result);
               },
               child: const Text(
                 'OK',
@@ -279,8 +339,10 @@ class _AddCommentPageState extends State<AddCommentPage> {
                   ),
                   overlayColor: MaterialStateProperty.all(Colors.transparent),
                 ),
-                onPressed: () {
+                onPressed: () async {
                   selectImage();
+                  // String result = await storageService.uploadImage();
+                  // print(result);
                 },
                 child: _image == null
                     ? Text.rich(

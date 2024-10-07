@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "4231610679",
+    "project_id": "cesa100-6cdf5",
+    "storage_bucket": "cesa100-6cdf5.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:4231610679:android:146b1bdaad810914fc1ab2",
+        "android_client_info": {
+          "package_name": "com.ultrae.cesa100"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAmLqUFz1kuDevrwE76-ftbcSny7e6T4Vg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
