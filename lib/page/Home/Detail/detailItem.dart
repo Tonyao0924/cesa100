@@ -62,12 +62,7 @@ class _DetailItemState extends State<DetailItem> {
   double zoomF = 0.2;
   DateTimeAxisController? axisController1;
   DateTimeAxisController? axisController2;
-  List<Map<String, dynamic>> markerPoints = [
-    {'x': DateTime(2024, 9, 27, 5, 15), 'y': 0},
-    {'x': DateTime(2024, 9, 27, 5, 30), 'y': 0},
-    {'x': DateTime(2024, 9, 27, 5, 45), 'y': 0},
-    // ...可以繼續添加更多點
-  ];
+  List<Map<String, dynamic>> markerPoints = [];
 
   @override
   void initState() {
@@ -127,13 +122,27 @@ class _DetailItemState extends State<DetailItem> {
       DateTime tmp = DateTime.parse(item['DateTime']);
       double current = item['Current_A'] is double ? item['Current_A'] : item['Current_A'].toDouble();
       double temperature = item['Temperature_C'] is double ? item['Temperature_C'] : item['Temperature_C'].toDouble();
+      String? description = item['description']?.isNotEmpty ?? false ? item['description'] : null;
+      String? imagePath = item['image_path']?.isNotEmpty ?? false ? item['image_path'] : null;
       totalCurrent.add(current);
       totalTemperature.add(temperature);
       putTIRData(current, temperature);
       bloodSugarLens.add(ChartData(tmp, current));
       temperatureLens.add(ChartData(tmp, temperature));
       dataCount++;
+
+
+      if (description != null || imagePath != null) {
+        Map<String, dynamic> markerPoint = {'x': tmp, 'y': 0};
+        markerPoint.addAll({
+          if (description != null) 'description': description,
+          if (imagePath != null) 'image_path': imagePath,
+        });
+        markerPoints.add(markerPoint); // 加入到 markerPoints 列表中
+      }
+
     }
+    print(markerPoints);
     if (firstinit) {
       DateTime firstTime = DateTime.parse(futureData![0]['DateTime']);
       DateTime lastTime = DateTime.parse(futureData![futureData!.length - 1]['DateTime']);
@@ -467,7 +476,7 @@ class _DetailItemState extends State<DetailItem> {
                             // title: const AxisTitle(text: 'Time'),
                             rangePadding: ChartRangePadding.additional,
                             initialVisibleMinimum: _rangeController.start,
-                            initialVisibleMaximum: _rangeController.end,
+                            initialVisibleMaximum: _rangeController.end.add(Duration(hours: 1)),
                             rangeController: _rangeController,
                             majorGridLines: MajorGridLines(width: 0, color: Colors.black12), // 主分個格寬度
                             minorGridLines: MinorGridLines(width: 0, color: Colors.black12), // 次分隔線粗度
