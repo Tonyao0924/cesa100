@@ -475,8 +475,9 @@ class _DetailItemState extends State<DetailItem> {
                             name: 'primaryXAxis',
                             // title: const AxisTitle(text: 'Time'),
                             rangePadding: ChartRangePadding.additional,
+                            // rangePadding: ChartRangePadding.round,
                             initialVisibleMinimum: _rangeController.start,
-                            initialVisibleMaximum: _rangeController.end.add(Duration(hours: 1)),
+                            initialVisibleMaximum: _rangeController.end,
                             rangeController: _rangeController,
                             majorGridLines: MajorGridLines(width: 0, color: Colors.black12), // 主分個格寬度
                             minorGridLines: MinorGridLines(width: 0, color: Colors.black12), // 次分隔線粗度
@@ -1033,6 +1034,7 @@ class _DetailItemState extends State<DetailItem> {
           DateTime newMaxX = maxX.add(Duration(
               milliseconds:
                   ((maxX.millisecondsSinceEpoch - _rangeController.end.millisecondsSinceEpoch) * sensitivity).toInt()));
+          // DateTime newMaxX = maxX.add(Duration(hours: 1));
           print('---一後來的資料$maxX   $newMaxX');
 
           // 更新 _rangeController 的範圍，應用計算結果
