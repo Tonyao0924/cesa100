@@ -477,7 +477,8 @@ class _DetailItemState extends State<DetailItem> {
                             rangePadding: ChartRangePadding.additional,
                             // rangePadding: ChartRangePadding.round,
                             initialVisibleMinimum: _rangeController.start,
-                            initialVisibleMaximum: _rangeController.end,
+                            initialVisibleMaximum: _rangeController.end.add(Duration(hours: 1)),
+                            // maximum: _rangeController.end.add(Duration(hours: 1)),
                             rangeController: _rangeController,
                             majorGridLines: MajorGridLines(width: 0, color: Colors.black12), // 主分個格寬度
                             minorGridLines: MinorGridLines(width: 0, color: Colors.black12), // 次分隔線粗度
@@ -485,7 +486,6 @@ class _DetailItemState extends State<DetailItem> {
                             minorTickLines: MinorTickLines(width: 0), // 隱藏次要刻度線
                             intervalType: DateTimeIntervalType.hours, // 確保每小時顯示一次標籤
                             interval: initCirculation / 3, // 每1個單位顯示一次標籤
-                            // interval: 1,
                             dateFormat: DateFormat('HH:mm'),
                             // initialZoomFactor: zoomF,
                             // initialZoomPosition: 0.5,
