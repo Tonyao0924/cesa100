@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:cesa100/page/Home/Detail/addCommentPage.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:syncfusion_flutter_core/core.dart';
 
 import 'package:cesa100/commonComponents/GlobalVariables.dart';
@@ -28,6 +29,7 @@ class _DetailItemState extends State<DetailItem> {
   late ZoomPanBehavior _zoomPanBehavior;
   late TooltipBehavior _tooltipBehavior;
   late CrosshairBehavior _crosshairBehavior; // 十字線
+  late TrackballBehavior _trackballBehavior;
   List<dynamic>? futureData; //讀取資料
   List<dynamic>? futureTIRData; //讀取TIR資料
   List<ChartData> bloodSugarLens = []; //圖表血糖軸
@@ -63,6 +65,7 @@ class _DetailItemState extends State<DetailItem> {
   DateTimeAxisController? axisController1;
   DateTimeAxisController? axisController2;
   List<Map<String, dynamic>> markerPoints = [];
+  DateTime? _verticalLineX;
 
   @override
   void initState() {
@@ -90,6 +93,11 @@ class _DetailItemState extends State<DetailItem> {
       lineDashArray: <double>[3, 5],
       lineWidth: 2,
       lineType: CrosshairLineType.both,
+      shouldAlwaysShow: true,
+    );
+    _trackballBehavior = TrackballBehavior(
+      enable: true,
+      // markerSettings: TrackballMarkerSettings(markerVisibility: TrackballVisibilityMode.visible),
       shouldAlwaysShow: true,
     );
   }
@@ -131,7 +139,6 @@ class _DetailItemState extends State<DetailItem> {
       temperatureLens.add(ChartData(tmp, temperature));
       dataCount++;
 
-
       if (description != null || imagePath != null) {
         Map<String, dynamic> markerPoint = {'x': tmp, 'y': 0};
         markerPoint.addAll({
@@ -140,7 +147,6 @@ class _DetailItemState extends State<DetailItem> {
         });
         markerPoints.add(markerPoint); // 加入到 markerPoints 列表中
       }
-
     }
     print(markerPoints);
     if (firstinit) {
@@ -253,169 +259,170 @@ class _DetailItemState extends State<DetailItem> {
       child: Column(
         children: [
           Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2), // 陰影顏色和透明度
-                  spreadRadius: 2, // 陰影擴散半徑
-                  blurRadius: 2, // 陰影模糊半徑
-                  offset: Offset(2, 2), // 陰影偏移量 (水平, 垂直)
-                ),
-              ],
-            ),
-            margin: EdgeInsets.symmetric(
-              horizontal: width * 0.02,
-              vertical: 10,
-            ),
-            padding: EdgeInsets.symmetric(vertical: _chartState == 0 ? height * 0.008 : 0),
-            child:Row(
-              mainAxisAlignment: _chartState == 1 || _chartState == 2
-                  ? MainAxisAlignment.center
-                  : MainAxisAlignment.spaceBetween,
-              children: [
-                if (_chartState == 0 || _chartState == 1)
-                  Expanded(  // 直接使用 Expanded
-                    child: FittedBox(  // FittedBox 包住整個 Row
-                      fit: BoxFit.scaleDown,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text.rich(
-                            TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: '${(widget.rowData.bloodSugar).toStringAsFixed(0)}',
-                                  style: TextStyle(
-                                    fontSize: _chartState == 1 ? 80 : 70,
-                                    color: Color(0xff808080),
-                                    fontWeight: FontWeight.bold,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2), // 陰影顏色和透明度
+                    spreadRadius: 2, // 陰影擴散半徑
+                    blurRadius: 2, // 陰影模糊半徑
+                    offset: Offset(2, 2), // 陰影偏移量 (水平, 垂直)
+                  ),
+                ],
+              ),
+              margin: EdgeInsets.symmetric(
+                horizontal: width * 0.02,
+                vertical: 10,
+              ),
+              padding: EdgeInsets.symmetric(vertical: _chartState == 0 ? height * 0.008 : 0),
+              child: Row(
+                mainAxisAlignment:
+                    _chartState == 1 || _chartState == 2 ? MainAxisAlignment.center : MainAxisAlignment.spaceBetween,
+                children: [
+                  if (_chartState == 0 || _chartState == 1)
+                    Expanded(
+                      // 直接使用 Expanded
+                      child: FittedBox(
+                        // FittedBox 包住整個 Row
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text.rich(
+                              TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: '${(widget.rowData.bloodSugar).toStringAsFixed(0)}',
+                                    style: TextStyle(
+                                      fontSize: _chartState == 1 ? 80 : 70,
+                                      color: Color(0xff808080),
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                ),
-                                WidgetSpan(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      if (_chartState == 0)
-                                        SizedBox(
-                                          width: 35,
-                                          height: 35,
-                                          child: Image.asset(
-                                            'assets/home/arrow_-90angle.png',
-                                            fit: BoxFit.scaleDown,
+                                  WidgetSpan(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        if (_chartState == 0)
+                                          SizedBox(
+                                            width: 35,
+                                            height: 35,
+                                            child: Image.asset(
+                                              'assets/home/arrow_-90angle.png',
+                                              fit: BoxFit.scaleDown,
+                                            ),
                                           ),
-                                        ),
-                                      if (_chartState == 1)
-                                        const Text(
-                                          'mg/dl',
-                                          style: TextStyle(
-                                            fontSize: 15,
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                      if (_chartState == 0)
-                                        FittedBox(
-                                          fit: BoxFit.scaleDown,
-                                          child: const Text(
+                                        if (_chartState == 1)
+                                          const Text(
                                             'mg/dl',
                                             style: TextStyle(
-                                              fontSize: 10,
+                                              fontSize: 15,
                                               color: Colors.black,
                                             ),
                                           ),
-                                        ),
-                                    ],
+                                        if (_chartState == 0)
+                                          FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            child: const Text(
+                                              'mg/dl',
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (_chartState == 1)
-                            SizedBox(
-                              width: 50,
-                              height: 50,
-                              child: Image.asset(
-                                'assets/home/arrow_-90angle.png',
-                                fit: BoxFit.scaleDown,
+                                ],
                               ),
                             ),
-                        ],
+                            if (_chartState == 1)
+                              SizedBox(
+                                width: 50,
+                                height: 50,
+                                child: Image.asset(
+                                  'assets/home/arrow_-90angle.png',
+                                  fit: BoxFit.scaleDown,
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                if (_chartState == 0 || _chartState == 2)
-                  Expanded(  // 直接使用 Expanded
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text.rich(
-                            TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: '${(widget.rowData.temperature).toStringAsFixed(1)}',
-                                  style: TextStyle(
-                                    fontSize: _chartState == 2 ? 80 : 70,
-                                    color: Color(0xff808080),
-                                    fontWeight: FontWeight.bold,
+                  if (_chartState == 0 || _chartState == 2)
+                    Expanded(
+                      // 直接使用 Expanded
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text.rich(
+                              TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: '${(widget.rowData.temperature).toStringAsFixed(1)}',
+                                    style: TextStyle(
+                                      fontSize: _chartState == 2 ? 80 : 70,
+                                      color: Color(0xff808080),
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                ),
-                                WidgetSpan(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      if (_chartState == 0)
-                                        SizedBox(
-                                          width: 35,
-                                          height: 35,
-                                          child: Image.asset(
-                                            'assets/home/arrow_45angle.png',
-                                            fit: BoxFit.scaleDown,
+                                  WidgetSpan(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        if (_chartState == 0)
+                                          SizedBox(
+                                            width: 35,
+                                            height: 35,
+                                            child: Image.asset(
+                                              'assets/home/arrow_45angle.png',
+                                              fit: BoxFit.scaleDown,
+                                            ),
                                           ),
-                                        ),
-                                      if (_chartState == 2)
-                                        const Text(
-                                          '℃',
-                                          style: TextStyle(
-                                            fontSize: 15,
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                      if (_chartState == 0)
-                                        FittedBox(
-                                          fit: BoxFit.scaleDown,
-                                          child: const Text(
+                                        if (_chartState == 2)
+                                          const Text(
                                             '℃',
                                             style: TextStyle(
-                                              fontSize: 10,
+                                              fontSize: 15,
                                               color: Colors.black,
                                             ),
                                           ),
-                                        ),
-                                    ],
+                                        if (_chartState == 0)
+                                          FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            child: const Text(
+                                              '℃',
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (_chartState == 2)
-                            SizedBox(
-                              width: 50,
-                              height: 50,
-                              child: Image.asset(
-                                'assets/home/arrow_45angle.png',
-                                fit: BoxFit.scaleDown,
+                                ],
                               ),
                             ),
-                        ],
+                            if (_chartState == 2)
+                              SizedBox(
+                                width: 50,
+                                height: 50,
+                                child: Image.asset(
+                                  'assets/home/arrow_45angle.png',
+                                  fit: BoxFit.scaleDown,
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-              ],
-            )
-          ),
+                ],
+              )),
           Expanded(
             child: Container(
               margin: EdgeInsets.symmetric(
@@ -447,6 +454,7 @@ class _DetailItemState extends State<DetailItem> {
                           zoomPanBehavior: _zoomPanBehavior,
                           // tooltipBehavior: _tooltipBehavior,
                           // crosshairBehavior: _crosshairBehavior,
+                          trackballBehavior: _trackballBehavior,
                           plotAreaBorderWidth: 4, //外框線粗度
                           plotAreaBorderColor: Colors.black12,
                           onActualRangeChanged: _onActualRangeChanged,
@@ -467,8 +475,8 @@ class _DetailItemState extends State<DetailItem> {
                                 color: Colors.black45,
                               ),
                               coordinateUnit: CoordinateUnit.point,
-                              x: point['x'],  // 對應每個 marker 的 X 軸座標
-                              y: point['y'],  // 對應每個 marker 的 Y 軸座標
+                              x: point['x'], // 對應每個 marker 的 X 軸座標
+                              y: point['y'], // 對應每個 marker 的 Y 軸座標
                             );
                           }).toList(),
                           primaryXAxis: DateTimeAxis(
@@ -504,6 +512,15 @@ class _DetailItemState extends State<DetailItem> {
                             onRendererCreated: (DateTimeAxisController controller) {
                               axisController1 = controller;
                             },
+                            plotBands: <PlotBand>[
+                              PlotBand(
+                                isVisible: true,
+                                start: _verticalLineX, // 使用計算後的 X 軸位置
+                                end: _verticalLineX, // 垂直線的起點和終點相同，形成一條垂直線
+                                borderWidth: 2,
+                                borderColor: Colors.red,
+                              ),
+                            ],
                           ),
                           primaryYAxis: NumericAxis(
                             interval: 40,
@@ -637,7 +654,7 @@ class _DetailItemState extends State<DetailItem> {
                               TextButton(
                                 style: ButtonStyle(
                                   foregroundColor: MaterialStateProperty.resolveWith(
-                                        (states) {
+                                    (states) {
                                       return states.contains(MaterialState.pressed) ? iconHoverColor : iconColor;
                                     },
                                   ),
@@ -670,10 +687,9 @@ class _DetailItemState extends State<DetailItem> {
                                 child: Text.rich(
                                   WidgetSpan(
                                       child: Icon(
-                                        Icons.add_outlined,
-                                        size: 30,
-                                      )
-                                  ),
+                                    Icons.add_outlined,
+                                    size: 30,
+                                  )),
                                 ),
                               ),
                               Column(
@@ -1013,6 +1029,22 @@ class _DetailItemState extends State<DetailItem> {
   }
 
   void _onActualRangeChanged(ActualRangeChangedArgs args) {
+    if (args.axis!.name == 'primaryXAxis') {
+      final double visibleMin = args.visibleMin;
+      final double visibleMax = args.visibleMax;
+
+      final DateTime positionAt80Percent = DateTime.fromMillisecondsSinceEpoch(
+        (visibleMin + (visibleMax - visibleMin) * 4 / 5).toInt(),
+      );
+
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          _verticalLineX = positionAt80Percent;
+        });
+      });
+      print("垂直線對應的 X 軸位置為: $positionAt80Percent");
+    }
+
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 100), () {
       if (args.visibleMin != 0) {
