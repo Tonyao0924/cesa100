@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:cesa100/commonComponents/addData.dart';
+import 'package:cesa100/commonComponents/totalDialog.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -169,7 +170,12 @@ class _AddCommentPageState extends State<AddCommentPage> {
                 }
                 print(imagePath);
                 var result = await _sendPutRequest();
-                // print(result);
+                if (result == 200) {
+                  showToast(context, 'Modification Successful');
+                  Navigator.pop(context, true); // 關閉當前頁面
+                }else{
+                  showToast(context, 'Modification Failed');
+                }
               },
               child: const Text(
                 'OK',

@@ -15,6 +15,7 @@ import 'package:intl/intl.dart';
 
 import '../../../commonComponents/chartData.dart';
 import '../../../commonComponents/constants.dart';
+import '../../../commonComponents/totalDialog.dart';
 import '../Home/petlist.dart';
 
 class DetailItem extends StatefulWidget {
@@ -466,19 +467,32 @@ class _DetailItemState extends State<DetailItem> {
                               axisController1!.zoomPosition = zoomP;
                             }
                           },
-                          annotations: markerPoints.map((point) {
-                            return CartesianChartAnnotation(
-                              region: AnnotationRegion.plotArea,
-                              widget: const Icon(
-                                Icons.arrow_drop_up,
-                                size: 40,
-                                color: Colors.black45,
+                          annotations: <CartesianChartAnnotation>[
+                            CartesianChartAnnotation(
+                              widget: Container(
+                                width: 2, // 線條寬度
+                                height: height * 0.5, // 垂直高度
+                                color: Colors.black, // 線條顏色
                               ),
-                              coordinateUnit: CoordinateUnit.point,
-                              x: point['x'], // 對應每個 marker 的 X 軸座標
-                              y: point['y'], // 對應每個 marker 的 Y 軸座標
-                            );
-                          }).toList(),
+                              coordinateUnit: CoordinateUnit.percentage, // 使用相對於畫布的座標系
+                              x: '80%',
+                              y: '50%',
+                              region: AnnotationRegion.plotArea, // 限定在繪圖區域內
+                            ),
+                            ...markerPoints.map((point) {
+                              return CartesianChartAnnotation(
+                                region: AnnotationRegion.plotArea,
+                                widget: const Icon(
+                                  Icons.arrow_drop_up,
+                                  size: 40,
+                                  color: Colors.black45,
+                                ),
+                                coordinateUnit: CoordinateUnit.point,
+                                x: point['x'], // 對應每個 marker 的 X 軸座標
+                                y: point['y'], // 對應每個 marker 的 Y 軸座標
+                              );
+                            }).toList(),
+                          ],
                           primaryXAxis: DateTimeAxis(
                             name: 'primaryXAxis',
                             // title: const AxisTitle(text: 'Time'),
@@ -512,15 +526,15 @@ class _DetailItemState extends State<DetailItem> {
                             onRendererCreated: (DateTimeAxisController controller) {
                               axisController1 = controller;
                             },
-                            plotBands: <PlotBand>[
-                              PlotBand(
-                                isVisible: true,
-                                start: _verticalLineX, // 使用計算後的 X 軸位置
-                                end: _verticalLineX, // 垂直線的起點和終點相同，形成一條垂直線
-                                borderWidth: 2,
-                                borderColor: Colors.red,
-                              ),
-                            ],
+                            // plotBands: <PlotBand>[
+                            //   PlotBand(
+                            //     isVisible: true,
+                            //     start: _verticalLineX, // 使用計算後的 X 軸位置
+                            //     end: _verticalLineX, // 垂直線的起點和終點相同，形成一條垂直線
+                            //     borderWidth: 2,
+                            //     borderColor: Colors.red,
+                            //   ),
+                            // ],
                           ),
                           primaryYAxis: NumericAxis(
                             interval: 40,
@@ -660,9 +674,9 @@ class _DetailItemState extends State<DetailItem> {
                                   ),
                                   overlayColor: MaterialStateProperty.all(Colors.transparent),
                                 ),
-                                onPressed: () {
+                                onPressed: () async {
                                   //新增註釋頁面
-                                  Navigator.push(
+                                  final result = await Navigator.push(
                                     context,
                                     PageRouteBuilder(
                                       pageBuilder: (context, animation, secondaryAnimation) => AddCommentPage(
@@ -683,6 +697,10 @@ class _DetailItemState extends State<DetailItem> {
                                       },
                                     ),
                                   );
+                                  print('回傳的結果:$result');
+                                  if (result == true) {
+                                    showToast(context, '註釋已新增');
+                                  }
                                 },
                                 child: Text.rich(
                                   WidgetSpan(
@@ -1048,7 +1066,7 @@ class _DetailItemState extends State<DetailItem> {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 100), () {
       if (args.visibleMin != 0) {
-        print('---一開始的資料$maxX  $minX');
+        // print('---一開始的資料$maxX  $minX');
         print(DateTime.fromMillisecondsSinceEpoch((args.visibleMax).toInt()));
         setState(() {
           // 設定靈敏度值
@@ -1067,7 +1085,7 @@ class _DetailItemState extends State<DetailItem> {
               milliseconds:
                   ((maxX.millisecondsSinceEpoch - _rangeController.end.millisecondsSinceEpoch) * sensitivity).toInt()));
           // DateTime newMaxX = maxX.add(Duration(hours: 1));
-          print('---一後來的資料$maxX   $newMaxX');
+          // print('---一後來的資料$maxX   $newMaxX');
 
           // 更新 _rangeController 的範圍，應用計算結果
           _rangeController.start = newMinX;
