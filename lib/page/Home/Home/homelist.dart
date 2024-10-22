@@ -61,43 +61,63 @@ class _HomeListState extends State<HomeList> with BleCallback2 {
       result = resultDeviceInformation;
       FlutterTtcBle.stopLeScan();
     });
+
+    Map<String, int> failedAttempts = {}; // 用來儲存每個 deviceId 的失敗次數
+
     Timer.periodic(const Duration(seconds: 10), (timer) async {
-      if(deviceIds.isEmpty){
+      if (deviceIds.isEmpty) {
         deviceIds = await TodoDB.getAllDeviceIds();
-      }else{
+      } else {
         timer.cancel();
-        Timer.periodic(const Duration(seconds: 10), (timer1) async {
-          print('拿資料');
-          print(deviceIds);
-          result.deviceId = deviceIds[0]['device_id'];
-          FlutterTtcBle.connect(deviceId: result.deviceId);
-          Timer.periodic(const Duration(seconds: 1), (timer) async {
-            bool x = await FlutterTtcBle.isConnected(deviceId: result.deviceId);
-            if (x) {
-              alreadyConnect = true;
-              print('$x 連線成功');
-              timer.cancel();
-              showToast(context, '連線成功');
-              // await writeData();
-              Timer.periodic(const Duration(seconds: 1), (timer) async {
-                await FlutterTtcBle.readCharacteristic(
-                  deviceId: result.deviceId,
-                  serviceUuid: '184247d0-7cbc-11e9-089e-2a86e4085a59',
-                  characteristicUuid: '6e6c31cc-3bd6-fe13-124d-9611451cd8f3',
-                ).then((value) => print(value));
-                bool x = await FlutterTtcBle.isConnected(deviceId: result.deviceId);
-                print(x);
-                if (x == false || isDispose) timer.cancel();
-              });
-            } else {
-              print('$x 連線失敗');
-              if (alreadyConnect == false) {
-                await FlutterTtcBle.connect(deviceId: result.deviceId);
+
+        for (var deviceId in deviceIds) {
+          failedAttempts[deviceId['device_id']] = 0; // 初始化每個 deviceId 的失敗次數
+
+          Timer.periodic(const Duration(seconds: 10), (timer1) async {
+            print('拿資料');
+            print(deviceIds);
+
+            result.deviceId = deviceId['device_id'];
+            FlutterTtcBle.connect(deviceId: result.deviceId);
+
+            Timer.periodic(const Duration(seconds: 1), (timer) async {
+              bool x = await FlutterTtcBle.isConnected(deviceId: result.deviceId);
+
+              if (x) {
+                alreadyConnect = true;
+                print('$x 連線成功');
+                timer.cancel();
+                showToast(context, '連線成功');
+                // await writeData();
+
+                Timer.periodic(const Duration(seconds: 1), (timer) async {
+                  await FlutterTtcBle.readCharacteristic(
+                    deviceId: result.deviceId,
+                    serviceUuid: '184247d0-7cbc-11e9-089e-2a86e4085a59',
+                    characteristicUuid: '6e6c31cc-3bd6-fe13-124d-9611451cd8f3',
+                  ).then((value) => print(value));
+
+                  bool x = await FlutterTtcBle.isConnected(deviceId: result.deviceId);
+                  print(x);
+                  if (x == false || isDispose) timer.cancel();
+                });
+              } else {
+                print('$x 連線失敗');
+                failedAttempts[result.deviceId] = failedAttempts[result.deviceId]! + 1;
+
+                if (failedAttempts[result.deviceId]! >= 5) {
+                  print('deviceId ${result.deviceId} 連線失敗五次，停止連線');
+                  failedAttempts[deviceId['device_id']] = 0;
+                  timer.cancel(); // 停止嘗試該 deviceId 的連線
+                } else if (alreadyConnect == false) {
+                  await FlutterTtcBle.connect(deviceId: result.deviceId);
+                }
+
+                if (isDispose) timer.cancel();
               }
-              if (isDispose) timer.cancel();
-            }
+            });
           });
-        });
+        }
       }
     });
   }

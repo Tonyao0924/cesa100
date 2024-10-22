@@ -455,7 +455,7 @@ class _DetailItemState extends State<DetailItem> {
                           zoomPanBehavior: _zoomPanBehavior,
                           // tooltipBehavior: _tooltipBehavior,
                           // crosshairBehavior: _crosshairBehavior,
-                          trackballBehavior: _trackballBehavior,
+                          // trackballBehavior: _trackballBehavior,
                           plotAreaBorderWidth: 4, //外框線粗度
                           plotAreaBorderColor: Colors.black12,
                           onActualRangeChanged: _onActualRangeChanged,
@@ -506,7 +506,7 @@ class _DetailItemState extends State<DetailItem> {
                             minorGridLines: MinorGridLines(width: 0, color: Colors.black12), // 次分隔線粗度
                             majorTickLines: MajorTickLines(width: 0), // 隱藏主要刻度線
                             minorTickLines: MinorTickLines(width: 0), // 隱藏次要刻度線
-                            intervalType: DateTimeIntervalType.hours, // 確保每小時顯示一次標籤
+                            intervalType: DateTimeIntervalType.hours, // 確保每小時顯示一次標籤aassaaaaaaaaaaa
                             interval: initCirculation / 3, // 每1個單位顯示一次標籤
                             dateFormat: DateFormat('HH:mm'),
                             // initialZoomFactor: zoomF,
@@ -584,15 +584,16 @@ class _DetailItemState extends State<DetailItem> {
                           ],
                           series: <CartesianSeries>[
                             if (_chartState == 0 || _chartState == 1)
-                              LineSeries<ChartData, DateTime>(
+                              FastLineSeries<ChartData, DateTime>(
                                 color: Colors.deepOrangeAccent,
                                 dataSource: bloodSugarLens,
                                 xValueMapper: (ChartData data, _) => data.x,
                                 yValueMapper: (ChartData data, _) => data.y,
                                 width: 2, // 橘色值粗度
+                                animationDuration: 0,
                               ),
                             if (_chartState == 0 || _chartState == 2)
-                              LineSeries<ChartData, DateTime>(
+                              FastLineSeries<ChartData, DateTime>(
                                 color: Colors.blue,
                                 dataSource: temperatureLens,
                                 xValueMapper: (ChartData data, _) => data.x,
@@ -600,6 +601,7 @@ class _DetailItemState extends State<DetailItem> {
                                 yAxisName: 'secondaryYAxis',
                                 name: '℃',
                                 width: 2, // 藍色值粗度
+                                animationDuration: 0,
                               ),
                           ],
                         ),

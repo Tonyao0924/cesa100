@@ -37,6 +37,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
   StorageService storageService = StorageService();
   final firebaseStorage = FirebaseStorage.instance;
   String imagePath = '';
+  bool _isWaiting = false;
 
   Future<int> _sendPutRequest() async {
     try {
@@ -164,16 +165,22 @@ class _AddCommentPageState extends State<AddCommentPage> {
                 overlayColor: MaterialStateProperty.all(Colors.transparent),
               ),
               onPressed: () async {
-                if(_image != null && imagePath == ''){
+                setState(() {
+                  _isWaiting = true;
+                });
+                if (_image != null && imagePath == '') {
                   imagePath = await uploadImageToFirebase();
                   print(imagePath);
                 }
                 print(imagePath);
                 var result = await _sendPutRequest();
+                setState(() {
+                  _isWaiting = false;
+                });
                 if (result == 200) {
                   showToast(context, 'Modification Successful');
                   Navigator.pop(context, true); // 關閉當前頁面
-                }else{
+                } else {
                   showToast(context, 'Modification Failed');
                 }
               },
@@ -187,190 +194,211 @@ class _AddCommentPageState extends State<AddCommentPage> {
             ),
           ],
         ),
-        body: SingleChildScrollView(
-          child: Column(
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                child: Row(
-                  children: [
-                    Text(
-                      'Time',
-                      style: TextStyle(
-                        fontSize: 18,
-                      ),
-                    ),
-                    SizedBox(width: 10), // 添加空間使文字之間不會太擁擠
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.all(Radius.circular(30)),
-                      ),
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5), // 添加內邊距讓顯示效果更好
-                      child: Text(
-                        // 使用 DateFormat 將時間轉換為 '月/日 時:分' 格式
-                        DateFormat('MM/dd HH:mm').format(DateFormat('yyyy-MM-dd HH:mm:ss').parse(widget.lastTime)),
-                        style: TextStyle(
-                          fontSize: 16,
+        body: Stack(
+          children: [
+            SingleChildScrollView(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    child: Row(
+                      children: [
+                        Text(
+                          'Time',
+                          style: TextStyle(
+                            fontSize: 18,
+                          ),
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10),
-                child: Row(
-                  children: [
-                    RichText(
-                      text: TextSpan(
-                        text: 'BG：', // "BG：" 的樣式
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Colors.black, // 根據需求設置文字顏色
-                        ),
-                        children: <TextSpan>[
-                          TextSpan(
-                            text: '${widget.lastBG}', // `lastBG` 數值的樣式
+                        SizedBox(width: 10), // 添加空間使文字之間不會太擁擠
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.all(Radius.circular(30)),
+                          ),
+                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5), // 添加內邊距讓顯示效果更好
+                          child: Text(
+                            // 使用 DateFormat 將時間轉換為 '月/日 時:分' 格式
+                            DateFormat('MM/dd HH:mm').format(DateFormat('yyyy-MM-dd HH:mm:ss').parse(widget.lastTime)),
                             style: TextStyle(
-                              fontSize: 30, // 設置較大的字體
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green, // 根據需求設置文字顏色
+                              fontSize: 16,
                             ),
                           ),
-                          TextSpan(
-                            text: 'mg/dl', // `lastBG` 數值的樣式
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 10),
+                    child: Row(
+                      children: [
+                        RichText(
+                          text: TextSpan(
+                            text: 'BG：', // "BG：" 的樣式
                             style: TextStyle(
-                              fontSize: 12, // 設置較大的字體
+                              fontSize: 20,
                               color: Colors.black, // 根據需求設置文字顏色
                             ),
+                            children: <TextSpan>[
+                              TextSpan(
+                                text: '${widget.lastBG}', // `lastBG` 數值的樣式
+                                style: TextStyle(
+                                  fontSize: 30, // 設置較大的字體
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green, // 根據需求設置文字顏色
+                                ),
+                              ),
+                              TextSpan(
+                                text: 'mg/dl', // `lastBG` 數值的樣式
+                                style: TextStyle(
+                                  fontSize: 12, // 設置較大的字體
+                                  color: Colors.black, // 根據需求設置文字顏色
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                    Spacer(),
-                    RichText(
-                      text: TextSpan(
-                        text: 'TEMP：', // "TEMP：" 的樣式
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Colors.black, // 根據需求設置文字顏色
                         ),
-                        children: <TextSpan>[
-                          TextSpan(
-                            text: '${widget.lastTEMP}', // `lastTEMP` 數值的樣式
+                        Spacer(),
+                        RichText(
+                          text: TextSpan(
+                            text: 'TEMP：', // "TEMP：" 的樣式
                             style: TextStyle(
-                              fontSize: 24, // 設置較大的字體
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue, // 根據需求設置文字顏色
-                            ),
-                          ),
-                          TextSpan(
-                            text: ' ℃', // 溫度單位的樣式
-                            style: TextStyle(
-                              fontSize: 12, // 設置較小的字體
+                              fontSize: 20,
                               color: Colors.black, // 根據需求設置文字顏色
                             ),
+                            children: <TextSpan>[
+                              TextSpan(
+                                text: '${widget.lastTEMP}', // `lastTEMP` 數值的樣式
+                                style: TextStyle(
+                                  fontSize: 24, // 設置較大的字體
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue, // 根據需求設置文字顏色
+                                ),
+                              ),
+                              TextSpan(
+                                text: ' ℃', // 溫度單位的樣式
+                                style: TextStyle(
+                                  fontSize: 12, // 設置較小的字體
+                                  color: Colors.black, // 根據需求設置文字顏色
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      SizedBox(width: 10),
+                      Text(
+                        'Description:',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    margin: EdgeInsets.symmetric(horizontal: 10),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 5,
+                    ),
+                    child: Scrollbar(
+                      controller: _scrollController,
+                      child: TextFormField(
+                        controller: _textEditingController,
+                        keyboardType: TextInputType.multiline,
+                        minLines: 5,
+                        maxLines: 5,
+                        decoration: InputDecoration(
+                          hintText: 'Enter description here...',
+                          border: InputBorder.none,
+                          // counterText: '',
+                        ),
+                        // onChanged: (value) {
+                        //   WidgetsBinding.instance.addPostFrameCallback((_) {
+                        //     // _updateThumbPosition(); // Update the scroll thumb position and height
+                        //   });
+                        // },
                       ),
                     ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  SizedBox(width: 10),
-                  Text(
-                    'Description:',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
                   ),
-                ],
-              ),
-              SizedBox(height: 8),
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                margin: EdgeInsets.symmetric(horizontal: 10),
-                padding: EdgeInsets.symmetric(
-                  horizontal: 5,
-                ),
-                child: Scrollbar(
-                  controller: _scrollController,
-                  child: TextFormField(
-                    controller: _textEditingController,
-                    keyboardType: TextInputType.multiline,
-                    minLines: 5,
-                    maxLines: 5,
-                    decoration: InputDecoration(
-                      hintText: 'Enter description here...',
-                      border: InputBorder.none,
-                      // counterText: '',
-                    ),
-                    // onChanged: (value) {
-                    //   WidgetsBinding.instance.addPostFrameCallback((_) {
-                    //     // _updateThumbPosition(); // Update the scroll thumb position and height
-                    //   });
-                    // },
+                  SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      SizedBox(width: 10),
+                      Text(
+                        'Image:',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ),
-              SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  SizedBox(width: 10),
-                  Text(
-                    'Image:',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                  TextButton(
+                    style: ButtonStyle(
+                      foregroundColor: MaterialStateProperty.resolveWith(
+                        (states) {
+                          return states.contains(MaterialState.pressed) ? iconHoverColor : iconColor;
+                        },
+                      ),
+                      overlayColor: MaterialStateProperty.all(Colors.transparent),
                     ),
-                  ),
-                ],
-              ),
-              TextButton(
-                style: ButtonStyle(
-                  foregroundColor: MaterialStateProperty.resolveWith(
-                    (states) {
-                      return states.contains(MaterialState.pressed) ? iconHoverColor : iconColor;
+                    onPressed: () async {
+                      selectImage();
+                      // String result = await storageService.uploadImage();
+                      // print(result);
                     },
-                  ),
-                  overlayColor: MaterialStateProperty.all(Colors.transparent),
-                ),
-                onPressed: () async {
-                  selectImage();
-                  // String result = await storageService.uploadImage();
-                  // print(result);
-                },
-                child: _image == null
-                    ? Text.rich(
-                        WidgetSpan(
-                          child: ImageIcon(
-                            AssetImage("assets/home/image.png"), // 顯示默認的圖片圖標
-                            size: 200,
+                    child: _image == null
+                        ? Text.rich(
+                            WidgetSpan(
+                              child: ImageIcon(
+                                AssetImage("assets/home/image.png"), // 顯示默認的圖片圖標
+                                size: 200,
+                              ),
+                            ),
+                          )
+                        : ClipRRect(
+                            borderRadius: BorderRadius.circular(10), // 設置圓角半徑為 10
+                            child: Image.memory(
+                              _image!, // 如果有圖片，則顯示選中的圖片
+                              width: width * 0.6,
+                              height: width * 0.6,
+                              fit: BoxFit.cover, // 確保圖片填滿容器
+                            ),
                           ),
-                        ),
-                      )
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(10), // 設置圓角半徑為 10
-                        child: Image.memory(
-                          _image!, // 如果有圖片，則顯示選中的圖片
-                          width: width * 0.6,
-                          height: width * 0.6,
-                          fit: BoxFit.cover, // 確保圖片填滿容器
-                        ),
-                      ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            _isWaiting
+                ? Center(
+              child: Container(
+                height: width / 5,
+                width: width / 5,
+                decoration: BoxDecoration(
+                  color: Colors.black45,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: CupertinoActivityIndicator(
+                  animating: true,
+                  radius: width / 15,
+                  color: Colors.white,
+                ),
+              ),
+            )
+                : Container(),
+          ],
         ),
       ),
     );
