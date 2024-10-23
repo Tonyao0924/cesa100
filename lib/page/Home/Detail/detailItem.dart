@@ -499,7 +499,7 @@ class _DetailItemState extends State<DetailItem> {
                             rangePadding: ChartRangePadding.additional,
                             // rangePadding: ChartRangePadding.round,
                             initialVisibleMinimum: _rangeController.start,
-                            initialVisibleMaximum: _rangeController.end.add(Duration(hours: 1)),
+                            initialVisibleMaximum: _rangeController.end.add(Duration(hours: 3)),
                             // maximum: _rangeController.end.add(Duration(hours: 1)),
                             rangeController: _rangeController,
                             majorGridLines: MajorGridLines(width: 0, color: Colors.black12), // 主分個格寬度
@@ -526,15 +526,6 @@ class _DetailItemState extends State<DetailItem> {
                             onRendererCreated: (DateTimeAxisController controller) {
                               axisController1 = controller;
                             },
-                            // plotBands: <PlotBand>[
-                            //   PlotBand(
-                            //     isVisible: true,
-                            //     start: _verticalLineX, // 使用計算後的 X 軸位置
-                            //     end: _verticalLineX, // 垂直線的起點和終點相同，形成一條垂直線
-                            //     borderWidth: 2,
-                            //     borderColor: Colors.red,
-                            //   ),
-                            // ],
                           ),
                           primaryYAxis: NumericAxis(
                             interval: 40,
@@ -1092,6 +1083,8 @@ class _DetailItemState extends State<DetailItem> {
           // 更新 _rangeController 的範圍，應用計算結果
           _rangeController.start = newMinX;
           _rangeController.end = newMaxX;
+
+          print(newMaxX.difference(newMinX));
 
           // 更新圖表數據
           if (futureData != null) {

@@ -87,7 +87,9 @@ class _HomeListState extends State<HomeList> with BleCallback2 {
                 alreadyConnect = true;
                 print('$x 連線成功');
                 timer.cancel();
-                showToast(context, '連線成功');
+                if (mounted) {
+                  showToast(context, '連線成功');
+                }
                 // await writeData();
 
                 Timer.periodic(const Duration(seconds: 1), (timer) async {
