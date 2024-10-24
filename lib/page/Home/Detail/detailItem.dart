@@ -61,8 +61,6 @@ class _DetailItemState extends State<DetailItem> {
   int lastId = 0; // 儲存backend最後一筆資料id
   int lastBG = 0;
   double lastTEMP = 0.0;
-  double zoomP = 0.5;
-  double zoomF = 0.2;
   DateTimeAxisController? axisController1;
   DateTimeAxisController? axisController2;
   List<Map<String, dynamic>> markerPoints = [];
@@ -109,6 +107,8 @@ class _DetailItemState extends State<DetailItem> {
     futureTIRData = await fetchTIRData();
     bloodSugarTIR = [0, 0, 0, 0, 0];
     temperatureTIR = [0, 0, 0, 0, 0];
+    temperatureData = [];
+    bloodSugarData = [];
     dataCount = 0;
     for (var item in futureTIRData!) {
       temperatureData.add(item['temperature_1'].toDouble());
@@ -127,6 +127,11 @@ class _DetailItemState extends State<DetailItem> {
       lastBG = futureData!.last['Current_A'];
       lastTEMP = futureData!.last['Temperature_C'];
     }
+    totalCurrent = [];
+    totalTemperature = [];
+    bloodSugarLens = [];
+    temperatureLens = [];
+    markerPoints = [];
     for (var item in futureData!) {
       DateTime tmp = DateTime.parse(item['DateTime']);
       double current = item['Current_A'] is double ? item['Current_A'] : item['Current_A'].toDouble();
@@ -151,9 +156,9 @@ class _DetailItemState extends State<DetailItem> {
     }
     print(markerPoints);
     if (firstinit) {
-      DateTime firstTime = DateTime.parse(futureData![0]['DateTime']);
+      // DateTime firstTime = DateTime.parse(futureData![0]['DateTime']);
       DateTime lastTime = DateTime.parse(futureData![futureData!.length - 1]['DateTime']);
-      minX = firstTime;
+      // minX = firstTime;
       maxX = lastTime;
       minX = maxX!.subtract(Duration(hours: 3)); // 預設為最後一筆減去三小時
       _rangeController = RangeController(
@@ -228,6 +233,7 @@ class _DetailItemState extends State<DetailItem> {
   }
 
   void circulationLoop() {
+    print('-----------------');
     print(minX);
     print(maxX);
     setState(() {
@@ -236,7 +242,7 @@ class _DetailItemState extends State<DetailItem> {
       } else {
         initCirculation = 3;
       }
-      minX = maxX!.subtract(Duration(hours: initCirculation));
+      minX = _rangeController.end.subtract(Duration(hours: initCirculation));
       _rangeController.start = minX;
       _rangeController.end = maxX;
     });
@@ -459,14 +465,6 @@ class _DetailItemState extends State<DetailItem> {
                           plotAreaBorderWidth: 4, //外框線粗度
                           plotAreaBorderColor: Colors.black12,
                           onActualRangeChanged: _onActualRangeChanged,
-                          onZooming: (ZoomPanArgs args) {
-                            if (args.axis!.name == 'primaryXAxis') {
-                              zoomP = args.currentZoomPosition;
-                              zoomF = args.currentZoomFactor;
-                              axisController1!.zoomFactor = zoomF;
-                              axisController1!.zoomPosition = zoomP;
-                            }
-                          },
                           annotations: <CartesianChartAnnotation>[
                             CartesianChartAnnotation(
                               widget: Container(
@@ -495,21 +493,20 @@ class _DetailItemState extends State<DetailItem> {
                           ],
                           primaryXAxis: DateTimeAxis(
                             name: 'primaryXAxis',
+                            axisLine: const AxisLine(color: Colors.transparent),
                             // title: const AxisTitle(text: 'Time'),
                             rangePadding: ChartRangePadding.additional,
                             // rangePadding: ChartRangePadding.round,
                             initialVisibleMinimum: _rangeController.start,
                             initialVisibleMaximum: _rangeController.end.add(Duration(hours: 3)),
-                            // maximum: _rangeController.end.add(Duration(hours: 1)),
                             rangeController: _rangeController,
                             majorGridLines: MajorGridLines(width: 0, color: Colors.black12), // 主分個格寬度
                             minorGridLines: MinorGridLines(width: 0, color: Colors.black12), // 次分隔線粗度
                             majorTickLines: MajorTickLines(width: 0), // 隱藏主要刻度線
                             minorTickLines: MinorTickLines(width: 0), // 隱藏次要刻度線
-                            intervalType: DateTimeIntervalType.hours, // 確保每小時顯示一次標籤aassaaaaaaaaaaa
+                            intervalType: DateTimeIntervalType.hours, // 確保每小時顯示一次標籤
                             interval: initCirculation / 3, // 每1個單位顯示一次標籤
                             dateFormat: DateFormat('HH:mm'),
-                            // initialZoomFactor: zoomF,
                             // initialZoomPosition: 0.5,
                             axisLabelFormatter: (AxisLabelRenderDetails details) {
                               final DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(details.value.toInt());
@@ -528,6 +525,7 @@ class _DetailItemState extends State<DetailItem> {
                             },
                           ),
                           primaryYAxis: NumericAxis(
+                            axisLine: const AxisLine(color: Colors.transparent),
                             interval: 40,
                             minimum: 0,
                             maximum: 280,
@@ -547,6 +545,7 @@ class _DetailItemState extends State<DetailItem> {
                           ),
                           axes: <ChartAxis>[
                             NumericAxis(
+                              axisLine: const AxisLine(color: Colors.transparent),
                               name: 'secondaryYAxis',
                               opposedPosition: true,
                               interval: 5,
@@ -668,7 +667,6 @@ class _DetailItemState extends State<DetailItem> {
                                   overlayColor: MaterialStateProperty.all(Colors.transparent),
                                 ),
                                 onPressed: () async {
-                                  //新增註釋頁面
                                   final result = await Navigator.push(
                                     context,
                                     PageRouteBuilder(
@@ -693,6 +691,7 @@ class _DetailItemState extends State<DetailItem> {
                                   print('回傳的結果:$result');
                                   if (result == true) {
                                     showToast(context, '註釋已新增');
+                                    drawChart();
                                   }
                                 },
                                 child: Text.rich(
@@ -1050,25 +1049,38 @@ class _DetailItemState extends State<DetailItem> {
 
       SchedulerBinding.instance.addPostFrameCallback((_) {
         setState(() {
-          _verticalLineX = positionAt80Percent;
+          _verticalLineX = DateTime(
+            positionAt80Percent.year,
+            positionAt80Percent.month,
+            positionAt80Percent.day,
+            positionAt80Percent.hour,
+            positionAt80Percent.minute,
+          );
         });
       });
-      print("垂直線對應的 X 軸位置為: $positionAt80Percent");
+      print("垂直線對應的 X 軸位置為: $_verticalLineX");
     }
 
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 100), () {
       if (args.visibleMin != 0) {
-        // print('---一開始的資料$maxX  $minX');
+        print('---一開始的資料$minX  $maxX');
         print(DateTime.fromMillisecondsSinceEpoch((args.visibleMax).toInt()));
         setState(() {
           // 設定靈敏度值
-          double sensitivity = 0.5; // 設置為你想要的靈敏度值
+          double sensitivity = 0; // 設置為你想要的靈敏度值
 
           // 取得當前的可見範圍的最小值和最大值
           minX = DateTime.fromMillisecondsSinceEpoch((args.visibleMin).toInt());
           maxX = DateTime.fromMillisecondsSinceEpoch((args.visibleMax).toInt());
+          // print('---一開始的資料$minX  $maxX');
+          final double visibleMax = args.visibleMax;
 
+          // 將 visibleMax 轉換成 DateTime 格式
+          final DateTime rightBoundary = DateTime.fromMillisecondsSinceEpoch(visibleMax.toInt());
+
+          print("目前的右邊邊界為: $rightBoundary");
+          // print(maxX);
           // // 計算新的可見範圍，應用靈敏度
           DateTime newMinX = minX.add(Duration(
               milliseconds:
@@ -1077,8 +1089,10 @@ class _DetailItemState extends State<DetailItem> {
           DateTime newMaxX = maxX.add(Duration(
               milliseconds:
                   ((maxX.millisecondsSinceEpoch - _rangeController.end.millisecondsSinceEpoch) * sensitivity).toInt()));
+
+          // print(newMaxX);
           // DateTime newMaxX = maxX.add(Duration(hours: 1));
-          // print('---一後來的資料$maxX   $newMaxX');
+          print('---一後來的資料$newMinX   $newMaxX');
 
           // 更新 _rangeController 的範圍，應用計算結果
           _rangeController.start = newMinX;
@@ -1090,6 +1104,30 @@ class _DetailItemState extends State<DetailItem> {
           if (futureData != null) {
             _updateChartData();
           }
+
+          // if (_verticalLineX != null && markerPoints.isNotEmpty) {
+          //   for (var point in markerPoints) {
+          //     DateTime markerPointX = point['x']; // 假設 markerPoints 的 x 是 DateTime
+          //     // 計算 _verticalLineX 與 markerPointX 的時間差，並檢查是否在 1 分鐘內
+          //     if ((_verticalLineX!.difference(markerPointX).inMinutes).abs() <= 1) {
+          //       setState(() {
+          //         _verticalLineX = markerPointX;
+          //
+          //         final int durationHours = (initCirculation * 0.8).floor(); // 計算小時數並取整
+          //         final int durationMinutes = ((initCirculation * 0.8 - durationHours) * 60).round(); // 計算剩餘的分鐘數
+          //
+          //         final durationOffset = Duration(hours: durationHours, minutes: durationMinutes);
+          //         minX = _verticalLineX!.subtract(durationOffset); // 設置新的 minX
+          //         maxX = _verticalLineX!.add(durationOffset); // 設置新的 maxX
+          //
+          //         _rangeController.start = minX;
+          //         _rangeController.end = maxX;
+          //       });
+          //       break; // 找到一個符合條件的 marker 就結束迴圈
+          //     }
+          //   }
+          //   print("垂直線對應的 X 軸位置為: $_verticalLineX");
+          // }
         });
       }
     });
