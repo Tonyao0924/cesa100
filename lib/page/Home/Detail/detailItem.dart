@@ -1073,14 +1073,9 @@ class _DetailItemState extends State<DetailItem> {
           // 取得當前的可見範圍的最小值和最大值
           minX = DateTime.fromMillisecondsSinceEpoch((args.visibleMin).toInt());
           maxX = DateTime.fromMillisecondsSinceEpoch((args.visibleMax).toInt());
-          // print('---一開始的資料$minX  $maxX');
-          final double visibleMax = args.visibleMax;
-
-          // 將 visibleMax 轉換成 DateTime 格式
-          final DateTime rightBoundary = DateTime.fromMillisecondsSinceEpoch(visibleMax.toInt());
-
-          print("目前的右邊邊界為: $rightBoundary");
+          print('---一修改的資料$minX  $maxX');
           // print(maxX);
+
           // // 計算新的可見範圍，應用靈敏度
           DateTime newMinX = minX.add(Duration(
               milliseconds:
