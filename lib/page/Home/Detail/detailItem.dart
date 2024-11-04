@@ -159,8 +159,16 @@ class _DetailItemState extends State<DetailItem> {
       // DateTime firstTime = DateTime.parse(futureData![0]['DateTime']);
       DateTime lastTime = DateTime.parse(futureData![futureData!.length - 1]['DateTime']);
       // minX = firstTime;
-      maxX = lastTime;
-      minX = maxX!.subtract(Duration(hours: 3)); // 預設為最後一筆減去三小時
+      // maxX = lastTime;
+      // minX = maxX!.subtract(Duration(hours: 3)); // 預設為最後一筆減去三小時
+      final int durationHours = (initCirculation * 0.8).floor();
+      final int durationMinutes = ((initCirculation * 0.8 - durationHours) * 60).round();
+
+      final offset = Duration(hours: durationHours, minutes: durationMinutes);
+
+      // 設置 minX 和 maxX，讓 lastTime 出現在 4/5 位置
+      minX = lastTime.subtract(offset);
+      maxX = lastTime.add(Duration(hours: initCirculation - durationHours, minutes: -durationMinutes));
       _rangeController = RangeController(
         start: minX,
         end: maxX,
@@ -245,7 +253,9 @@ class _DetailItemState extends State<DetailItem> {
       minX = _rangeController.end.subtract(Duration(hours: initCirculation));
       _rangeController.start = minX;
       _rangeController.end = maxX;
+      _setVerticalLine();
     });
+    // print('---一修改的資料${_rangeController.start}  ${_rangeController.end}');
   }
 
   @override
@@ -497,8 +507,8 @@ class _DetailItemState extends State<DetailItem> {
                             // title: const AxisTitle(text: 'Time'),
                             rangePadding: ChartRangePadding.additional,
                             // rangePadding: ChartRangePadding.round,
-                            initialVisibleMinimum: _rangeController.start,
-                            initialVisibleMaximum: _rangeController.end.add(Duration(hours: 3)),
+                            // initialVisibleMinimum: _rangeController.start,
+                            // initialVisibleMaximum: _rangeController.end.add(Duration(hours: 3)),
                             rangeController: _rangeController,
                             majorGridLines: MajorGridLines(width: 0, color: Colors.black12), // 主分個格寬度
                             minorGridLines: MinorGridLines(width: 0, color: Colors.black12), // 次分隔線粗度
@@ -1038,10 +1048,42 @@ class _DetailItemState extends State<DetailItem> {
     return widgets;
   }
 
+  void _setVerticalLine(){
+    if (_verticalLineX != null && markerPoints.isNotEmpty) {
+      for (var point in markerPoints) {
+        DateTime markerPointX = point['x'];
+        if ((_verticalLineX!.difference(markerPointX).inMinutes).abs() <= 1) {
+          setState(() {
+            _verticalLineX = markerPointX;
+
+            // 計算前 1/5 和後 4/5 的範圍
+            final int frontDurationHours = (initCirculation * 0.2).floor();
+            final int frontDurationMinutes = ((initCirculation * 0.2 - frontDurationHours) * 60).round();
+
+            final int backDurationHours = (initCirculation * 0.8).floor();
+            final int backDurationMinutes = ((initCirculation * 0.8 - backDurationHours) * 60).round();
+
+            final frontOffset = Duration(hours: frontDurationHours, minutes: frontDurationMinutes);
+            final backOffset = Duration(hours: backDurationHours, minutes: backDurationMinutes);
+
+            // 設置 minX 為垂直線前 1/5，maxX 為垂直線後 4/5
+            minX = _verticalLineX!.subtract(backOffset);
+            maxX = _verticalLineX!.add(frontOffset);
+
+            _rangeController.start = minX;
+            _rangeController.end = maxX;
+          });
+          break;
+        }
+      }
+      print("垂直線對應的 X 軸位置為: $_verticalLineX");
+    }
+  }
+
   void _onActualRangeChanged(ActualRangeChangedArgs args) {
     if (args.axis!.name == 'primaryXAxis') {
-      final double visibleMin = args.visibleMin;
-      final double visibleMax = args.visibleMax;
+      final double visibleMin = args.visibleMin.toDouble();
+      final double visibleMax = args.visibleMax.toDouble();
 
       final DateTime positionAt80Percent = DateTime.fromMillisecondsSinceEpoch(
         (visibleMin + (visibleMax - visibleMin) * 4 / 5).toInt(),
@@ -1071,9 +1113,11 @@ class _DetailItemState extends State<DetailItem> {
           double sensitivity = 0; // 設置為你想要的靈敏度值
 
           // 取得當前的可見範圍的最小值和最大值
-          minX = DateTime.fromMillisecondsSinceEpoch((args.visibleMin).toInt());
-          maxX = DateTime.fromMillisecondsSinceEpoch((args.visibleMax).toInt());
-          print('---一修改的資料$minX  $maxX');
+          // minX = DateTime.fromMillisecondsSinceEpoch((args.visibleMin).toInt());
+          // maxX = DateTime.fromMillisecondsSinceEpoch((args.visibleMax).toInt());
+          minX = _rangeController.start;
+          maxX = _rangeController.end;
+          print('---一修改的資料${_rangeController.start}  ${_rangeController.end}');
           // print(maxX);
 
           // // 計算新的可見範圍，應用靈敏度
@@ -1100,29 +1144,7 @@ class _DetailItemState extends State<DetailItem> {
             _updateChartData();
           }
 
-          // if (_verticalLineX != null && markerPoints.isNotEmpty) {
-          //   for (var point in markerPoints) {
-          //     DateTime markerPointX = point['x']; // 假設 markerPoints 的 x 是 DateTime
-          //     // 計算 _verticalLineX 與 markerPointX 的時間差，並檢查是否在 1 分鐘內
-          //     if ((_verticalLineX!.difference(markerPointX).inMinutes).abs() <= 1) {
-          //       setState(() {
-          //         _verticalLineX = markerPointX;
-          //
-          //         final int durationHours = (initCirculation * 0.8).floor(); // 計算小時數並取整
-          //         final int durationMinutes = ((initCirculation * 0.8 - durationHours) * 60).round(); // 計算剩餘的分鐘數
-          //
-          //         final durationOffset = Duration(hours: durationHours, minutes: durationMinutes);
-          //         minX = _verticalLineX!.subtract(durationOffset); // 設置新的 minX
-          //         maxX = _verticalLineX!.add(durationOffset); // 設置新的 maxX
-          //
-          //         _rangeController.start = minX;
-          //         _rangeController.end = maxX;
-          //       });
-          //       break; // 找到一個符合條件的 marker 就結束迴圈
-          //     }
-          //   }
-          //   print("垂直線對應的 X 軸位置為: $_verticalLineX");
-          // }
+          _setVerticalLine();
         });
       }
     });
