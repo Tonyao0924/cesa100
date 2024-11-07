@@ -18,12 +18,17 @@ class AddCommentPage extends StatefulWidget {
   final int lastBG;
   final double lastTEMP;
   final String lastTime;
+  final String description;
+  final String imagePath;
+
   const AddCommentPage({
     super.key,
     required this.lastId,
     required this.lastBG,
     required this.lastTEMP,
     required this.lastTime,
+    required this.description,
+    required this.imagePath,
   });
 
   @override
@@ -38,6 +43,14 @@ class _AddCommentPageState extends State<AddCommentPage> {
   final firebaseStorage = FirebaseStorage.instance;
   String imagePath = '';
   bool _isWaiting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _textEditingController.text = widget.description;
+    imagePath = widget.imagePath;
+    print(imagePath);
+  }
 
   Future<int> _sendPutRequest() async {
     try {
@@ -359,24 +372,34 @@ class _AddCommentPageState extends State<AddCommentPage> {
                       // String result = await storageService.uploadImage();
                       // print(result);
                     },
-                    child: _image == null
+                    child: imagePath != null && imagePath.isNotEmpty
+                        ? ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.network(
+                        imagePath,
+                        width: width * 0.6,
+                        height: width * 0.6,
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                        : (_image == null
                         ? Text.rich(
-                            WidgetSpan(
-                              child: ImageIcon(
-                                AssetImage("assets/home/image.png"), // 顯示默認的圖片圖標
-                                size: 200,
-                              ),
-                            ),
-                          )
+                      WidgetSpan(
+                        child: ImageIcon(
+                          AssetImage("assets/home/image.png"),
+                          size: 200,
+                        ),
+                      ),
+                    )
                         : ClipRRect(
-                            borderRadius: BorderRadius.circular(10), // 設置圓角半徑為 10
-                            child: Image.memory(
-                              _image!, // 如果有圖片，則顯示選中的圖片
-                              width: width * 0.6,
-                              height: width * 0.6,
-                              fit: BoxFit.cover, // 確保圖片填滿容器
-                            ),
-                          ),
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.memory(
+                        _image!,
+                        width: width * 0.6,
+                        height: width * 0.6,
+                        fit: BoxFit.cover,
+                      ),
+                    )),
                   ),
                 ],
               ),

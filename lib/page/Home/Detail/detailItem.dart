@@ -65,6 +65,8 @@ class _DetailItemState extends State<DetailItem> {
   DateTimeAxisController? axisController2;
   List<Map<String, dynamic>> markerPoints = [];
   DateTime? _verticalLineX;
+  String image_path = '';
+  double zoomF = 0.1;
 
   @override
   void initState() {
@@ -78,6 +80,7 @@ class _DetailItemState extends State<DetailItem> {
       selectionRectColor: Colors.grey,
       zoomMode: ZoomMode.x,
       enablePanning: true, // 左右滾動
+
       // enablePinching: true, // 手勢縮放圖表大小
     );
     _tooltipBehavior = TooltipBehavior(
@@ -125,7 +128,7 @@ class _DetailItemState extends State<DetailItem> {
     if (futureData!.isNotEmpty) {
       lastId = futureData!.last['id'];
       lastBG = futureData!.last['Current_A'];
-      lastTEMP = futureData!.last['Temperature_C'];
+      lastTEMP = futureData!.last['Temperature_C'].toDouble();
     }
     totalCurrent = [];
     totalTemperature = [];
@@ -255,7 +258,6 @@ class _DetailItemState extends State<DetailItem> {
       _rangeController.end = maxX;
       _setVerticalLine();
     });
-    // print('---一修改的資料${_rangeController.start}  ${_rangeController.end}');
   }
 
   @override
@@ -469,6 +471,11 @@ class _DetailItemState extends State<DetailItem> {
                         },
                         child: SfCartesianChart(
                           zoomPanBehavior: _zoomPanBehavior,
+                          onZooming: (ZoomPanArgs args){
+                            print(args.currentZoomFactor);
+                            print(args.currentZoomPosition);
+                            zoomF = args.currentZoomFactor;
+                          },
                           // tooltipBehavior: _tooltipBehavior,
                           // crosshairBehavior: _crosshairBehavior,
                           // trackballBehavior: _trackballBehavior,
@@ -486,6 +493,79 @@ class _DetailItemState extends State<DetailItem> {
                               x: '80%',
                               y: '50%',
                               region: AnnotationRegion.plotArea, // 限定在繪圖區域內
+                            ),
+                            CartesianChartAnnotation(
+                              widget: (image_path == null || image_path.isEmpty)
+                                  ? SizedBox.shrink() // 不顯示任何內容
+                                  : GestureDetector(
+                                      onTap: () async {
+                                        // 尋找與 `_verticalLineX` 日期和分鐘相同的資料點
+                                        var matchingData;
+                                        for (var data in futureData!) {
+                                          DateTime dataTime = DateTime.parse(data['DateTime']);
+                                          if (dataTime.year == _verticalLineX!.year &&
+                                              dataTime.month == _verticalLineX!.month &&
+                                              dataTime.day == _verticalLineX!.day &&
+                                              dataTime.hour == _verticalLineX!.hour &&
+                                              dataTime.minute == _verticalLineX!.minute) {
+                                            matchingData = data;
+                                            break;
+                                          }
+                                        }
+
+                                        // 如果找到匹配的數據點，則傳遞其資訊到 `AddCommentPage`
+                                        if (matchingData != null) {
+                                          final result = await Navigator.push(
+                                            context,
+                                            PageRouteBuilder(
+                                              pageBuilder: (context, animation, secondaryAnimation) => AddCommentPage(
+                                                lastId: matchingData['id'],
+                                                lastBG: matchingData['Current_A'],
+                                                lastTEMP: matchingData['Temperature_C'].toDouble(),
+                                                lastTime: matchingData['DateTime'],
+                                                description: matchingData['description'] ?? '',
+                                                imagePath: matchingData['image_path'] ?? '',
+                                              ),
+                                              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                                const begin = Offset(1.0, 0.0);
+                                                const end = Offset.zero;
+                                                const curve = Curves.ease;
+                                                var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                                                return SlideTransition(
+                                                  position: animation.drive(tween),
+                                                  child: child,
+                                                );
+                                              },
+                                            ),
+                                          );
+                                          print('回傳的結果:$result');
+                                          if (result == true) {
+                                            showToast(context, '註釋已新增');
+                                            drawChart();
+                                            _setVerticalLine();
+                                          }
+                                        } else {
+                                          showToast(context, '找不到數據點');
+                                        }
+                                      },
+                                      child: (image_path == ' ')
+                                          ? Image.asset(
+                                              'assets/home/image.png', // 預設圖片路徑
+                                              width: 80, // 圖片寬度
+                                              height: 80, // 圖片高度
+                                              fit: BoxFit.cover,
+                                            )
+                                          : Image.network(
+                                              image_path,
+                                              width: 80, // 圖片寬度
+                                              height: 80, // 圖片高度
+                                              fit: BoxFit.cover,
+                                            ),
+                                    ),
+                              coordinateUnit: CoordinateUnit.percentage,
+                              x: '25%', // 右上角的位置
+                              y: '15%', // 右上角的位置
+                              region: AnnotationRegion.chart,
                             ),
                             ...markerPoints.map((point) {
                               return CartesianChartAnnotation(
@@ -508,7 +588,9 @@ class _DetailItemState extends State<DetailItem> {
                             rangePadding: ChartRangePadding.additional,
                             // rangePadding: ChartRangePadding.round,
                             // initialVisibleMinimum: _rangeController.start,
-                            // initialVisibleMaximum: _rangeController.end.add(Duration(hours: 3)),
+                            // initialVisibleMaximum: _rangeController.end,
+                            // initialZoomFactor: zoomF,
+                            enableAutoIntervalOnZooming: false,
                             rangeController: _rangeController,
                             majorGridLines: MajorGridLines(width: 0, color: Colors.black12), // 主分個格寬度
                             minorGridLines: MinorGridLines(width: 0, color: Colors.black12), // 次分隔線粗度
@@ -677,31 +759,53 @@ class _DetailItemState extends State<DetailItem> {
                                   overlayColor: MaterialStateProperty.all(Colors.transparent),
                                 ),
                                 onPressed: () async {
-                                  final result = await Navigator.push(
-                                    context,
-                                    PageRouteBuilder(
-                                      pageBuilder: (context, animation, secondaryAnimation) => AddCommentPage(
-                                        lastId: futureData!.last['id'],
-                                        lastBG: futureData!.last['Current_A'],
-                                        lastTEMP: futureData!.last['Temperature_C'],
-                                        lastTime: futureData!.last['DateTime'],
+                                  // 尋找與 `_verticalLineX` 日期和分鐘相同的資料點
+                                  var matchingData;
+                                  for (var data in futureData!) {
+                                    DateTime dataTime = DateTime.parse(data['DateTime']);
+                                    if (dataTime.year == _verticalLineX!.year &&
+                                        dataTime.month == _verticalLineX!.month &&
+                                        dataTime.day == _verticalLineX!.day &&
+                                        dataTime.hour == _verticalLineX!.hour &&
+                                        dataTime.minute == _verticalLineX!.minute) {
+                                      matchingData = data;
+                                      break;
+                                    }
+                                  }
+
+                                  // 如果找到匹配的數據點，則傳遞其資訊到 `AddCommentPage`
+                                  if (matchingData != null) {
+                                    final result = await Navigator.push(
+                                      context,
+                                      PageRouteBuilder(
+                                        pageBuilder: (context, animation, secondaryAnimation) => AddCommentPage(
+                                          lastId: matchingData['id'],
+                                          lastBG: matchingData['Current_A'],
+                                          lastTEMP: matchingData['Temperature_C'].toDouble(),
+                                          lastTime: matchingData['DateTime'],
+                                          description: matchingData['description'] ?? '',
+                                          imagePath: matchingData['image_path'] ?? '',
+                                        ),
+                                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                          const begin = Offset(1.0, 0.0);
+                                          const end = Offset.zero;
+                                          const curve = Curves.ease;
+                                          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                                          return SlideTransition(
+                                            position: animation.drive(tween),
+                                            child: child,
+                                          );
+                                        },
                                       ),
-                                      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                                        const begin = Offset(1.0, 0.0);
-                                        const end = Offset.zero;
-                                        const curve = Curves.ease;
-                                        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                                        return SlideTransition(
-                                          position: animation.drive(tween),
-                                          child: child,
-                                        );
-                                      },
-                                    ),
-                                  );
-                                  print('回傳的結果:$result');
-                                  if (result == true) {
-                                    showToast(context, '註釋已新增');
-                                    drawChart();
+                                    );
+                                    print('回傳的結果:$result');
+                                    if (result == true) {
+                                      showToast(context, '註釋已新增');
+                                      await drawChart();
+                                      _setVerticalLine();
+                                    }
+                                  } else {
+                                    showToast(context, '找不到數據點');
                                   }
                                 },
                                 child: Text.rich(
@@ -1048,14 +1152,25 @@ class _DetailItemState extends State<DetailItem> {
     return widgets;
   }
 
-  void _setVerticalLine(){
+  void _setVerticalLine() {
     if (_verticalLineX != null && markerPoints.isNotEmpty) {
       for (var point in markerPoints) {
         DateTime markerPointX = point['x'];
-        if ((_verticalLineX!.difference(markerPointX).inMinutes).abs() <= 1) {
+        if ((_verticalLineX!.difference(markerPointX).inMinutes).abs() <= initCirculation * 60 / 90) {
+          print('markerPointX');
+          print(markerPointX);
           setState(() {
             _verticalLineX = markerPointX;
+            setState(() {
+              String? newImagePath = point['image_path']; // 標記點中包含 image_path
+              if (newImagePath != null && newImagePath.isNotEmpty) {
+                image_path = newImagePath;
+              } else {
+                image_path = ' ';
+              }
+            });
 
+            print(image_path);
             // 計算前 1/5 和後 4/5 的範圍
             final int frontDurationHours = (initCirculation * 0.2).floor();
             final int frontDurationMinutes = ((initCirculation * 0.2 - frontDurationHours) * 60).round();
@@ -1074,9 +1189,10 @@ class _DetailItemState extends State<DetailItem> {
             _rangeController.end = maxX;
           });
           break;
+        } else {
+          image_path = '';
         }
       }
-      print("垂直線對應的 X 軸位置為: $_verticalLineX");
     }
   }
 
