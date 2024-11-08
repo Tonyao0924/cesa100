@@ -79,8 +79,8 @@ class _DetailItemState extends State<DetailItem> {
       selectionRectBorderWidth: 1,
       selectionRectColor: Colors.grey,
       zoomMode: ZoomMode.x,
+      maximumZoomLevel: 1,
       enablePanning: true, // 左右滾動
-
       // enablePinching: true, // 手勢縮放圖表大小
     );
     _tooltipBehavior = TooltipBehavior(
@@ -256,6 +256,13 @@ class _DetailItemState extends State<DetailItem> {
       minX = _rangeController.end.subtract(Duration(hours: initCirculation));
       _rangeController.start = minX;
       _rangeController.end = maxX;
+      // 當_zoomPanBehavior被修改才能改變他的平移範圍 這邊先讓maximumZoomLevel被修改而改變他的平移量
+      _zoomPanBehavior = ZoomPanBehavior(
+        selectionRectColor: Colors.grey,
+        zoomMode: ZoomMode.x,
+        maximumZoomLevel: initCirculation.toDouble(),
+        enablePanning: true, // 左右滾動
+      );
       _setVerticalLine();
     });
   }
@@ -590,7 +597,7 @@ class _DetailItemState extends State<DetailItem> {
                             // initialVisibleMinimum: _rangeController.start,
                             // initialVisibleMaximum: _rangeController.end,
                             // initialZoomFactor: zoomF,
-                            enableAutoIntervalOnZooming: false,
+                            // enableAutoIntervalOnZooming: false,
                             rangeController: _rangeController,
                             majorGridLines: MajorGridLines(width: 0, color: Colors.black12), // 主分個格寬度
                             minorGridLines: MinorGridLines(width: 0, color: Colors.black12), // 次分隔線粗度
