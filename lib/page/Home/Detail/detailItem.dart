@@ -244,18 +244,29 @@ class _DetailItemState extends State<DetailItem> {
   }
 
   void circulationLoop() {
-    print('-----------------');
-    print(minX);
-    print(maxX);
+    // print('-----------------');
+    // print(minX);
+    // print(maxX);
+    print('_verticalLineX $_verticalLineX');
     setState(() {
       if (initCirculation != 24) {
         initCirculation *= 2;
       } else {
         initCirculation = 3;
       }
-      minX = _rangeController.end.subtract(Duration(hours: initCirculation));
+
+      final int frontDurationHours = (initCirculation * 0.2).floor();
+      final int frontDurationMinutes = ((initCirculation * 0.2 - frontDurationHours) * 60).round();
+
+      final frontOffset = Duration(hours: frontDurationHours, minutes: frontDurationMinutes);
+
+      // 設置 minX 為垂直線前 1/5，maxX 為垂直線後 4/5
+      maxX = _verticalLineX!.add(frontOffset);
+      minX = maxX!.subtract(Duration(hours: initCirculation));
+
       _rangeController.start = minX;
       _rangeController.end = maxX;
+
       // 當_zoomPanBehavior被修改才能改變他的平移範圍 這邊先讓maximumZoomLevel被修改而改變他的平移量
       _zoomPanBehavior = ZoomPanBehavior(
         selectionRectColor: Colors.grey,
@@ -478,11 +489,6 @@ class _DetailItemState extends State<DetailItem> {
                         },
                         child: SfCartesianChart(
                           zoomPanBehavior: _zoomPanBehavior,
-                          onZooming: (ZoomPanArgs args){
-                            print(args.currentZoomFactor);
-                            print(args.currentZoomPosition);
-                            zoomF = args.currentZoomFactor;
-                          },
                           // tooltipBehavior: _tooltipBehavior,
                           // crosshairBehavior: _crosshairBehavior,
                           // trackballBehavior: _trackballBehavior,
@@ -1182,15 +1188,11 @@ class _DetailItemState extends State<DetailItem> {
             final int frontDurationHours = (initCirculation * 0.2).floor();
             final int frontDurationMinutes = ((initCirculation * 0.2 - frontDurationHours) * 60).round();
 
-            final int backDurationHours = (initCirculation * 0.8).floor();
-            final int backDurationMinutes = ((initCirculation * 0.8 - backDurationHours) * 60).round();
-
             final frontOffset = Duration(hours: frontDurationHours, minutes: frontDurationMinutes);
-            final backOffset = Duration(hours: backDurationHours, minutes: backDurationMinutes);
 
             // 設置 minX 為垂直線前 1/5，maxX 為垂直線後 4/5
-            minX = _verticalLineX!.subtract(backOffset);
             maxX = _verticalLineX!.add(frontOffset);
+            minX = maxX!.subtract(Duration(hours: initCirculation));
 
             _rangeController.start = minX;
             _rangeController.end = maxX;
@@ -1205,8 +1207,8 @@ class _DetailItemState extends State<DetailItem> {
 
   void _onActualRangeChanged(ActualRangeChangedArgs args) {
     if (args.axis!.name == 'primaryXAxis') {
-      final double visibleMin = args.visibleMin.toDouble();
-      final double visibleMax = args.visibleMax.toDouble();
+      final double visibleMin = _rangeController.start.millisecondsSinceEpoch.toDouble();
+      final double visibleMax = _rangeController.end.millisecondsSinceEpoch.toDouble();
 
       final DateTime positionAt80Percent = DateTime.fromMillisecondsSinceEpoch(
         (visibleMin + (visibleMax - visibleMin) * 4 / 5).toInt(),
@@ -1230,37 +1232,14 @@ class _DetailItemState extends State<DetailItem> {
     _debounce = Timer(const Duration(milliseconds: 100), () {
       if (args.visibleMin != 0) {
         print('---一開始的資料$minX  $maxX');
-        print(DateTime.fromMillisecondsSinceEpoch((args.visibleMax).toInt()));
         setState(() {
-          // 設定靈敏度值
-          double sensitivity = 0; // 設置為你想要的靈敏度值
 
-          // 取得當前的可見範圍的最小值和最大值
-          // minX = DateTime.fromMillisecondsSinceEpoch((args.visibleMin).toInt());
-          // maxX = DateTime.fromMillisecondsSinceEpoch((args.visibleMax).toInt());
           minX = _rangeController.start;
           maxX = _rangeController.end;
           print('---一修改的資料${_rangeController.start}  ${_rangeController.end}');
           // print(maxX);
 
-          // // 計算新的可見範圍，應用靈敏度
-          DateTime newMinX = minX.add(Duration(
-              milliseconds:
-                  ((minX.millisecondsSinceEpoch - _rangeController.start.millisecondsSinceEpoch) * sensitivity)
-                      .toInt()));
-          DateTime newMaxX = maxX.add(Duration(
-              milliseconds:
-                  ((maxX.millisecondsSinceEpoch - _rangeController.end.millisecondsSinceEpoch) * sensitivity).toInt()));
-
-          // print(newMaxX);
-          // DateTime newMaxX = maxX.add(Duration(hours: 1));
-          print('---一後來的資料$newMinX   $newMaxX');
-
-          // 更新 _rangeController 的範圍，應用計算結果
-          _rangeController.start = newMinX;
-          _rangeController.end = newMaxX;
-
-          print(newMaxX.difference(newMinX));
+          print(maxX.difference(minX));
 
           // 更新圖表數據
           if (futureData != null) {
