@@ -263,7 +263,7 @@ class _DetailItemState extends State<DetailItem> {
       // 設置 minX 為垂直線前 1/5，maxX 為垂直線後 4/5
       maxX = _verticalLineX!.add(frontOffset);
       minX = maxX!.subtract(Duration(hours: initCirculation));
-
+      print('circulationLoop $minX $maxX $frontOffset');
       _rangeController.start = minX;
       _rangeController.end = maxX;
 
@@ -543,7 +543,8 @@ class _DetailItemState extends State<DetailItem> {
                                                 const begin = Offset(1.0, 0.0);
                                                 const end = Offset.zero;
                                                 const curve = Curves.ease;
-                                                var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                                                var tween =
+                                                    Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
                                                 return SlideTransition(
                                                   position: animation.drive(tween),
                                                   child: child,
@@ -1169,7 +1170,7 @@ class _DetailItemState extends State<DetailItem> {
     if (_verticalLineX != null && markerPoints.isNotEmpty) {
       for (var point in markerPoints) {
         DateTime markerPointX = point['x'];
-        if ((_verticalLineX!.difference(markerPointX).inMinutes).abs() <= initCirculation * 60 / 90) {
+        if ((_verticalLineX!.difference(markerPointX).inMinutes).abs() <= initCirculation) {
           print('markerPointX');
           print(markerPointX);
           setState(() {
@@ -1203,16 +1204,34 @@ class _DetailItemState extends State<DetailItem> {
         }
       }
     }
+    Timer(const Duration(milliseconds: 300), () {
+      _verticalLineSetOnce = false;
+    });
   }
+
+  bool _verticalLineSetOnce = false; // 新增一個布林變數
+  bool _isRight = false; // 滑動方向
+  double _previousData = 0; //記錄上一個點位，用來判斷_isRight這個變數
 
   void _onActualRangeChanged(ActualRangeChangedArgs args) {
     if (args.axis!.name == 'primaryXAxis') {
       final double visibleMin = _rangeController.start.millisecondsSinceEpoch.toDouble();
       final double visibleMax = _rangeController.end.millisecondsSinceEpoch.toDouble();
+      final double tmpMin = args.visibleMin.toDouble();
+
 
       final DateTime positionAt80Percent = DateTime.fromMillisecondsSinceEpoch(
         (visibleMin + (visibleMax - visibleMin) * 4 / 5).toInt(),
       );
+
+      if(tmpMin > _previousData){
+        _isRight = true;
+      }else{
+        _isRight = false;
+      }
+
+      print('\n$tmpMin - $_previousData = ${tmpMin-_previousData}');
+      _previousData = tmpMin;
 
       SchedulerBinding.instance.addPostFrameCallback((_) {
         setState(() {
@@ -1230,10 +1249,14 @@ class _DetailItemState extends State<DetailItem> {
 
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 100), () {
+      if(_isRight){
+        print('最後是往右');
+      }else{
+        print('最後是往左');
+      }
       if (args.visibleMin != 0) {
         print('---一開始的資料$minX  $maxX');
         setState(() {
-
           minX = _rangeController.start;
           maxX = _rangeController.end;
           print('---一修改的資料${_rangeController.start}  ${_rangeController.end}');
@@ -1246,7 +1269,10 @@ class _DetailItemState extends State<DetailItem> {
             _updateChartData();
           }
 
-          _setVerticalLine();
+          if (!_verticalLineSetOnce) {
+            _setVerticalLine();
+            _verticalLineSetOnce = true;
+          }
         });
       }
     });
