@@ -1168,42 +1168,85 @@ class _DetailItemState extends State<DetailItem> {
 
   void _setVerticalLine() {
     if (_verticalLineX != null && markerPoints.isNotEmpty) {
+      DateTime? closestPointInDirection;
+      int closestDifferenceInDirection = initCirculation;
+
+      // 先按照滑動方向查找
       for (var point in markerPoints) {
         DateTime markerPointX = point['x'];
-        if ((_verticalLineX!.difference(markerPointX).inMinutes).abs() <= initCirculation) {
-          print('markerPointX');
-          print(markerPointX);
-          setState(() {
-            _verticalLineX = markerPointX;
-            setState(() {
-              String? newImagePath = point['image_path']; // 標記點中包含 image_path
-              if (newImagePath != null && newImagePath.isNotEmpty) {
-                image_path = newImagePath;
-              } else {
-                image_path = ' ';
-              }
-            });
+        int difference = (_verticalLineX!.difference(markerPointX).inMinutes).abs();
 
-            print(image_path);
-            // 計算前 1/5 和後 4/5 的範圍
-            final int frontDurationHours = (initCirculation * 0.2).floor();
-            final int frontDurationMinutes = ((initCirculation * 0.2 - frontDurationHours) * 60).round();
-
-            final frontOffset = Duration(hours: frontDurationHours, minutes: frontDurationMinutes);
-
-            // 設置 minX 為垂直線前 1/5，maxX 為垂直線後 4/5
-            maxX = _verticalLineX!.add(frontOffset);
-            minX = maxX!.subtract(Duration(hours: initCirculation));
-
-            _rangeController.start = minX;
-            _rangeController.end = maxX;
-          });
-          break;
+        if (_isRight) {
+          // 滑動方向為右，尋找 _verticalLineX 右邊且距離最近的標記點
+          if (markerPointX.isAfter(_verticalLineX!) && difference <= initCirculation) {
+            if (difference < closestDifferenceInDirection) {
+              closestPointInDirection = markerPointX;
+              closestDifferenceInDirection = difference;
+            }
+          }
         } else {
-          image_path = '';
+          // 滑動方向為左，尋找 _verticalLineX 左邊且距離最近的標記點
+          if (markerPointX.isBefore(_verticalLineX!) && difference <= initCirculation) {
+            if (difference < closestDifferenceInDirection) {
+              closestPointInDirection = markerPointX;
+              closestDifferenceInDirection = difference;
+            }
+          }
         }
       }
+
+      DateTime? finalPoint = closestPointInDirection;
+
+      // 如果滑動方向找不到符合條件的點，則在所有標記點中尋找距離最近的點
+      if (finalPoint == null) {
+        DateTime? closestPointOverall;
+        int closestDifferenceOverall = initCirculation;
+
+        for (var point in markerPoints) {
+          DateTime markerPointX = point['x'];
+          int difference = (_verticalLineX!.difference(markerPointX).inMinutes).abs();
+
+          // 找到距離最近的點
+          if (difference < closestDifferenceOverall && difference <= initCirculation) {
+            closestPointOverall = markerPointX;
+            closestDifferenceOverall = difference;
+          }
+        }
+
+        finalPoint = closestPointOverall;
+      }
+
+      if (finalPoint != null) {
+        // 找到符合條件的標記點後更新
+        setState(() {
+          _verticalLineX = finalPoint;
+
+          // 更新 image_path
+          String? newImagePath = markerPoints.firstWhere(
+                (point) => point['x'] == finalPoint,
+            orElse: () => {'image_path': ''},
+          )['image_path'];
+
+          image_path = (newImagePath != null && newImagePath.isNotEmpty) ? newImagePath : ' ';
+
+          // 計算前 1/5 和後 4/5 的範圍
+          final int frontDurationHours = (initCirculation * 0.2).floor();
+          final int frontDurationMinutes = ((initCirculation * 0.2 - frontDurationHours) * 60).round();
+          final frontOffset = Duration(hours: frontDurationHours, minutes: frontDurationMinutes);
+
+          maxX = _verticalLineX!.add(frontOffset);
+          minX = maxX!.subtract(Duration(hours: initCirculation));
+
+          _rangeController.start = minX;
+          _rangeController.end = maxX;
+        });
+      } else {
+        // 若沒有找到符合條件的標記點，清空 image_path
+        image_path = '';
+      }
     }
+
+    // 重置 _verticalLineSetOnce
     Timer(const Duration(milliseconds: 300), () {
       _verticalLineSetOnce = false;
     });
@@ -1219,18 +1262,19 @@ class _DetailItemState extends State<DetailItem> {
       final double visibleMax = _rangeController.end.millisecondsSinceEpoch.toDouble();
       final double tmpMin = args.visibleMin.toDouble();
 
-
       final DateTime positionAt80Percent = DateTime.fromMillisecondsSinceEpoch(
         (visibleMin + (visibleMax - visibleMin) * 4 / 5).toInt(),
       );
 
-      if(tmpMin > _previousData){
-        _isRight = true;
-      }else{
-        _isRight = false;
+      if ((tmpMin - _previousData).abs() > 1) {
+        if (tmpMin > _previousData) {
+          _isRight = true;
+        } else {
+          _isRight = false;
+        }
       }
 
-      print('\n$tmpMin - $_previousData = ${tmpMin-_previousData}');
+      print('\n$tmpMin - $_previousData = ${tmpMin - _previousData}');
       _previousData = tmpMin;
 
       SchedulerBinding.instance.addPostFrameCallback((_) {
@@ -1249,9 +1293,9 @@ class _DetailItemState extends State<DetailItem> {
 
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 100), () {
-      if(_isRight){
+      if (_isRight) {
         print('最後是往右');
-      }else{
+      } else {
         print('最後是往左');
       }
       if (args.visibleMin != 0) {
