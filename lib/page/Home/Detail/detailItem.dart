@@ -61,8 +61,6 @@ class _DetailItemState extends State<DetailItem> {
   int lastId = 0; // 儲存backend最後一筆資料id
   int lastBG = 0;
   double lastTEMP = 0.0;
-  DateTimeAxisController? axisController1;
-  DateTimeAxisController? axisController2;
   List<Map<String, dynamic>> markerPoints = [];
   DateTime? _verticalLineX;
   String image_path = '';
@@ -625,9 +623,6 @@ class _DetailItemState extends State<DetailItem> {
                                 return ChartAxisLabel(
                                     DateFormat('HH:mm').format(dateTime), TextStyle(color: Colors.black));
                               }
-                            },
-                            onRendererCreated: (DateTimeAxisController controller) {
-                              axisController1 = controller;
                             },
                           ),
                           primaryYAxis: NumericAxis(
