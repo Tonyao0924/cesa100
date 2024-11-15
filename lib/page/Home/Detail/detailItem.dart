@@ -536,6 +536,7 @@ class _DetailItemState extends State<DetailItem> {
                                                 lastTime: matchingData['DateTime'],
                                                 description: matchingData['description'] ?? '',
                                                 imagePath: matchingData['image_path'] ?? '',
+                                                markerPoints: markerPoints ?? [],
                                               ),
                                               transitionsBuilder: (context, animation, secondaryAnimation, child) {
                                                 const begin = Offset(1.0, 0.0);
@@ -603,6 +604,8 @@ class _DetailItemState extends State<DetailItem> {
                             // initialVisibleMaximum: _rangeController.end,
                             // initialZoomFactor: zoomF,
                             // enableAutoIntervalOnZooming: false,
+                            minimum: DateTime(1900),
+                            maximum: DateTime(2100),
                             rangeController: _rangeController,
                             majorGridLines: MajorGridLines(width: 0, color: Colors.black12), // 主分個格寬度
                             minorGridLines: MinorGridLines(width: 0, color: Colors.black12), // 次分隔線粗度
@@ -794,6 +797,7 @@ class _DetailItemState extends State<DetailItem> {
                                           lastTime: matchingData['DateTime'],
                                           description: matchingData['description'] ?? '',
                                           imagePath: matchingData['image_path'] ?? '',
+                                          markerPoints: markerPoints ?? [],
                                         ),
                                         transitionsBuilder: (context, animation, secondaryAnimation, child) {
                                           const begin = Offset(1.0, 0.0);
@@ -1161,6 +1165,7 @@ class _DetailItemState extends State<DetailItem> {
     return widgets;
   }
 
+  // 判斷直線
   void _setVerticalLine() {
     if (_verticalLineX != null && markerPoints.isNotEmpty) {
       DateTime? closestPointInDirection;
@@ -1173,7 +1178,7 @@ class _DetailItemState extends State<DetailItem> {
 
         if (_isRight) {
           // 滑動方向為右，尋找 _verticalLineX 右邊且距離最近的標記點
-          if (markerPointX.isAfter(_verticalLineX!) && difference <= initCirculation) {
+          if (markerPointX.isAfter(_verticalLineX!) && difference <= initCirculation * 2) {
             if (difference < closestDifferenceInDirection) {
               closestPointInDirection = markerPointX;
               closestDifferenceInDirection = difference;
@@ -1181,7 +1186,7 @@ class _DetailItemState extends State<DetailItem> {
           }
         } else {
           // 滑動方向為左，尋找 _verticalLineX 左邊且距離最近的標記點
-          if (markerPointX.isBefore(_verticalLineX!) && difference <= initCirculation) {
+          if (markerPointX.isBefore(_verticalLineX!) && difference <= initCirculation * 2) {
             if (difference < closestDifferenceInDirection) {
               closestPointInDirection = markerPointX;
               closestDifferenceInDirection = difference;
@@ -1261,7 +1266,7 @@ class _DetailItemState extends State<DetailItem> {
         (visibleMin + (visibleMax - visibleMin) * 4 / 5).toInt(),
       );
 
-      if ((tmpMin - _previousData).abs() > 1) {
+      if ((tmpMin - _previousData).abs() > 1) { //要大於1是因為避免手機判斷的誤差點
         if (tmpMin > _previousData) {
           _isRight = true;
         } else {
@@ -1269,7 +1274,6 @@ class _DetailItemState extends State<DetailItem> {
         }
       }
 
-      print('\n$tmpMin - $_previousData = ${tmpMin - _previousData}');
       _previousData = tmpMin;
 
       SchedulerBinding.instance.addPostFrameCallback((_) {
@@ -1283,7 +1287,6 @@ class _DetailItemState extends State<DetailItem> {
           );
         });
       });
-      print("垂直線對應的 X 軸位置為: $_verticalLineX");
     }
 
     _debounce?.cancel();

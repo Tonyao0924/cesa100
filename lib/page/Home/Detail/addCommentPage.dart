@@ -20,6 +20,7 @@ class AddCommentPage extends StatefulWidget {
   final String lastTime;
   final String description;
   final String imagePath;
+  final List<Map<String, dynamic>> markerPoints;
 
   const AddCommentPage({
     super.key,
@@ -29,6 +30,7 @@ class AddCommentPage extends StatefulWidget {
     required this.lastTime,
     required this.description,
     required this.imagePath,
+    required this.markerPoints,
   });
 
   @override
@@ -50,6 +52,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
     _textEditingController.text = widget.description;
     imagePath = widget.imagePath;
     print(imagePath);
+    print(widget.markerPoints);
   }
 
   Future<int> _sendPutRequest() async {
