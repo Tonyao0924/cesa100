@@ -39,20 +39,52 @@ class AddCommentPage extends StatefulWidget {
 
 class _AddCommentPageState extends State<AddCommentPage> {
   ScrollController _scrollController = ScrollController();
-  TextEditingController _textEditingController = TextEditingController();
+  TextEditingController _textEditingController = TextEditingController(); // description 敘述
   Uint8List? _image;
   StorageService storageService = StorageService();
   final firebaseStorage = FirebaseStorage.instance;
   String imagePath = '';
   bool _isWaiting = false;
+  int position = 0; // id位置
+  bool leftBlue = false; //左邊箭頭
+  bool rightBlue = false; // 右邊箭頭
 
   @override
   void initState() {
     super.initState();
     _textEditingController.text = widget.description;
     imagePath = widget.imagePath;
-    print(imagePath);
-    print(widget.markerPoints);
+    print(widget.lastTime);
+    print(widget.markerPoints.length);
+    if (widget.markerPoints.length > 0) {
+      position = findNowTimePosition(DateTime.parse(widget.lastTime), widget.markerPoints);
+      if(position > 1 || -position > 1) leftBlue = true;
+      if(-position <= widget.markerPoints.length || position < widget.markerPoints.length) rightBlue = true;
+    }
+    print(position);
+    print(leftBlue);
+    print(rightBlue);
+  }
+
+  // 二分搜尋法
+  int findNowTimePosition(DateTime lastTime, List<Map<String, dynamic>> markerPoints) {
+    int low = 0; //
+    int high = widget.markerPoints.length - 1;
+    while (low <= high) {
+      int mid = (low + high) ~/ 2;
+      DateTime midX = markerPoints[mid]['x'];
+
+      if (lastTime == midX) {
+        return mid + 1; // 找到剛好匹配的點 +1是因為陣烈是從０開始
+      } else if (lastTime.isBefore(midX)) {
+        high = mid - 1;
+      } else {
+        low = mid + 1;
+      }
+    }
+
+    // 如果沒有剛好匹配，low 和 high 是最接近的兩個索引
+    return -(low + 1); // 返回負值表示未找到，但提供插入點
   }
 
   Future<int> _sendPutRequest() async {
@@ -216,9 +248,30 @@ class _AddCommentPageState extends State<AddCommentPage> {
               child: Column(
                 children: [
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    padding: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        TextButton(
+                          style: ButtonStyle(
+                            foregroundColor: MaterialStateProperty.resolveWith(
+                              (states) {
+                                return states.contains(MaterialState.pressed) ? iconHoverColor : iconColor;
+                              },
+                            ),
+                            overlayColor: MaterialStateProperty.all(Colors.transparent),
+                          ),
+                          onPressed: () async {},
+                          child: Text.rich(
+                            WidgetSpan(
+                              child: Icon(
+                                Icons.chevron_left,
+                                size: 30,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Spacer(),
                         Text(
                           'Time',
                           style: TextStyle(
@@ -237,6 +290,27 @@ class _AddCommentPageState extends State<AddCommentPage> {
                             DateFormat('MM/dd HH:mm').format(DateFormat('yyyy-MM-dd HH:mm:ss').parse(widget.lastTime)),
                             style: TextStyle(
                               fontSize: 16,
+                            ),
+                          ),
+                        ),
+                        Spacer(),
+
+                        TextButton(
+                          style: ButtonStyle(
+                            foregroundColor: MaterialStateProperty.resolveWith(
+                                  (states) {
+                                return states.contains(MaterialState.pressed) ? iconHoverColor : iconColor;
+                              },
+                            ),
+                            overlayColor: MaterialStateProperty.all(Colors.transparent),
+                          ),
+                          onPressed: () async {},
+                          child: Text.rich(
+                            WidgetSpan(
+                              child: Icon(
+                                Icons.chevron_right,
+                                size: 30,
+                              ),
                             ),
                           ),
                         ),
@@ -377,52 +451,55 @@ class _AddCommentPageState extends State<AddCommentPage> {
                     },
                     child: imagePath != null && imagePath.isNotEmpty
                         ? ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.network(
-                        imagePath,
-                        width: width * 0.6,
-                        height: width * 0.6,
-                        fit: BoxFit.cover,
-                      ),
-                    )
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.network(
+                              imagePath,
+                              width: width * 0.6,
+                              height: width * 0.6,
+                              fit: BoxFit.cover,
+                            ),
+                          )
                         : (_image == null
-                        ? Text.rich(
-                      WidgetSpan(
-                        child: ImageIcon(
-                          AssetImage("assets/home/image.png"),
-                          size: 200,
-                        ),
-                      ),
-                    )
-                        : ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.memory(
-                        _image!,
-                        width: width * 0.6,
-                        height: width * 0.6,
-                        fit: BoxFit.cover,
-                      ),
-                    )),
+                            ? Text.rich(
+                                WidgetSpan(
+                                  child: ImageIcon(
+                                    AssetImage(
+                                      "assets/home/image_plus.png",
+                                    ),
+                                    color: Colors.black12,
+                                    size: 200,
+                                  ),
+                                ),
+                              )
+                            : ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Image.memory(
+                                  _image!,
+                                  width: width * 0.6,
+                                  height: width * 0.6,
+                                  fit: BoxFit.cover,
+                                ),
+                              )),
                   ),
                 ],
               ),
             ),
             _isWaiting
                 ? Center(
-              child: Container(
-                height: width / 5,
-                width: width / 5,
-                decoration: BoxDecoration(
-                  color: Colors.black45,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: CupertinoActivityIndicator(
-                  animating: true,
-                  radius: width / 15,
-                  color: Colors.white,
-                ),
-              ),
-            )
+                    child: Container(
+                      height: width / 5,
+                      width: width / 5,
+                      decoration: BoxDecoration(
+                        color: Colors.black45,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: CupertinoActivityIndicator(
+                        animating: true,
+                        radius: width / 15,
+                        color: Colors.white,
+                      ),
+                    ),
+                  )
                 : Container(),
           ],
         ),

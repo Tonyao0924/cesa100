@@ -133,6 +133,7 @@ class _DetailItemState extends State<DetailItem> {
     bloodSugarLens = [];
     temperatureLens = [];
     markerPoints = [];
+    int markerId = 1; // 初始化 marker ID 從 1 開始
     for (var item in futureData!) {
       DateTime tmp = DateTime.parse(item['DateTime']);
       double current = item['Current_A'] is double ? item['Current_A'] : item['Current_A'].toDouble();
@@ -147,11 +148,13 @@ class _DetailItemState extends State<DetailItem> {
       dataCount++;
 
       if (description != null || imagePath != null) {
-        Map<String, dynamic> markerPoint = {'x': tmp, 'y': 0};
-        markerPoint.addAll({
+        Map<String, dynamic> markerPoint = {
+          'id': markerId++, // 給每個 markerPoint 賦予唯一的 ID 並遞增
+          'x': tmp,
+          'y': 0,
           if (description != null) 'description': description,
           if (imagePath != null) 'image_path': imagePath,
-        });
+        };
         markerPoints.add(markerPoint); // 加入到 markerPoints 列表中
       }
     }
@@ -564,8 +567,9 @@ class _DetailItemState extends State<DetailItem> {
                                       child: (image_path == ' ')
                                           ? Image.asset(
                                               'assets/home/image.png', // 預設圖片路徑
-                                              width: 80, // 圖片寬度
-                                              height: 80, // 圖片高度
+                                              width: 60, // 圖片寬度
+                                              height: 60, // 圖片高度
+                                        color: Colors.black12,
                                               fit: BoxFit.cover,
                                             )
                                           : Image.network(
