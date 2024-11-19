@@ -149,7 +149,9 @@ class _DetailItemState extends State<DetailItem> {
 
       if (description != null || imagePath != null) {
         Map<String, dynamic> markerPoint = {
-          'id': markerId++, // 給每個 markerPoint 賦予唯一的 ID 並遞增
+          'id': item['id'],
+          'bg': item['Current_A'],
+          'temp': item['Temperature_C'],
           'x': tmp,
           'y': 0,
           if (description != null) 'description': description,
@@ -217,6 +219,7 @@ class _DetailItemState extends State<DetailItem> {
   // 解析資料
   Future<List<dynamic>> fetchData() async {
     final response = await http.get(Uri.parse('${GlobalVariables.serverIP}sensorData'));
+    print('-------${response.body.runtimeType}');
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
@@ -680,7 +683,7 @@ class _DetailItemState extends State<DetailItem> {
                               numberFormat: NumberFormat('##0'),
                             ),
                           ],
-                          series: <CartesianSeries>[
+                          series: <CartesianSeries<ChartData,DateTime>>[
                             if (_chartState == 0 || _chartState == 1)
                               FastLineSeries<ChartData, DateTime>(
                                 color: Colors.deepOrangeAccent,

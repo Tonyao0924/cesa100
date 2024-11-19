@@ -19,7 +19,7 @@ class _ModifyPageState extends State<ModifyPage> {
       appBar: AppBar(
         centerTitle: true,
         title: Text(
-          'Modify',
+          'Setting',
           style: TextStyle(
             fontSize: 24,
             color: Colors.black,

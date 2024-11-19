@@ -150,7 +150,7 @@ class _ModifyItemState extends State<ModifyItem> {
                         const FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text(
-                            'Baseline(mg/dl)',
+                            'Warning(mg/dl)',
                             style: TextStyle(fontSize: 16, color: Colors.black),
                           ),
                         ),
@@ -192,7 +192,7 @@ class _ModifyItemState extends State<ModifyItem> {
                         const FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text(
-                            'Baseline(℃)',
+                            'Warning(℃)',
                             style: TextStyle(fontSize: 16, color: Colors.black),
                           ),
                         ),

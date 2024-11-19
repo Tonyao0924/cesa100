@@ -43,27 +43,42 @@ class _AddCommentPageState extends State<AddCommentPage> {
   Uint8List? _image;
   StorageService storageService = StorageService();
   final firebaseStorage = FirebaseStorage.instance;
-  String imagePath = '';
   bool _isWaiting = false;
   int position = 0; // id位置
   bool leftBlue = false; //左邊箭頭
   bool rightBlue = false; // 右邊箭頭
+  late int lastId;
+  late int lastBG;
+  late double lastTEMP;
+  late String lastTime;
+  late String description;
+  late String imagePath;
 
   @override
   void initState() {
     super.initState();
+    lastId = widget.lastId;
+    lastBG = widget.lastBG;
+    lastTEMP = widget.lastTEMP;
+    lastTime = widget.lastTime;
     _textEditingController.text = widget.description;
     imagePath = widget.imagePath;
-    print(widget.lastTime);
-    print(widget.markerPoints.length);
     if (widget.markerPoints.length > 0) {
-      position = findNowTimePosition(DateTime.parse(widget.lastTime), widget.markerPoints);
-      if(position > 1 || -position > 1) leftBlue = true;
-      if(-position <= widget.markerPoints.length || position < widget.markerPoints.length) rightBlue = true;
+      position = findNowTimePosition(DateTime.parse(lastTime), widget.markerPoints);
+      if (position >= 0 && widget.markerPoints.isNotEmpty) {
+        // 正數情況：找到精確匹配
+        if (position >= 1) leftBlue = true; // 不是第一個點
+        if (position < widget.markerPoints.length - 1) rightBlue = true; // 不是最後一個點
+      } else {
+        // 負數情況：未找到，表示插入點
+        int insertIndex = -(position);
+        if (insertIndex > 0) leftBlue = true; // 可以插入在索引 0 之後，左側有效
+        if (insertIndex < widget.markerPoints.length) rightBlue = true; // 插入點在範圍內，右側有效
+      }
     }
+    print(widget.markerPoints);
+    print(widget.markerPoints.length);
     print(position);
-    print(leftBlue);
-    print(rightBlue);
   }
 
   // 二分搜尋法
@@ -75,7 +90,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
       DateTime midX = markerPoints[mid]['x'];
 
       if (lastTime == midX) {
-        return mid + 1; // 找到剛好匹配的點 +1是因為陣烈是從０開始
+        return mid ; // 找到剛好匹配的點
       } else if (lastTime.isBefore(midX)) {
         high = mid - 1;
       } else {
@@ -84,7 +99,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
     }
 
     // 如果沒有剛好匹配，low 和 high 是最接近的兩個索引
-    return -(low + 1); // 返回負值表示未找到，但提供插入點
+    return -(low); // 返回負值表示未找到，但提供插入點
   }
 
   Future<int> _sendPutRequest() async {
@@ -93,7 +108,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
       String? imageUrl = imagePath.isEmpty ? null : imagePath;
 
       final response = await http.put(
-        Uri.parse('http://172.16.200.77:3000/comment/${widget.lastId}'), // 將 id 加入 URL
+        Uri.parse('http://172.16.200.77:3000/comment/${lastId}'), // 將 id 加入 URL
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
@@ -261,12 +276,27 @@ class _AddCommentPageState extends State<AddCommentPage> {
                             ),
                             overlayColor: MaterialStateProperty.all(Colors.transparent),
                           ),
-                          onPressed: () async {},
+                          onPressed: () async {
+                            if (position < 0) {
+                              position = position.abs(); // 將負數轉為正數
+                            }
+                            position -= 1;
+                            print(position);
+                            setState(() {
+                              lastId = widget.markerPoints[position]['id'];
+                              lastBG = widget.markerPoints[position]['bg'];
+                              lastTEMP = widget.markerPoints[position]['temp'];
+                              lastTime = widget.markerPoints[position]['x'].toString();
+                              _textEditingController.text = widget.markerPoints[position]['description'] ?? '';
+                              imagePath = widget.markerPoints[position]['image_path'] ?? '';
+                            });
+                          },
                           child: Text.rich(
                             WidgetSpan(
                               child: Icon(
                                 Icons.chevron_left,
                                 size: 30,
+                                color: leftBlue ? Colors.blue : Colors.grey,
                               ),
                             ),
                           ),
@@ -287,7 +317,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
                           padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5), // 添加內邊距讓顯示效果更好
                           child: Text(
                             // 使用 DateFormat 將時間轉換為 '月/日 時:分' 格式
-                            DateFormat('MM/dd HH:mm').format(DateFormat('yyyy-MM-dd HH:mm:ss').parse(widget.lastTime)),
+                            DateFormat('MM/dd HH:mm').format(DateFormat('yyyy-MM-dd HH:mm:ss').parse(lastTime)),
                             style: TextStyle(
                               fontSize: 16,
                             ),
@@ -310,6 +340,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
                               child: Icon(
                                 Icons.chevron_right,
                                 size: 30,
+                                color: rightBlue ? Colors.blue : Colors.grey,
                               ),
                             ),
                           ),
@@ -330,7 +361,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
                             ),
                             children: <TextSpan>[
                               TextSpan(
-                                text: '${widget.lastBG}', // `lastBG` 數值的樣式
+                                text: '${lastBG}', // `lastBG` 數值的樣式
                                 style: TextStyle(
                                   fontSize: 30, // 設置較大的字體
                                   fontWeight: FontWeight.bold,
@@ -357,7 +388,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
                             ),
                             children: <TextSpan>[
                               TextSpan(
-                                text: '${widget.lastTEMP}', // `lastTEMP` 數值的樣式
+                                text: '${lastTEMP}', // `lastTEMP` 數值的樣式
                                 style: TextStyle(
                                   fontSize: 24, // 設置較大的字體
                                   fontWeight: FontWeight.bold,
@@ -451,35 +482,52 @@ class _AddCommentPageState extends State<AddCommentPage> {
                     },
                     child: imagePath != null && imagePath.isNotEmpty
                         ? ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: Image.network(
-                              imagePath,
-                              width: width * 0.6,
-                              height: width * 0.6,
-                              fit: BoxFit.cover,
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.network(
+                        imagePath,
+                        width: width * 0.6,
+                        height: width * 0.6,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) {
+                            return child; // 圖片加載完成，返回圖片
+                          }
+                          return Center(
+                            child: CircularProgressIndicator(), // 顯示加載指示器
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          return Center(
+                            child: Text(
+                              '圖片加載失敗',
+                              style: TextStyle(color: Colors.red),
                             ),
-                          )
+                          ); // 加載失敗顯示提示
+                        },
+                      ),
+                    )
                         : (_image == null
-                            ? Text.rich(
-                                WidgetSpan(
-                                  child: ImageIcon(
-                                    AssetImage(
-                                      "assets/home/image_plus.png",
-                                    ),
-                                    color: Colors.black12,
-                                    size: 200,
-                                  ),
-                                ),
-                              )
-                            : ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: Image.memory(
-                                  _image!,
-                                  width: width * 0.6,
-                                  height: width * 0.6,
-                                  fit: BoxFit.cover,
-                                ),
-                              )),
+                        ?  Text.rich(
+                      WidgetSpan(
+                        child: ImageIcon(
+                          AssetImage(
+                            "assets/home/image_plus.png",
+                          ),
+                          color: Colors.black12,
+                          size: 200,
+                        ),
+                      ),
+                    )
+                        : ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.memory(
+                        _image!,
+                        width: width * 0.6,
+                        height: width * 0.6,
+                        fit: BoxFit.cover,
+                      ),
+                    )),
+
                   ),
                 ],
               ),
