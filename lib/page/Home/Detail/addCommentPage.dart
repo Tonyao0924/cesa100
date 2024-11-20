@@ -90,7 +90,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
       DateTime midX = markerPoints[mid]['x'];
 
       if (lastTime == midX) {
-        return mid ; // 找到剛好匹配的點
+        return mid; // 找到剛好匹配的點
       } else if (lastTime.isBefore(midX)) {
         high = mid - 1;
       } else {
@@ -228,23 +228,26 @@ class _AddCommentPageState extends State<AddCommentPage> {
                 overlayColor: MaterialStateProperty.all(Colors.transparent),
               ),
               onPressed: () async {
-                setState(() {
-                  _isWaiting = true;
-                });
-                if (_image != null && imagePath == '') {
-                  imagePath = await uploadImageToFirebase();
+                bool? confirmResult = await confirmDialog(context);
+                if (confirmResult == true) {
+                  setState(() {
+                    _isWaiting = true;
+                  });
+                  if (_image != null && imagePath == '') {
+                    imagePath = await uploadImageToFirebase();
+                    print(imagePath);
+                  }
                   print(imagePath);
-                }
-                print(imagePath);
-                var result = await _sendPutRequest();
-                setState(() {
-                  _isWaiting = false;
-                });
-                if (result == 200) {
-                  showToast(context, 'Modification Successful');
-                  Navigator.pop(context, true); // 關閉當前頁面
-                } else {
-                  showToast(context, 'Modification Failed');
+                  var result = await _sendPutRequest();
+                  setState(() {
+                    _isWaiting = false;
+                  });
+                  if (result == 200) {
+                    // showToast(context, 'Modification Successful');
+                    Navigator.pop(context, lastTime); // 關閉當前頁面
+                  } else {
+                    showToast(context, 'Modification Failed');
+                  }
                 }
               },
               child: const Text(
@@ -277,19 +280,23 @@ class _AddCommentPageState extends State<AddCommentPage> {
                             overlayColor: MaterialStateProperty.all(Colors.transparent),
                           ),
                           onPressed: () async {
-                            if (position < 0) {
-                              position = position.abs(); // 將負數轉為正數
+                            if (leftBlue) {
+                              if (position < 0) {
+                                position = position.abs(); // 將負數轉為正數
+                              }
+                              position -= 1;
+                              print(position);
+                              setState(() {
+                                lastId = widget.markerPoints[position]['id'];
+                                lastBG = widget.markerPoints[position]['bg'];
+                                lastTEMP = widget.markerPoints[position]['temp'];
+                                lastTime = widget.markerPoints[position]['x'].toString();
+                                _textEditingController.text = widget.markerPoints[position]['description'] ?? '';
+                                imagePath = widget.markerPoints[position]['image_path'] ?? '';
+                                leftBlue = position > 0 ? true : false;
+                                rightBlue = position < widget.markerPoints.length - 1 ? true : false;
+                              });
                             }
-                            position -= 1;
-                            print(position);
-                            setState(() {
-                              lastId = widget.markerPoints[position]['id'];
-                              lastBG = widget.markerPoints[position]['bg'];
-                              lastTEMP = widget.markerPoints[position]['temp'];
-                              lastTime = widget.markerPoints[position]['x'].toString();
-                              _textEditingController.text = widget.markerPoints[position]['description'] ?? '';
-                              imagePath = widget.markerPoints[position]['image_path'] ?? '';
-                            });
                           },
                           child: Text.rich(
                             WidgetSpan(
@@ -328,13 +335,31 @@ class _AddCommentPageState extends State<AddCommentPage> {
                         TextButton(
                           style: ButtonStyle(
                             foregroundColor: MaterialStateProperty.resolveWith(
-                                  (states) {
+                              (states) {
                                 return states.contains(MaterialState.pressed) ? iconHoverColor : iconColor;
                               },
                             ),
                             overlayColor: MaterialStateProperty.all(Colors.transparent),
                           ),
-                          onPressed: () async {},
+                          onPressed: () async {
+                            if (rightBlue) {
+                              if (position < 0) {
+                                position = position.abs(); // 將負數轉為正數
+                              }
+                              position += 1;
+                              print(position);
+                              setState(() {
+                                lastId = widget.markerPoints[position]['id'];
+                                lastBG = widget.markerPoints[position]['bg'];
+                                lastTEMP = widget.markerPoints[position]['temp'];
+                                lastTime = widget.markerPoints[position]['x'].toString();
+                                _textEditingController.text = widget.markerPoints[position]['description'] ?? '';
+                                imagePath = widget.markerPoints[position]['image_path'] ?? '';
+                                leftBlue = position > 0 ? true : false;
+                                rightBlue = position < widget.markerPoints.length - 1 ? true : false;
+                              });
+                            }
+                          },
                           child: Text.rich(
                             WidgetSpan(
                               child: Icon(
@@ -482,52 +507,58 @@ class _AddCommentPageState extends State<AddCommentPage> {
                     },
                     child: imagePath != null && imagePath.isNotEmpty
                         ? ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.network(
-                        imagePath,
-                        width: width * 0.6,
-                        height: width * 0.6,
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) {
-                            return child; // 圖片加載完成，返回圖片
-                          }
-                          return Center(
-                            child: CircularProgressIndicator(), // 顯示加載指示器
-                          );
-                        },
-                        errorBuilder: (context, error, stackTrace) {
-                          return Center(
-                            child: Text(
-                              '圖片加載失敗',
-                              style: TextStyle(color: Colors.red),
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.network(
+                              imagePath,
+                              width: width * 0.6,
+                              height: width * 0.6,
+                              fit: BoxFit.cover,
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) {
+                                  return child; // 圖片載入完成，返回圖片
+                                }
+                                return Center(
+                                  child: SizedBox(
+                                    width: width * 0.6,
+                                    height: width * 0.6,
+                                    child: Padding(
+                                      padding: EdgeInsets.all(width * 0.25),
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  ),
+                                );
+                              },
+                              errorBuilder: (context, error, stackTrace) {
+                                return Center(
+                                  child: Text(
+                                    '圖片載入失敗',
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                ); // 載入失敗顯示提示
+                              },
                             ),
-                          ); // 加載失敗顯示提示
-                        },
-                      ),
-                    )
+                          )
                         : (_image == null
-                        ?  Text.rich(
-                      WidgetSpan(
-                        child: ImageIcon(
-                          AssetImage(
-                            "assets/home/image_plus.png",
-                          ),
-                          color: Colors.black12,
-                          size: 200,
-                        ),
-                      ),
-                    )
-                        : ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.memory(
-                        _image!,
-                        width: width * 0.6,
-                        height: width * 0.6,
-                        fit: BoxFit.cover,
-                      ),
-                    )),
-
+                            ? Text.rich(
+                                WidgetSpan(
+                                  child: ImageIcon(
+                                    AssetImage(
+                                      "assets/home/image_plus.png",
+                                    ),
+                                    color: Colors.black12,
+                                    size: 200,
+                                  ),
+                                ),
+                              )
+                            : ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Image.memory(
+                                  _image!,
+                                  width: width * 0.6,
+                                  height: width * 0.6,
+                                  fit: BoxFit.cover,
+                                ),
+                              )),
                   ),
                 ],
               ),
@@ -552,6 +583,49 @@ class _AddCommentPageState extends State<AddCommentPage> {
           ],
         ),
       ),
+    );
+  }
+
+  Future<bool?> confirmDialog(BuildContext context) async {
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return CupertinoAlertDialog(
+          content: Container(
+            child: const FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                '您確定修改嗎？',
+                style: TextStyle(
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            CupertinoDialogAction(
+              child: const Text('否',
+                style: TextStyle(
+                  fontSize: 14,
+                ),),
+              isDestructiveAction: true,
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+            CupertinoDialogAction(
+              child: const Text('是',
+                style: TextStyle(
+                  fontSize: 14,
+                ),),
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

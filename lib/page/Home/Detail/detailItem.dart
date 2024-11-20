@@ -161,12 +161,12 @@ class _DetailItemState extends State<DetailItem> {
       }
     }
     print(markerPoints);
+    avgBloodSugar = totalCurrent.reduce((a, b) => a + b) / totalCurrent.length;
+    avgTemperature = totalTemperature.reduce((a, b) => a + b) / totalTemperature.length;
+    displayBloodSugarTIR = bloodSugarTIR;
+    displayTemperatureTIR = temperatureTIR;
     if (firstinit) {
-      // DateTime firstTime = DateTime.parse(futureData![0]['DateTime']);
       DateTime lastTime = DateTime.parse(futureData![futureData!.length - 1]['DateTime']);
-      // minX = firstTime;
-      // maxX = lastTime;
-      // minX = maxX!.subtract(Duration(hours: 3)); // 預設為最後一筆減去三小時
       final int durationHours = (initCirculation * 0.8).floor();
       final int durationMinutes = ((initCirculation * 0.8 - durationHours) * 60).round();
 
@@ -183,10 +183,6 @@ class _DetailItemState extends State<DetailItem> {
       print(minX);
       print(maxX);
     }
-    avgBloodSugar = totalCurrent.reduce((a, b) => a + b) / totalCurrent.length;
-    avgTemperature = totalTemperature.reduce((a, b) => a + b) / totalTemperature.length;
-    displayBloodSugarTIR = bloodSugarTIR;
-    displayTemperatureTIR = temperatureTIR;
     setState(() {});
   }
 
@@ -334,7 +330,7 @@ class _DetailItemState extends State<DetailItem> {
                               TextSpan(
                                 children: [
                                   TextSpan(
-                                    text: '${(widget.rowData.bloodSugar).toStringAsFixed(0)}',
+                                    text: '${(lastBG).toStringAsFixed(0)}',
                                     style: TextStyle(
                                       fontSize: _chartState == 1 ? 80 : 70,
                                       color: Color(0xff808080),
@@ -404,7 +400,7 @@ class _DetailItemState extends State<DetailItem> {
                               TextSpan(
                                 children: [
                                   TextSpan(
-                                    text: '${(widget.rowData.temperature).toStringAsFixed(1)}',
+                                    text: '${(lastTEMP).toStringAsFixed(1)}',
                                     style: TextStyle(
                                       fontSize: _chartState == 2 ? 80 : 70,
                                       color: Color(0xff808080),
@@ -488,6 +484,17 @@ class _DetailItemState extends State<DetailItem> {
                     child: Container(
                       padding: EdgeInsets.only(bottom: height * 0.03, top: 40),
                       child: GestureDetector(
+                        onDoubleTap: () {
+                          DateTime lastTime = DateTime.parse(futureData![futureData!.length - 1]['DateTime']);
+                          final int durationHours = (initCirculation * 0.8).floor();
+                          final int durationMinutes = ((initCirculation * 0.8 - durationHours) * 60).round();
+                          final offset = Duration(hours: durationHours, minutes: durationMinutes);
+                          setState(() {
+                            _rangeController.start = lastTime.subtract(offset);
+                            _rangeController.end = lastTime
+                                .add(Duration(hours: initCirculation - durationHours, minutes: -durationMinutes));
+                          });
+                        },
                         onTap: () {
                           _toggleChartState();
                         },
@@ -558,10 +565,24 @@ class _DetailItemState extends State<DetailItem> {
                                             ),
                                           );
                                           print('回傳的結果:$result');
-                                          if (result == true) {
+                                          if (result != null) {
                                             showToast(context, '註釋已新增');
-                                            drawChart();
-                                            _setVerticalLine();
+                                            _verticalLineX = DateTime.parse(result);
+                                            final int frontDurationHours = (initCirculation * 0.2).floor();
+                                            final int frontDurationMinutes =
+                                                ((initCirculation * 0.2 - frontDurationHours) * 60).round();
+                                            final frontOffset =
+                                                Duration(hours: frontDurationHours, minutes: frontDurationMinutes);
+
+                                            maxX = _verticalLineX!.add(frontOffset);
+                                            minX = maxX!.subtract(Duration(hours: initCirculation));
+
+                                            _rangeController.start = minX;
+                                            _rangeController.end = maxX;
+                                            await drawChart();
+                                            if (matchingData['DateTime'] == result) {
+                                              _setVerticalLine();
+                                            }
                                           }
                                         } else {
                                           showToast(context, '找不到數據點');
@@ -572,7 +593,7 @@ class _DetailItemState extends State<DetailItem> {
                                               'assets/home/image.png', // 預設圖片路徑
                                               width: 60, // 圖片寬度
                                               height: 60, // 圖片高度
-                                        color: Colors.black12,
+                                              color: Colors.black12,
                                               fit: BoxFit.cover,
                                             )
                                           : Image.network(
@@ -605,12 +626,6 @@ class _DetailItemState extends State<DetailItem> {
                             name: 'primaryXAxis',
                             axisLine: const AxisLine(color: Colors.transparent),
                             // title: const AxisTitle(text: 'Time'),
-                            rangePadding: ChartRangePadding.additional,
-                            // rangePadding: ChartRangePadding.round,
-                            // initialVisibleMinimum: _rangeController.start,
-                            // initialVisibleMaximum: _rangeController.end,
-                            // initialZoomFactor: zoomF,
-                            // enableAutoIntervalOnZooming: false,
                             minimum: DateTime(1900),
                             maximum: DateTime(2100),
                             rangeController: _rangeController,
@@ -683,7 +698,7 @@ class _DetailItemState extends State<DetailItem> {
                               numberFormat: NumberFormat('##0'),
                             ),
                           ],
-                          series: <CartesianSeries<ChartData,DateTime>>[
+                          series: <CartesianSeries<ChartData, DateTime>>[
                             if (_chartState == 0 || _chartState == 1)
                               FastLineSeries<ChartData, DateTime>(
                                 color: Colors.deepOrangeAccent,
@@ -819,10 +834,24 @@ class _DetailItemState extends State<DetailItem> {
                                       ),
                                     );
                                     print('回傳的結果:$result');
-                                    if (result == true) {
+                                    if (result != null) {
                                       showToast(context, '註釋已新增');
+                                      _verticalLineX = DateTime.parse(result);
+                                      final int frontDurationHours = (initCirculation * 0.2).floor();
+                                      final int frontDurationMinutes =
+                                          ((initCirculation * 0.2 - frontDurationHours) * 60).round();
+                                      final frontOffset =
+                                          Duration(hours: frontDurationHours, minutes: frontDurationMinutes);
+
+                                      maxX = _verticalLineX!.add(frontOffset);
+                                      minX = maxX!.subtract(Duration(hours: initCirculation));
+
+                                      _rangeController.start = minX;
+                                      _rangeController.end = maxX;
                                       await drawChart();
-                                      _setVerticalLine();
+                                      if (matchingData['DateTime'] == result) {
+                                        _setVerticalLine();
+                                      }
                                     }
                                   } else {
                                     showToast(context, '找不到數據點');
@@ -1230,7 +1259,7 @@ class _DetailItemState extends State<DetailItem> {
 
           // 更新 image_path
           String? newImagePath = markerPoints.firstWhere(
-                (point) => point['x'] == finalPoint,
+            (point) => point['x'] == finalPoint,
             orElse: () => {'image_path': ''},
           )['image_path'];
 
@@ -1273,7 +1302,8 @@ class _DetailItemState extends State<DetailItem> {
         (visibleMin + (visibleMax - visibleMin) * 4 / 5).toInt(),
       );
 
-      if ((tmpMin - _previousData).abs() > 1) { //要大於1是因為避免手機判斷的誤差點
+      if ((tmpMin - _previousData).abs() > 1) {
+        //要大於1是因為避免手機判斷的誤差點
         if (tmpMin > _previousData) {
           _isRight = true;
         } else {
