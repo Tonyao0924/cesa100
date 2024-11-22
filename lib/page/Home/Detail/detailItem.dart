@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:cesa100/page/Home/Detail/addCommentPage.dart';
+import 'package:cesa100/page/Home/Comment/addCommentPage.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:syncfusion_flutter_core/core.dart';
 
