@@ -560,14 +560,11 @@ class _AddCommentPageState extends State<AddCommentPage> {
                                     return child; // 圖片載入完成，返回圖片
                                   }
                                   return Center(
-                                    child: SizedBox(
-                                      width: width * 0.6,
-                                      height: width * 0.6,
-                                      child: Padding(
-                                        padding: EdgeInsets.all(width * 0.25),
+                                      child: SizedBox(
+                                        width: width * 0.1,
+                                        height: width * 0.1,
                                         child: CircularProgressIndicator(),
                                       ),
-                                    ),
                                   );
                                 },
                                 errorBuilder: (context, error, stackTrace) {
@@ -637,7 +634,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
               MaterialPageRoute(
                 builder: (context) => CommentList(
                   position: position,
-                  markerPoints: widget.markerPoints ?? [],
+                  markerPoints: widget.markerPoints.reversed.toList() ?? [],
                 ),
               ),
             );
