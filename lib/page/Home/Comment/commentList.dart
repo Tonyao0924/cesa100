@@ -21,24 +21,27 @@ class _CommentListState extends State<CommentList> {
   ScrollController _controller = ScrollController();
   late List<Map<String, dynamic>> displayedPoints; // 當前顯示的資料
   bool _isLoading = false;
-  late int selectedIndex;
-
-
+  int selectedIndex = 0;
 
   @override
   void initState() {
     super.initState();
     markerPoints = widget.markerPoints;
     position = widget.position;
-    if (markerPoints.length > 0) {
-      position = markerPoints.length - 1 - position;
+
+    if (position < 0) {
+      position = 0;
+      selectedIndex = -1;
+      // 初始化顯示資料
+      displayedPoints = markerPoints.sublist(0, (0 + 30).clamp(0, markerPoints.length));
+    } else {
+      if (markerPoints.length > 0) {
+        position = markerPoints.length - 1 - position;
+      }
+      // 初始化顯示資料
+      displayedPoints = markerPoints.sublist(position, (position + 30).clamp(0, markerPoints.length));
     }
-
-    // 初始化顯示資料
-    displayedPoints = markerPoints.sublist(position, (position + 30).clamp(0, markerPoints.length));
-    print(displayedPoints[0]);
-
-    selectedIndex = 0;
+    print(position);
     _controller.addListener(_onScroll);
   }
 
@@ -95,7 +98,7 @@ class _CommentListState extends State<CommentList> {
 
           print('向上載入的數量: ${endIndex - startIndex}');
           selectedIndex = selectedIndex + (endIndex - startIndex);
-          if(endIndex - startIndex != 0){
+          if (endIndex - startIndex != 0) {
             double height = MediaQuery.of(context).size.height;
             double itemHeight = height * 0.24;
             _controller.jumpTo(itemHeight * (endIndex - startIndex));
@@ -178,7 +181,6 @@ class _CommentListState extends State<CommentList> {
                 print(point);
               },
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: width * 0.02),
                 margin: EdgeInsets.symmetric(horizontal: width * 0.05, vertical: height * 0.02),
                 decoration: BoxDecoration(
                   color: selectedIndex == index ? Colors.blue : Colors.white,
@@ -188,7 +190,6 @@ class _CommentListState extends State<CommentList> {
                 height: height * 0.2,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    // foregroundColor: buttonBackgroundColor,
                     backgroundColor: selectedIndex == index ? Colors.blue : Colors.white,
                     splashFactory: NoSplash.splashFactory,
                     elevation: 0,
@@ -197,14 +198,14 @@ class _CommentListState extends State<CommentList> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  onPressed: (){
-
+                  onPressed: () {
+                    int markerPointsIndex = markerPoints.indexOf(displayedPoints[index]);
+                    Navigator.pop(context, markerPoints.length - markerPointsIndex -1);
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      displayedPoints[index]['image_path'] != null &&
-                          displayedPoints[index]['image_path'].isNotEmpty
+                      displayedPoints[index]['image_path'] != null && displayedPoints[index]['image_path'].isNotEmpty
                           ? ClipRRect(
                               borderRadius: BorderRadius.circular(10),
                               child: Image.network(
@@ -249,72 +250,85 @@ class _CommentListState extends State<CommentList> {
                               ),
                             ),
                       SizedBox(width: 20),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Text(
-                                DateFormat('yyyy-MM/dd HH:mm').format(
-                                  DateFormat('yyyy-MM-dd HH:mm:ss').parse(displayedPoints[index]['x'].toString()),
-                                ),
-                                style: TextStyle(
-                                  color: selectedIndex == index ? Colors.white : Colors.black,
-                                  fontSize: 18,
-                                ),
-                              ),
-                            ],
-                          ),
-                          Spacer(),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Text(
-                                'BG：${displayedPoints[index]['bg']}',
-                                style: TextStyle(
-                                  color: selectedIndex == index ? Colors.white : Colors.black,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
-                          ),
-                          Spacer(),
-                          Row(
-                            children: [
-                              Text(
-                                'TEMP：${displayedPoints[index]['temp']}',
-                                style: TextStyle(
-                                  color: selectedIndex == index ? Colors.white : Colors.black,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
-                          ),
-                          Spacer(),
-                          RichText(
-                            text: TextSpan(
-                              text: 'desc_：', // "BG：" 的樣式
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: selectedIndex == index ? Colors.white : Colors.black, // 根據需求設置文字顏色
-                              ),
-                              children: <TextSpan>[
-                                TextSpan(
-                                  text: displayedPoints[index]['description'] != null
-                                      ? _truncateText(displayedPoints[index]['description'], 15)
-                                      : 'Null', // 如果為 null，直接顯示空字串
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Text(
+                                  DateFormat('yyyy-MM/dd HH:mm').format(
+                                    DateFormat('yyyy-MM-dd HH:mm:ss').parse(displayedPoints[index]['x'].toString()),
+                                  ),
                                   style: TextStyle(
-                                    fontSize: 16,
-                                    color: selectedIndex == index ? Colors.white : Colors.black, // 根據需求設置文字顏色
-                                    fontWeight:
-                                    displayedPoints[index]['description'] != null ? FontWeight.normal : FontWeight.bold,
+                                    color: selectedIndex == index ? Colors.white : Colors.black,
+                                    fontSize: 18,
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                        ],
+                            Spacer(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'BG：${displayedPoints[index]['bg']}',
+                                  style: TextStyle(
+                                    color: selectedIndex == index ? Colors.white : Colors.black,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Spacer(),
+                            Row(
+                              children: [
+                                Text(
+                                  'TEMP：${displayedPoints[index]['temp']}',
+                                  style: TextStyle(
+                                    color: selectedIndex == index ? Colors.white : Colors.black,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Spacer(),
+                            FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Row(
+                                  children: [
+                                    Text.rich(
+                                      TextSpan(
+                                        children: <TextSpan>[
+                                          TextSpan(
+                                            text: 'desc_：', // "desc_" 的樣式
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              color: selectedIndex == index ? Colors.white : Colors.black, // 根據需求設置文字顏色
+                                            ),
+                                          ),
+                                          TextSpan(
+                                            text: displayedPoints[index]['description'] != null
+                                                ? _truncateText(displayedPoints[index]['description'], 15)
+                                                : 'Null', // 如果為 null，直接顯示空字串
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              color: selectedIndex == index ? Colors.white : Colors.black, // 根據需求設置文字顏色
+                                              fontWeight: displayedPoints[index]['description'] != null
+                                                  ? FontWeight.normal
+                                                  : FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                        
+                          ],
+                        ),
                       )
                     ],
                   ),

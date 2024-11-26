@@ -214,6 +214,21 @@ class _AddCommentPageState extends State<AddCommentPage> {
     return downloadUrl;
   }
 
+  void updateMarkerDetails(int position){
+    setState(() {
+      lastId = widget.markerPoints[position]['id'];
+      lastBG = widget.markerPoints[position]['bg'];
+      lastTEMP = widget.markerPoints[position]['temp'].toDouble();
+      lastTime = widget.markerPoints[position]['x'].toString();
+      _textEditingController.text = widget.markerPoints[position]['description'] ?? '';
+      imagePath = widget.markerPoints[position]['image_path'] ?? '';
+      initialDescription = _textEditingController.text;
+      imageChange = false;
+      leftBlue = position > 0 ? true : false;
+      rightBlue = position < widget.markerPoints.length - 1 ? true : false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     int width = MediaQuery.of(context).size.width.toInt();
@@ -323,18 +338,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
                               }
                               position -= 1;
                               print(position);
-                              setState(() {
-                                lastId = widget.markerPoints[position]['id'];
-                                lastBG = widget.markerPoints[position]['bg'];
-                                lastTEMP = widget.markerPoints[position]['temp'].toDouble();
-                                lastTime = widget.markerPoints[position]['x'].toString();
-                                _textEditingController.text = widget.markerPoints[position]['description'] ?? '';
-                                imagePath = widget.markerPoints[position]['image_path'] ?? '';
-                                initialDescription = _textEditingController.text;
-                                imageChange = false;
-                                leftBlue = position > 0 ? true : false;
-                                rightBlue = position < widget.markerPoints.length - 1 ? true : false;
-                              });
+                              updateMarkerDetails(position);
                             }
                           },
                           child: Text.rich(
@@ -389,18 +393,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
                               }
 
                               print(position);
-                              setState(() {
-                                lastId = widget.markerPoints[position]['id'];
-                                lastBG = widget.markerPoints[position]['bg'];
-                                lastTEMP = widget.markerPoints[position]['temp'].toDouble();
-                                lastTime = widget.markerPoints[position]['x'].toString();
-                                _textEditingController.text = widget.markerPoints[position]['description'] ?? '';
-                                imagePath = widget.markerPoints[position]['image_path'] ?? '';
-                                initialDescription = _textEditingController.text;
-                                imageChange = false;
-                                leftBlue = position > 0 ? true : false;
-                                rightBlue = position < widget.markerPoints.length - 1 ? true : false;
-                              });
+                              updateMarkerDetails(position);
                             }
                           },
                           child: Text.rich(
@@ -628,8 +621,8 @@ class _AddCommentPageState extends State<AddCommentPage> {
             'assets/home/history.png', // 自定義圖片的路徑
             fit: BoxFit.cover, // 根據需求調整圖片的顯示方式
           ),
-          onPressed: () {
-            Navigator.push(
+          onPressed: () async {
+            final result = await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => CommentList(
@@ -638,6 +631,11 @@ class _AddCommentPageState extends State<AddCommentPage> {
                 ),
               ),
             );
+            if(result != null){
+              print(result);
+              position = result;
+              updateMarkerDetails(position);
+            }
           },
         ),
       ),
