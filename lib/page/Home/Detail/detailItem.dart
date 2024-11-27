@@ -73,11 +73,10 @@ class _DetailItemState extends State<DetailItem> {
     bloodSugarLens.clear();
     temperatureLens.clear();
     _zoomPanBehavior = ZoomPanBehavior(
-      selectionRectBorderColor: Colors.red,
-      selectionRectBorderWidth: 1,
-      selectionRectColor: Colors.grey,
+      // selectionRectBorderColor: Colors.red,
+      // selectionRectBorderWidth: 1,
+      // selectionRectColor: Colors.grey,
       zoomMode: ZoomMode.x,
-      maximumZoomLevel: 1,
       enablePanning: true, // 左右滾動
       // enablePinching: true, // 手勢縮放圖表大小
     );
@@ -123,17 +122,13 @@ class _DetailItemState extends State<DetailItem> {
       bloodSugarData.add(item['current_4'].toDouble());
       break;
     }
-    if (futureData!.isNotEmpty) {
-      lastId = futureData!.last['id'];
-      lastBG = futureData!.last['Current_A'];
-      lastTEMP = futureData!.last['Temperature_C'].toDouble();
-    }
     totalCurrent = [];
     totalTemperature = [];
     bloodSugarLens = [];
     temperatureLens = [];
     markerPoints = [];
     int markerId = 1; // 初始化 marker ID 從 1 開始
+    int loopCount = 0; // 記錄當前迴圈次數
     for (var item in futureData!) {
       DateTime tmp = DateTime.parse(item['DateTime']);
       double current = item['Current_A'] is double ? item['Current_A'] : item['Current_A'].toDouble();
@@ -143,8 +138,14 @@ class _DetailItemState extends State<DetailItem> {
       totalCurrent.add(current);
       totalTemperature.add(temperature);
       putTIRData(current, temperature);
-      bloodSugarLens.add(ChartData(tmp, current));
-      temperatureLens.add(ChartData(tmp, temperature));
+      // bloodSugarLens.add(ChartData(tmp, current));
+      // temperatureLens.add(ChartData(tmp, temperature));
+      if (loopCount % 10 == 0) {
+        bloodSugarLens.add(ChartData(tmp, current));
+        temperatureLens.add(ChartData(tmp, temperature));
+      }
+      loopCount++; // 增加執行次數計數
+
       dataCount++;
 
       if (description != null || imagePath != null) {
@@ -160,6 +161,17 @@ class _DetailItemState extends State<DetailItem> {
         markerPoints.add(markerPoint); // 加入到 markerPoints 列表中
       }
     }
+    if (futureData!.isNotEmpty) {
+      lastId = futureData!.last['id'];
+      lastBG = futureData!.last['Current_A'];
+      lastTEMP = futureData!.last['Temperature_C'].toDouble();
+      bloodSugarLens.add(ChartData(DateTime.parse(futureData!.last['DateTime']), lastBG.toDouble()));
+      temperatureLens.add(ChartData(DateTime.parse(futureData!.last['DateTime']), lastTEMP));
+    }
+    // if (futureData!.isNotEmpty) {
+    //   var lastItem = futureData!.last;
+    //   加入最後一筆的bloodSugarLens跟temperatureLens
+    // }
     print(markerPoints);
     avgBloodSugar = totalCurrent.reduce((a, b) => a + b) / totalCurrent.length;
     avgTemperature = totalTemperature.reduce((a, b) => a + b) / totalTemperature.length;
@@ -624,7 +636,6 @@ class _DetailItemState extends State<DetailItem> {
                           ],
                           primaryXAxis: DateTimeAxis(
                             name: 'primaryXAxis',
-                            axisLine: const AxisLine(color: Colors.transparent),
                             // title: const AxisTitle(text: 'Time'),
                             minimum: DateTime(1900),
                             maximum: DateTime(2100),
@@ -636,7 +647,6 @@ class _DetailItemState extends State<DetailItem> {
                             intervalType: DateTimeIntervalType.hours, // 確保每小時顯示一次標籤
                             interval: initCirculation / 3, // 每1個單位顯示一次標籤
                             dateFormat: DateFormat('HH:mm'),
-                            // initialZoomPosition: 0.5,
                             axisLabelFormatter: (AxisLabelRenderDetails details) {
                               final DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(details.value.toInt());
 
@@ -707,6 +717,7 @@ class _DetailItemState extends State<DetailItem> {
                                 yValueMapper: (ChartData data, _) => data.y,
                                 width: 2, // 橘色值粗度
                                 animationDuration: 0,
+                                enableTooltip: false,
                               ),
                             if (_chartState == 0 || _chartState == 2)
                               FastLineSeries<ChartData, DateTime>(
@@ -718,6 +729,7 @@ class _DetailItemState extends State<DetailItem> {
                                 name: '℃',
                                 width: 2, // 藍色值粗度
                                 animationDuration: 0,
+                                enableTooltip: false,
                               ),
                           ],
                         ),

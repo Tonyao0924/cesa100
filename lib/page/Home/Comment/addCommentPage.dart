@@ -481,6 +481,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+
                     ],
                   ),
                   SizedBox(height: 8),

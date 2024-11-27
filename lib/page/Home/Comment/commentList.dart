@@ -172,7 +172,7 @@ class _CommentListState extends State<CommentList> {
         child: ListView.builder(
           shrinkWrap: true, // 適配 SingleChildScrollView
           physics: NeverScrollableScrollPhysics(), // 禁止內部滾動，使用外部滾動
-          itemExtent: height * 0.24,
+          itemExtent: height * 0.14,
           itemCount: displayedPoints.length,
           itemBuilder: (context, index) {
             final point = displayedPoints[index];
@@ -181,13 +181,13 @@ class _CommentListState extends State<CommentList> {
                 print(point);
               },
               child: Container(
-                margin: EdgeInsets.symmetric(horizontal: width * 0.05, vertical: height * 0.02),
+                margin: EdgeInsets.symmetric(horizontal: width * 0.05, vertical: height * 0.01),
                 decoration: BoxDecoration(
                   color: selectedIndex == index ? Colors.blue : Colors.white,
                   borderRadius: BorderRadius.all(Radius.circular(20)),
                 ),
                 width: width * 0.9,
-                height: height * 0.2,
+                height: height * 0.12,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: selectedIndex == index ? Colors.blue : Colors.white,
