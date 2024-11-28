@@ -140,7 +140,7 @@ class _DetailItemState extends State<DetailItem> {
       putTIRData(current, temperature);
       // bloodSugarLens.add(ChartData(tmp, current));
       // temperatureLens.add(ChartData(tmp, temperature));
-      if (loopCount % 10 == 0) {
+      if (loopCount % 10 == 0 && futureData!.length > 200) {
         bloodSugarLens.add(ChartData(tmp, current));
         temperatureLens.add(ChartData(tmp, temperature));
       }

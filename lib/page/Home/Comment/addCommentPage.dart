@@ -214,7 +214,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
     return downloadUrl;
   }
 
-  void updateMarkerDetails(int position){
+  void updateMarkerDetails(int position) {
     setState(() {
       lastId = widget.markerPoints[position]['id'];
       lastBG = widget.markerPoints[position]['bg'];
@@ -481,7 +481,53 @@ class _AddCommentPageState extends State<AddCommentPage> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-
+                      Spacer(),
+                      Container(
+                        height: 48,
+                        width: 48,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Colors.black12,
+                          ),
+                          borderRadius: BorderRadius.circular(10), // 邊框圓角
+                        ),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            splashFactory: NoSplash.splashFactory,
+                            padding: EdgeInsets.zero, // 去除按鈕內邊距
+                            elevation: 0,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          onPressed: () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CommentList(
+                                  position: position,
+                                  markerPoints: widget.markerPoints.reversed.toList() ?? [],
+                                ),
+                              ),
+                            );
+                            if (result != null) {
+                              print(result);
+                              position = result;
+                              updateMarkerDetails(position);
+                            }
+                          },
+                          child: Image.asset(
+                            'assets/home/history.png', // 自定義圖片的路徑
+                            height: 48,
+                            width: 48,
+                            color: Colors.black,
+                            fit: BoxFit.cover, // 根據需求調整圖片的顯示方式
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 10),
                     ],
                   ),
                   SizedBox(height: 8),
@@ -554,11 +600,11 @@ class _AddCommentPageState extends State<AddCommentPage> {
                                     return child; // 圖片載入完成，返回圖片
                                   }
                                   return Center(
-                                      child: SizedBox(
-                                        width: width * 0.1,
-                                        height: width * 0.1,
-                                        child: CircularProgressIndicator(),
-                                      ),
+                                    child: SizedBox(
+                                      width: width * 0.1,
+                                      height: width * 0.1,
+                                      child: CircularProgressIndicator(),
+                                    ),
                                   );
                                 },
                                 errorBuilder: (context, error, stackTrace) {
@@ -616,29 +662,29 @@ class _AddCommentPageState extends State<AddCommentPage> {
                 : Container(),
           ],
         ),
-        floatingActionButton: FloatingActionButton(
-          elevation: 0,
-          child: Image.asset(
-            'assets/home/history.png', // 自定義圖片的路徑
-            fit: BoxFit.cover, // 根據需求調整圖片的顯示方式
-          ),
-          onPressed: () async {
-            final result = await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => CommentList(
-                  position: position,
-                  markerPoints: widget.markerPoints.reversed.toList() ?? [],
-                ),
-              ),
-            );
-            if(result != null){
-              print(result);
-              position = result;
-              updateMarkerDetails(position);
-            }
-          },
-        ),
+        // floatingActionButton: FloatingActionButton(
+        //   elevation: 0,
+        //   child: Image.asset(
+        //     'assets/home/history.png', // 自定義圖片的路徑
+        //     fit: BoxFit.cover, // 根據需求調整圖片的顯示方式
+        //   ),
+        //   onPressed: () async {
+        //     final result = await Navigator.push(
+        //       context,
+        //       MaterialPageRoute(
+        //         builder: (context) => CommentList(
+        //           position: position,
+        //           markerPoints: widget.markerPoints.reversed.toList() ?? [],
+        //         ),
+        //       ),
+        //     );
+        //     if (result != null) {
+        //       print(result);
+        //       position = result;
+        //       updateMarkerDetails(position);
+        //     }
+        //   },
+        // ),
       ),
     );
   }

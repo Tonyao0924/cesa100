@@ -22,6 +22,8 @@ class _CommentListState extends State<CommentList> {
   late List<Map<String, dynamic>> displayedPoints; // 當前顯示的資料
   bool _isLoading = false;
   int selectedIndex = 0;
+  bool topLoading = false;
+  bool downLoading = false;
 
   @override
   void initState() {
@@ -45,19 +47,6 @@ class _CommentListState extends State<CommentList> {
     _controller.addListener(_onScroll);
   }
 
-  // @override
-  // void didChangeDependencies() {
-  //   super.didChangeDependencies();
-  //   double height = MediaQuery.of(context).size.height;
-  //   double itemHeight = height * 0.24;
-  //
-  //   // 初始化 ScrollController
-  //   _controller = ScrollController(initialScrollOffset: itemHeight * selectedIndex);
-  //   _controller.addListener(() {
-  //     print(_controller.offset);
-  //   });
-  // }
-
   @override
   void dispose() {
     _controller.dispose();
@@ -80,7 +69,11 @@ class _CommentListState extends State<CommentList> {
     setState(() {
       _isLoading = true;
     });
-
+    if (isScrollDown) {
+      downLoading = true;
+    } else {
+      topLoading = true;
+    }
     // 模擬載入延遲
     Future.delayed(const Duration(seconds: 1), () {
       if (!mounted) return;
@@ -89,9 +82,11 @@ class _CommentListState extends State<CommentList> {
         int endIndex;
 
         if (isScrollDown) {
+          downLoading = false;
           startIndex = markerPoints.indexOf(displayedPoints.last) + 1;
           endIndex = (startIndex + 30).clamp(0, markerPoints.length);
         } else {
+          topLoading = false;
           endIndex = markerPoints.indexOf(displayedPoints.first);
           startIndex = (endIndex - 30).clamp(0, markerPoints.length);
           if (startIndex < 0) startIndex = 0;
@@ -100,7 +95,7 @@ class _CommentListState extends State<CommentList> {
           selectedIndex = selectedIndex + (endIndex - startIndex);
           if (endIndex - startIndex != 0) {
             double height = MediaQuery.of(context).size.height;
-            double itemHeight = height * 0.24;
+            double itemHeight = height * 0.14;
             _controller.jumpTo(itemHeight * (endIndex - startIndex));
           }
         }
@@ -169,173 +164,208 @@ class _CommentListState extends State<CommentList> {
       ),
       body: SingleChildScrollView(
         controller: _controller,
-        child: ListView.builder(
-          shrinkWrap: true, // 適配 SingleChildScrollView
-          physics: NeverScrollableScrollPhysics(), // 禁止內部滾動，使用外部滾動
-          itemExtent: height * 0.14,
-          itemCount: displayedPoints.length,
-          itemBuilder: (context, index) {
-            final point = displayedPoints[index];
-            return GestureDetector(
-              onTap: () {
-                print(point);
-              },
-              child: Container(
-                margin: EdgeInsets.symmetric(horizontal: width * 0.05, vertical: height * 0.01),
-                decoration: BoxDecoration(
-                  color: selectedIndex == index ? Colors.blue : Colors.white,
-                  borderRadius: BorderRadius.all(Radius.circular(20)),
-                ),
-                width: width * 0.9,
-                height: height * 0.12,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: selectedIndex == index ? Colors.blue : Colors.white,
-                    splashFactory: NoSplash.splashFactory,
-                    elevation: 0,
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  onPressed: () {
-                    int markerPointsIndex = markerPoints.indexOf(displayedPoints[index]);
-                    Navigator.pop(context, markerPoints.length - markerPointsIndex -1);
-                  },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      displayedPoints[index]['image_path'] != null && displayedPoints[index]['image_path'].isNotEmpty
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: Image.network(
-                                displayedPoints[index]['image_path'],
-                                width: width * 0.2,
-                                height: width * 0.2,
-                                fit: BoxFit.cover,
-                                loadingBuilder: (context, child, loadingProgress) {
-                                  if (loadingProgress == null) {
-                                    return child; // 圖片載入完成，返回圖片
-                                  }
-                                  return Center(
-                                    child: SizedBox(
-                                      width: width * 0.2,
-                                      height: width * 0.2,
-                                      child: Padding(
-                                        padding: EdgeInsets.all(width * 0.05),
-                                        child: CircularProgressIndicator(),
-                                      ),
-                                    ),
-                                  );
-                                },
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Center(
-                                    child: Text(
-                                      '圖片載入失敗',
-                                      style: TextStyle(color: Colors.red),
-                                    ),
-                                  ); // 載入失敗顯示提示
-                                },
-                              ),
-                            )
-                          : Text.rich(
-                              WidgetSpan(
-                                child: ImageIcon(
-                                  AssetImage(
-                                    "assets/home/image_plus.png",
-                                  ),
-                                  color: Colors.black12,
-                                  size: width * 0.2,
-                                ),
-                              ),
-                            ),
-                      SizedBox(width: 20),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                Text(
-                                  DateFormat('yyyy-MM/dd HH:mm').format(
-                                    DateFormat('yyyy-MM-dd HH:mm:ss').parse(displayedPoints[index]['x'].toString()),
-                                  ),
-                                  style: TextStyle(
-                                    color: selectedIndex == index ? Colors.white : Colors.black,
-                                    fontSize: 18,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Spacer(),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'BG：${displayedPoints[index]['bg']}',
-                                  style: TextStyle(
-                                    color: selectedIndex == index ? Colors.white : Colors.black,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Spacer(),
-                            Row(
-                              children: [
-                                Text(
-                                  'TEMP：${displayedPoints[index]['temp']}',
-                                  style: TextStyle(
-                                    color: selectedIndex == index ? Colors.white : Colors.black,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Spacer(),
-                            FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Row(
-                                  children: [
-                                    Text.rich(
-                                      TextSpan(
-                                        children: <TextSpan>[
-                                          TextSpan(
-                                            text: 'desc_：', // "desc_" 的樣式
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              color: selectedIndex == index ? Colors.white : Colors.black, // 根據需求設置文字顏色
-                                            ),
-                                          ),
-                                          TextSpan(
-                                            text: displayedPoints[index]['description'] != null
-                                                ? _truncateText(displayedPoints[index]['description'], 15)
-                                                : 'Null', // 如果為 null，直接顯示空字串
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              color: selectedIndex == index ? Colors.white : Colors.black, // 根據需求設置文字顏色
-                                              fontWeight: displayedPoints[index]['description'] != null
-                                                  ? FontWeight.normal
-                                                  : FontWeight.bold,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                        
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
+        child: Column(
+          children: [
+            if (topLoading)
+              Container(
+                padding: const EdgeInsets.all(16.0),
+                alignment: Alignment.center,
+                child: SizedBox(
+                  width: 24.0,
+                  height: 24.0,
+                  child: CircularProgressIndicator(strokeWidth: 2.0),
                 ),
               ),
-            );
-          },
+            ListView.builder(
+              shrinkWrap: true, // 適配 SingleChildScrollView
+              physics: NeverScrollableScrollPhysics(), // 禁止內部滾動，使用外部滾動
+              itemExtent: height * 0.16,
+              itemCount: displayedPoints.length,
+              itemBuilder: (context, index) {
+                final point = displayedPoints[index];
+                return GestureDetector(
+                  onTap: () {
+                    print(point);
+                  },
+                  child: Container(
+                    margin: EdgeInsets.symmetric(horizontal: width * 0.05, vertical: height * 0.01),
+                    decoration: BoxDecoration(
+                      color: selectedIndex == index ? Colors.blue : Colors.white,
+                      borderRadius: BorderRadius.all(Radius.circular(20)),
+                    ),
+                    width: width * 0.9,
+                    height: height * 0.14,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: selectedIndex == index ? Colors.blue : Colors.white,
+                        splashFactory: NoSplash.splashFactory,
+                        elevation: 0,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onPressed: () {
+                        int markerPointsIndex = markerPoints.indexOf(displayedPoints[index]);
+                        Navigator.pop(context, markerPoints.length - markerPointsIndex - 1);
+                      },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          displayedPoints[index]['image_path'] != null &&
+                                  displayedPoints[index]['image_path'].isNotEmpty
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Image.network(
+                                    displayedPoints[index]['image_path'],
+                                    width: width * 0.2,
+                                    height: width * 0.2,
+                                    fit: BoxFit.cover,
+                                    loadingBuilder: (context, child, loadingProgress) {
+                                      if (loadingProgress == null) {
+                                        return child; // 圖片載入完成，返回圖片
+                                      }
+                                      return Center(
+                                        child: SizedBox(
+                                          width: width * 0.2,
+                                          height: width * 0.2,
+                                          child: Padding(
+                                            padding: EdgeInsets.all(width * 0.05),
+                                            child: CircularProgressIndicator(),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Center(
+                                        child: Text(
+                                          '圖片載入失敗',
+                                          style: TextStyle(color: Colors.red),
+                                        ),
+                                      ); // 載入失敗顯示提示
+                                    },
+                                  ),
+                                )
+                              : Text.rich(
+                                  WidgetSpan(
+                                    child: ImageIcon(
+                                      AssetImage(
+                                        "assets/home/image_plus.png",
+                                      ),
+                                      color: Colors.black12,
+                                      size: width * 0.2,
+                                    ),
+                                  ),
+                                ),
+                          SizedBox(width: 20),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        DateFormat('yyyy-MM/dd HH:mm').format(
+                                          DateFormat('yyyy-MM-dd HH:mm:ss').parse(displayedPoints[index]['x'].toString()),
+                                        ),
+                                        style: TextStyle(
+                                          color: selectedIndex == index ? Colors.white : Colors.black,
+                                          fontSize: 18,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Spacer(),
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'BG：${displayedPoints[index]['bg']}',
+                                        style: TextStyle(
+                                          color: selectedIndex == index ? Colors.white : Colors.black,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Spacer(),
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        'TEMP：${displayedPoints[index]['temp']}',
+                                        style: TextStyle(
+                                          color: selectedIndex == index ? Colors.white : Colors.black,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Spacer(),
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Row(
+                                    children: [
+                                      Text.rich(
+                                        TextSpan(
+                                          children: <TextSpan>[
+                                            TextSpan(
+                                              text: 'desc_：', // "desc_" 的樣式
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                color:
+                                                    selectedIndex == index ? Colors.white : Colors.black, // 根據需求設置文字顏色
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text: displayedPoints[index]['description'] != null
+                                                  ? _truncateText(displayedPoints[index]['description'], 15)
+                                                  : 'Null', // 如果為 null，直接顯示空字串
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                color:
+                                                    selectedIndex == index ? Colors.white : Colors.black, // 根據需求設置文字顏色
+                                                fontWeight: displayedPoints[index]['description'] != null
+                                                    ? FontWeight.normal
+                                                    : FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+            if (downLoading)
+              Container(
+                padding: const EdgeInsets.all(16.0),
+                alignment: Alignment.center,
+                child: SizedBox(
+                  width: 24.0,
+                  height: 24.0,
+                  child: CircularProgressIndicator(strokeWidth: 2.0),
+                ),
+              ),
+          ],
         ),
       ),
     );
