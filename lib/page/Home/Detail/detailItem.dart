@@ -61,10 +61,9 @@ class _DetailItemState extends State<DetailItem> {
   int lastId = 0; // 儲存backend最後一筆資料id
   int lastBG = 0;
   double lastTEMP = 0.0;
-  List<Map<String, dynamic>> markerPoints = [];
+  List<Map<String, dynamic>> markerPoints = []; // 存放註釋點的資訊
   DateTime? _verticalLineX;
   String image_path = '';
-  double zoomF = 0.1;
 
   @override
   void initState() {
@@ -110,6 +109,8 @@ class _DetailItemState extends State<DetailItem> {
     temperatureData = [];
     bloodSugarData = [];
     dataCount = 0;
+
+    // 將資料分類
     for (var item in futureTIRData!) {
       temperatureData.add(item['temperature_1'].toDouble());
       temperatureData.add(item['temperature_2'].toDouble());
@@ -255,6 +256,7 @@ class _DetailItemState extends State<DetailItem> {
     });
   }
 
+  // 選擇顯示範圍的range 3 6 12 24循環
   void circulationLoop() {
     // print('-----------------');
     // print(minX);
@@ -510,6 +512,7 @@ class _DetailItemState extends State<DetailItem> {
                         onTap: () {
                           _toggleChartState();
                         },
+                        //圖表程式碼
                         child: SfCartesianChart(
                           zoomPanBehavior: _zoomPanBehavior,
                           // tooltipBehavior: _tooltipBehavior,
@@ -522,7 +525,7 @@ class _DetailItemState extends State<DetailItem> {
                             CartesianChartAnnotation(
                               widget: Container(
                                 width: 2, // 線條寬度
-                                height: height * 0.5, // 垂直高度
+                                height: height * 1, // 垂直高度
                                 color: Colors.black, // 線條顏色
                               ),
                               coordinateUnit: CoordinateUnit.percentage, // 使用相對於畫布的座標系

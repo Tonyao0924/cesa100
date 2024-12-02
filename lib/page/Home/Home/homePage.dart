@@ -32,22 +32,6 @@ class _HomePageState extends State<HomePage>{
     // bleProxy.removeBleCallback(this);
   }
 
-  // // 藍芽接受資料的func
-  // @override
-  // void onDataReceived(String deviceId, String serviceUuid, String characteristicUuid, Uint8List data) {
-  //   if (characteristicUuid == '6e6c31cc-3bd6-fe13-124d-9611451cd8f3') {
-  //     print(data);
-  //     if(data[0] == 255){
-  //       FlutterTtcBle.disconnect(deviceId: result.deviceId);
-  //     }
-  //   }else if(characteristicUuid == '6e6c31cc-3bd6-fe13-124d-9611451cd8f4'){
-  //     print(data);
-  //     double rawValue = ((data[0] * 0x100) + data[1]) / 100;
-  //     String temperature = rawValue.toStringAsFixed(3);
-  //     print('temperature');
-  //   }
-  // }
-
   @override
   Widget build(BuildContext context) {
     int width = MediaQuery.of(context).size.width.toInt();

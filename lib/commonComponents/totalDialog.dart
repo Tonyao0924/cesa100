@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 OverlayEntry? _currentOverlay;
 Timer? _timer;
 
+// 使用自己的toast
 void showToast(BuildContext context, String message) {
   int height = MediaQuery.of(context).size.height.toInt();
 
@@ -58,6 +59,7 @@ void showToast(BuildContext context, String message) {
   _currentOverlay = overlayEntry;
 }
 
+// 顯示錯誤的訊息的視窗
 Future<String?> errorDialog(BuildContext context, String msg) {
   final double screenWidth = MediaQuery.of(context).size.width;
 

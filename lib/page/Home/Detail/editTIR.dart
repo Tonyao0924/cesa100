@@ -60,6 +60,7 @@ class _EditTIRPageState extends State<EditTIRPage> {
     totalTemperature = List<double>.from(widget.totalTemperature);
   }
 
+  // 重新計算血糖數據
   void recalculateBGData() {
     setState(() {
       bloodSugarTIR = List<int>.filled(bloodSugarData.length + 1, 0);
@@ -79,6 +80,7 @@ class _EditTIRPageState extends State<EditTIRPage> {
     });
   }
 
+  // 重新計算溫度數據
   void recalculateTEMPData() {
     setState(() {
       temperatureTIR = List<int>.filled(temperatureData.length + 1, 0);

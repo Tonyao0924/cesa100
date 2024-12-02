@@ -335,6 +335,7 @@ class _EditTIRPageState extends State<EditTIRPage> {
   }
 }
 
+// 橫的TIR顯示方式
 class BarChartPainter2 extends CustomPainter {
   final String title;
   final String unit;
@@ -657,6 +658,7 @@ class BarChartPainter2 extends CustomPainter {
   }
 }
 
+// 直的TIR顯示方式
 class BarChartPainter extends CustomPainter {
   final List<double> data;
   final List<Color> colors;

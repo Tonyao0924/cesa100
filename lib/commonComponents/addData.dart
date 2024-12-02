@@ -28,6 +28,7 @@ class StorageService with ChangeNotifier{
     notifyListeners();
   }
 
+  // 從Firebase刪除相片
   Future<void> deleteImages(String imageUrl) async{
     try{
       _imageUrls.remove(imageUrl);
@@ -40,6 +41,8 @@ class StorageService with ChangeNotifier{
     notifyListeners();
   }
 
+
+  // 從url拿圖片路徑
   String extractPathFromUrl(String url){
     Uri uri = Uri.parse(url);
 
@@ -48,6 +51,7 @@ class StorageService with ChangeNotifier{
     return Uri.decodeComponent(encodePath);
   }
 
+  // 上傳相片到Firebase中
   Future<String> uploadImage() async {
     _isUploading = true;
     notifyListeners();

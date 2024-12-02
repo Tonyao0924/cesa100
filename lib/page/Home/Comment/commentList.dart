@@ -22,8 +22,8 @@ class _CommentListState extends State<CommentList> {
   late List<Map<String, dynamic>> displayedPoints; // 當前顯示的資料
   bool _isLoading = false;
   int selectedIndex = 0;
-  bool topLoading = false;
-  bool downLoading = false;
+  bool topLoading = false; // 是否顯示上方載入動畫
+  bool downLoading = false; // 是否顯示下方載入動畫
 
   @override
   void initState() {
@@ -53,6 +53,7 @@ class _CommentListState extends State<CommentList> {
     super.dispose();
   }
 
+  // 載入新資料
   void _onScroll() {
     if (_controller.position.pixels >= _controller.position.maxScrollExtent - 30 && !_isLoading) {
       // 滾到底部時載入更多
@@ -115,6 +116,7 @@ class _CommentListState extends State<CommentList> {
     });
   }
 
+  // 太多字的話後面使用...省略
   String _truncateText(String text, int maxLength) {
     if (text.length > maxLength) {
       return '${text.substring(0, maxLength)}...';

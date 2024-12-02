@@ -86,6 +86,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
     print(position);
   }
 
+  // 檢查是否被修改
   void isModified() {
     okBlue = imageChange || _textEditingController.text != initialDescription;
     setState(() {});
@@ -112,6 +113,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
     return -(low + 1); // 返回負值表示未找到，但提供插入點 +1的用意是因為-0 = 0
   }
 
+  // 新增敘述到資料庫中
   Future<int> _sendPutRequest() async {
     try {
       String? description = _textEditingController.text.isEmpty ? null : _textEditingController.text;
@@ -136,6 +138,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
     }
   }
 
+  //選擇是要拍照或是從相簿中選取
   Future<void> selectImage() async {
     showModalBottomSheet(
       context: context,
@@ -145,8 +148,8 @@ class _AddCommentPageState extends State<AddCommentPage> {
           child: Wrap(
             children: <Widget>[
               ListTile(
-                leading: Icon(Icons.camera_alt),
-                title: Text('Camera'),
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Camera'),
                 onTap: () async {
                   Navigator.of(context).pop();
                   Uint8List? img = await pickImage(ImageSource.camera);
@@ -160,8 +163,8 @@ class _AddCommentPageState extends State<AddCommentPage> {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.photo_library),
-                title: Text('Gallery'),
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Gallery'),
                 onTap: () async {
                   Navigator.of(context).pop();
                   Uint8List? img = await pickImage(ImageSource.gallery);
@@ -181,6 +184,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
     );
   }
 
+  // 選擇照片
   pickImage(ImageSource source) async {
     final ImagePicker _imagePicker = ImagePicker();
     XFile? _file = await _imagePicker.pickImage(source: source);
@@ -189,10 +193,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
     }
   }
 
-  void saveAnnotate() async {
-    print('save image.');
-  }
-
+  // 上傳照片到Firebase
   Future<String> uploadImageToFirebase() async {
     String downloadUrl = '';
 
@@ -214,6 +215,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
     return downloadUrl;
   }
 
+  // 更新畫面顯示資料
   void updateMarkerDetails(int position) {
     setState(() {
       lastId = widget.markerPoints[position]['id'];
@@ -238,7 +240,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
       child: Scaffold(
         appBar: AppBar(
           centerTitle: true,
-          title: FittedBox(
+          title: const FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
               'Add Comment',
@@ -250,22 +252,6 @@ class _AddCommentPageState extends State<AddCommentPage> {
             ),
           ),
           actions: [
-            // IconButton(
-            //   icon: Icon(
-            //     Icons.history,  // 使用 history 圖示
-            //     color: Colors.black, // 圖示顏色設置為黑色
-            //     size: 28, // 圖示大小
-            //   ),
-            //   onPressed: () {
-            //     // 點擊後執行的操作，例如打開歷史紀錄頁面
-            //     Navigator.push(
-            //       context,
-            //       MaterialPageRoute(
-            //         builder: (context) => CommentList(),  // 假設你有一個 HistoryPage
-            //       ),
-            //     );
-            //   },
-            // ),
             TextButton(
               style: ButtonStyle(
                 foregroundColor: MaterialStateProperty.resolveWith(
@@ -316,7 +302,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
               child: Column(
                 children: [
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                    padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -351,29 +337,29 @@ class _AddCommentPageState extends State<AddCommentPage> {
                             ),
                           ),
                         ),
-                        Spacer(),
-                        Text(
+                        const Spacer(),
+                        const Text(
                           'Time',
                           style: TextStyle(
                             fontSize: 18,
                           ),
                         ),
-                        SizedBox(width: 10), // 添加空間使文字之間不會太擁擠
+                        const SizedBox(width: 10), // 添加空間使文字之間不會太擁擠
                         Container(
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.all(Radius.circular(30)),
                           ),
-                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5), // 添加內邊距讓顯示效果更好
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5), // 添加內邊距讓顯示效果更好
                           child: Text(
                             // 使用 DateFormat 將時間轉換為 '月/日 時:分' 格式
                             DateFormat('MM/dd HH:mm').format(DateFormat('yyyy-MM-dd HH:mm:ss').parse(lastTime)),
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 16,
                             ),
                           ),
                         ),
-                        Spacer(),
+                        const Spacer(),
 
                         TextButton(
                           style: ButtonStyle(
@@ -410,26 +396,26 @@ class _AddCommentPageState extends State<AddCommentPage> {
                     ),
                   ),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
                     child: Row(
                       children: [
                         RichText(
                           text: TextSpan(
                             text: 'BG：', // "BG：" 的樣式
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 20,
                               color: Colors.black, // 根據需求設置文字顏色
                             ),
                             children: <TextSpan>[
                               TextSpan(
                                 text: '${lastBG}', // `lastBG` 數值的樣式
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 30, // 設置較大的字體
                                   fontWeight: FontWeight.bold,
                                   color: Colors.green, // 根據需求設置文字顏色
                                 ),
                               ),
-                              TextSpan(
+                              const TextSpan(
                                 text: 'mg/dl', // `lastBG` 數值的樣式
                                 style: TextStyle(
                                   fontSize: 12, // 設置較大的字體
@@ -439,24 +425,24 @@ class _AddCommentPageState extends State<AddCommentPage> {
                             ],
                           ),
                         ),
-                        Spacer(),
+                        const Spacer(),
                         RichText(
                           text: TextSpan(
                             text: 'TEMP：', // "TEMP：" 的樣式
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 20,
                               color: Colors.black, // 根據需求設置文字顏色
                             ),
                             children: <TextSpan>[
                               TextSpan(
                                 text: '${lastTEMP}', // `lastTEMP` 數值的樣式
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 24, // 設置較大的字體
                                   fontWeight: FontWeight.bold,
                                   color: Colors.blue, // 根據需求設置文字顏色
                                 ),
                               ),
-                              TextSpan(
+                              const TextSpan(
                                 text: ' ℃', // 溫度單位的樣式
                                 style: TextStyle(
                                   fontSize: 12, // 設置較小的字體
@@ -469,19 +455,19 @@ class _AddCommentPageState extends State<AddCommentPage> {
                       ],
                     ),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      SizedBox(width: 10),
-                      Text(
+                      const SizedBox(width: 10),
+                      const Text(
                         'Description:',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Spacer(),
+                      const Spacer(),
                       Container(
                         height: 48,
                         width: 48,
@@ -527,17 +513,17 @@ class _AddCommentPageState extends State<AddCommentPage> {
                           ),
                         ),
                       ),
-                      SizedBox(width: 10),
+                      const SizedBox(width: 10),
                     ],
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Container(
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.grey),
                       borderRadius: BorderRadius.circular(5),
                     ),
-                    margin: EdgeInsets.symmetric(horizontal: 10),
-                    padding: EdgeInsets.symmetric(
+                    margin: const EdgeInsets.symmetric(horizontal: 10),
+                    padding: const EdgeInsets.symmetric(
                       horizontal: 5,
                     ),
                     child: Scrollbar(
@@ -547,7 +533,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
                         keyboardType: TextInputType.multiline,
                         minLines: 5,
                         maxLines: 5,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           hintText: 'Enter description here...',
                           border: InputBorder.none,
                           // counterText: '',
@@ -558,8 +544,8 @@ class _AddCommentPageState extends State<AddCommentPage> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 20),
-                  Row(
+                  const SizedBox(height: 20),
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       SizedBox(width: 10),
@@ -603,12 +589,12 @@ class _AddCommentPageState extends State<AddCommentPage> {
                                     child: SizedBox(
                                       width: width * 0.1,
                                       height: width * 0.1,
-                                      child: CircularProgressIndicator(),
+                                      child: const CircularProgressIndicator(),
                                     ),
                                   );
                                 },
                                 errorBuilder: (context, error, stackTrace) {
-                                  return Center(
+                                  return const Center(
                                     child: Text(
                                       '圖片載入失敗',
                                       style: TextStyle(color: Colors.red),
@@ -621,7 +607,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
                               ? Text.rich(
                                   WidgetSpan(
                                     child: ImageIcon(
-                                      AssetImage(
+                                      const AssetImage(
                                         "assets/home/image_plus.png",
                                       ),
                                       color: Colors.black12,
@@ -689,6 +675,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
     );
   }
 
+  // 確認視窗
   Future<bool?> confirmDialog(BuildContext context) async {
     return showDialog(
       context: context,

@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+// 打開修改的視窗
 Future<List<double>?> openEditBGTIRDialog(BuildContext context, List<double> bloodSugarData) async {
   List<double> rangeData = List<double>.from(bloodSugarData);
   return showCupertinoDialog(
@@ -110,6 +111,7 @@ Future<int?> openBGPickerDialog(BuildContext context, int initialValue) async {
   );
 }
 
+// 打開修改溫度視窗
 Future<List<double>?> openEditTEMPTIRDialog(BuildContext context, List<double> temperatureData) async {
   List<double> rangeData = List<double>.from(temperatureData);
   return showCupertinoDialog(
